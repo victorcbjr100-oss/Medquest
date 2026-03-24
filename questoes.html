@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulado - MedQuest</title>
+    <title>Questões - MedQuest</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -26,75 +26,74 @@
             <a href="temas.html" class="text-gray-400 hover:text-blue-600 flex items-center gap-2 text-sm font-medium transition">
                 <i class="fas fa-times"></i> Sair
             </a>
-            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest text-center flex-1">Questão 1 de 5</span>
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest flex-1 text-center">Questão 1 de 5</span>
         </div>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 mt-6">
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-6">
-            <div class="mb-6">
-                <span class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded uppercase">Cardiologia</span>
-            </div>
-
-            <p class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">
-                Paciente com dor precordial e infra de ST em V5 e V6. Qual a conduta inicial?
-            </p>
+            <div class="mb-6"><span class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded uppercase">Cardiologia</span></div>
+            <p class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">Paciente com dor precordial e infra de ST em V5 e V6. Qual a conduta inicial?</p>
 
             <div class="space-y-3" id="campoAlternativas">
                 <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500 group-hover:text-blue-600">A</span>
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">A</span>
                     <span class="text-sm text-gray-600 font-medium">Realizar angioplastia primária em menos de 90 min.</span>
                 </button>
-
                 <button onclick="marcar(this)" data-certa="true" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500 group-hover:text-blue-600">B</span>
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">B</span>
                     <span class="text-sm text-gray-600 font-medium">Administrar dupla antiagregação plaquetária e estatina.</span>
                 </button>
-
                 <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500 group-hover:text-blue-600">C</span>
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">C</span>
                     <span class="text-sm text-gray-600 font-medium">Indicar trombólise química com Tenecteplase.</span>
                 </button>
-
                 <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500 group-hover:text-blue-600">D</span>
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">D</span>
                     <span class="text-sm text-gray-600 font-medium">Solicitar enzimas cardíacas e aguardar resultado.</span>
                 </button>
-
                 <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500 group-hover:text-blue-600">E</span>
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">E</span>
                     <span class="text-sm text-gray-600 font-medium">Realizar teste ergométrico de urgência.</span>
                 </button>
             </div>
 
             <div class="mt-10 flex justify-end items-center gap-4">
                 <span id="aviso" class="text-xs text-red-500 font-medium opacity-0 italic transition-opacity">Selecione uma opção</span>
-                <button id="confirmar" onclick="verificar()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:scale-105 transition-all">
-                    Confirmar Resposta
-                </button>
-                <button id="proxima" onclick="window.location.reload()" class="hidden bg-gray-800 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg">
-                    Próxima Questão <i class="fas fa-arrow-right ml-2"></i>
-                </button>
+                <button id="confirmar" onclick="verificar()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:scale-105 transition-all">Confirmar Resposta</button>
+                <button id="proxima" onclick="window.location.reload()" class="hidden bg-gray-800 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg">Próxima Questão <i class="fas fa-arrow-right ml-2"></i></button>
             </div>
         </div>
 
-        <div id="comentarios" class="hidden animate-in fade-in duration-500">
-            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="far fa-comment-dots text-blue-600"></i>
-                    <h3 class="font-bold text-gray-800 text-sm tracking-tight">Minhas Anotações na Nuvem</h3>
+        <div id="comentarios" class="hidden">
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
+                
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="far fa-edit text-blue-600"></i>
+                        <h3 class="font-bold text-gray-800 text-sm">Minhas Anotações</h3>
+                    </div>
+                    <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-28 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" placeholder="Escreva aqui seu resumo..."></textarea>
+                    <div class="flex items-center justify-between">
+                        <button onclick="salvarNoSupabase()" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md transition-all hover:bg-blue-700">Salvar Comentário</button>
+                        <span id="status" class="hidden text-green-500 text-[10px] font-bold uppercase italic animate-pulse">Sincronizado!</span>
+                    </div>
                 </div>
-                <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-28 focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all" placeholder="Escreva suas notas importantes sobre esta questão..."></textarea>
-                <div class="flex items-center justify-between">
-                    <button onclick="salvarNoSupabase()" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md shadow-blue-100 transition-all hover:bg-blue-700 active:scale-95">Salvar no Banco</button>
-                    <span id="status" class="hidden text-green-500 text-[10px] font-bold uppercase tracking-widest italic animate-pulse">Sincronizado!</span>
+
+                <div id="areaVisualizacao" class="hidden border-t border-gray-100 pt-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-quote-left text-gray-300 text-xs"></i>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Anotação Salva</span>
+                    </div>
+                    <div id="comentarioExibido" class="text-sm text-gray-700 leading-relaxed bg-blue-50/50 p-4 rounded-2xl border border-blue-50 italic">
+                        </div>
                 </div>
+
             </div>
         </div>
     </main>
 
     <script>
-        // CONFIGURAÇÃO DO SEU SUPABASE
         const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -102,20 +101,15 @@
         const questaoID = "q1_cardiologia";
         let elementoSelecionado = null;
 
-        // 1. CARREGAR COMENTÁRIO DO BANCO AO INICIAR
+        // 1. CARREGAR E EXIBIR
         window.onload = async () => {
-            const { data, error } = await supabaseClient
-                .from('comentarios_questoes')
-                .select('texto')
-                .eq('questao_id', questaoID)
-                .maybeSingle();
-            
-            if (data) {
+            const { data } = await supabaseClient.from('comentarios_questoes').select('texto').eq('questao_id', questaoID).maybeSingle();
+            if (data && data.texto) {
                 document.getElementById('textoComentario').value = data.texto;
+                exibirComentario(data.texto);
             }
         };
 
-        // 2. LÓGICA DE SELEÇÃO
         function marcar(el) {
             document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.remove('selecionada'));
             el.classList.add('selecionada');
@@ -123,49 +117,45 @@
             document.getElementById('aviso').style.opacity = '0';
         }
 
-        // 3. VERIFICAR RESPOSTA
         function verificar() {
-            if (!elementoSelecionado) {
-                document.getElementById('aviso').style.opacity = '1';
-                return;
-            }
-
-            const certa = elementoSelecionado.getAttribute('data-certa') === 'true';
-
+            if (!elementoSelecionado) { document.getElementById('aviso').style.opacity = '1'; return; }
             document.querySelectorAll('.botao-opcao').forEach(btn => {
                 btn.classList.add('travado');
                 if (btn.getAttribute('data-certa') === 'true') btn.classList.add('correta');
             });
-
-            if (!certa) {
-                elementoSelecionado.classList.remove('selecionada');
-                elementoSelecionado.classList.add('errada');
-            }
-
+            if (elementoSelecionado.getAttribute('data-certa') !== 'true') elementoSelecionado.classList.add('errada');
             document.getElementById('confirmar').classList.add('hidden');
             document.getElementById('proxima').classList.remove('hidden');
             document.getElementById('comentarios').classList.remove('hidden');
-            
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        // 4. SALVAR NO SUPABASE (FUNÇÃO ATUALIZADA)
+        // 2. FUNÇÃO PARA MOSTRAR O TEXTO ABAIXO
+        function exibirComentario(texto) {
+            const area = document.getElementById('areaVisualizacao');
+            const display = document.getElementById('comentarioExibido');
+            if (texto.trim() !== "") {
+                display.innerText = texto;
+                area.classList.remove('hidden');
+            } else {
+                area.classList.add('hidden');
+            }
+        }
+
+        // 3. SALVAR E ATUALIZAR INTERFACE
         async function salvarNoSupabase() {
             const texto = document.getElementById('textoComentario').value;
             const status = document.getElementById('status');
 
             const { error } = await supabaseClient
                 .from('comentarios_questoes')
-                .upsert({ 
-                    questao_id: questaoID, 
-                    texto: texto 
-                }, { onConflict: 'questao_id' });
+                .upsert({ questao_id: questaoID, texto: texto }, { onConflict: 'questao_id' });
 
             if (error) {
-                console.error("Erro detalhado do Supabase:", error);
-                alert("Erro ao salvar: " + error.message + "\nVerifique se rodou o comando SQL e as Policies.");
+                alert("Erro ao salvar: " + error.message);
             } else {
                 status.classList.remove('hidden');
+                exibirComentario(texto); // Atualiza a visualização na hora
                 setTimeout(() => status.classList.add('hidden'), 2500);
             }
         }
