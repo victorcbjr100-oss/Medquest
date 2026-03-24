@@ -11,21 +11,26 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .selecionada .letra { background-color: #3b82f6 !important; color: white !important; }
         .correta { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        .correta .letra { background-color: #22c55e !important; color: white !important; }
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .errada .letra { background-color: #ef4444 !important; color: white !important; }
         .travado { pointer-events: none; opacity: 0.8; }
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen pb-20">
 
-    <header class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50 text-center">
+    <header class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50 flex items-center justify-between">
+        <a href="temas.html" class="text-gray-400 hover:text-blue-600 transition"><i class="fas fa-times"></i></a>
         <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Questão 1 de 5</span>
+        <div class="w-4"></div>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 mt-6">
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-6">
             <div class="mb-6"><span class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded uppercase">Cardiologia</span></div>
-            <p class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">Paciente com dor precordial e infra de ST em V5 e V6. Qual a conduta inicial?</p>
+            <p class="text-gray-800 text-lg leading-relaxed mb-10 font-medium text-center">Paciente com dor precordial e infra de ST em V5 e V6. Qual a conduta inicial?</p>
 
             <div class="space-y-3" id="campoAlternativas">
                 <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
@@ -36,14 +41,26 @@
                     <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">B</span>
                     <span class="text-sm text-gray-600">Administrar dupla antiagregação plaquetária e estatina.</span>
                 </button>
-                </div>
+                <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">C</span>
+                    <span class="text-sm text-gray-600">Indicar trombólise química com Tenecteplase.</span>
+                </button>
+                <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">D</span>
+                    <span class="text-sm text-gray-600">Solicitar enzimas cardíacas e aguardar resultado.</span>
+                </button>
+                <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
+                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">E</span>
+                    <span class="text-sm text-gray-600">Realizar teste ergométrico de urgência.</span>
+                </button>
+            </div>
 
             <div class="mt-10 flex justify-end">
                 <button id="confirmar" onclick="verificar()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg hover:scale-105 transition-all">Confirmar Resposta</button>
             </div>
         </div>
 
-        <div id="comentarios" class="hidden">
+        <div id="comentarios" class="hidden animate-in fade-in duration-500">
             <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
                 <div class="flex items-center gap-2 mb-4">
                     <i class="far fa-comments text-blue-600"></i>
@@ -51,7 +68,7 @@
                 </div>
                 
                 <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-24 focus:outline-none focus:ring-2 focus:ring-blue-100" placeholder="Adicione um comentário..."></textarea>
-                <button onclick="salvarNoSupabase()" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md hover:bg-blue-700 mb-8">Enviar Comentário</button>
+                <button onclick="salvarNoSupabase()" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md hover:bg-blue-700 mb-8 transition-all">Enviar Comentário</button>
 
                 <div id="listaComentarios" class="space-y-4 border-t border-gray-100 pt-6">
                     </div>
@@ -67,13 +84,12 @@
         const questaoID = "q1_cardiologia";
         let elementoSelecionado = null;
 
-        // 1. CARREGAR TODOS OS COMENTÁRIOS AO INICIAR
         window.onload = async () => {
-            const { data, error } = await supabaseClient
+            const { data } = await supabaseClient
                 .from('comentarios_questoes')
                 .select('texto, created_at')
                 .eq('questao_id', questaoID)
-                .order('created_at', { ascending: false }); // Mais recentes primeiro
+                .order('created_at', { ascending: false });
             
             if (data) data.forEach(c => adicionarNaTela(c.texto, c.created_at));
         };
@@ -86,30 +102,32 @@
 
         function verificar() {
             if (!elementoSelecionado) return;
-            document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.add('travado'));
-            if (elementoSelecionado.getAttribute('data-certa') === 'true') elementoSelecionado.classList.add('correta');
-            else elementoSelecionado.classList.add('errada');
+            document.querySelectorAll('.botao-opcao').forEach(btn => {
+                btn.classList.add('travado');
+                if (btn.getAttribute('data-certa') === 'true') btn.classList.add('correta');
+            });
+            if (elementoSelecionado.getAttribute('data-certa') !== 'true') elementoSelecionado.classList.add('errada');
+            
             document.getElementById('comentarios').classList.remove('hidden');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        // 2. FUNÇÃO PARA CRIAR O ELEMENTO VISUAL DO COMENTÁRIO
         function adicionarNaTela(texto, dataHora) {
             const lista = document.getElementById('listaComentarios');
-            const dataFormatada = dataHora ? new Date(dataHora).toLocaleString('pt-BR') : "Agora";
+            const dataFormatada = dataHora ? new Date(dataHora).toLocaleString('pt-BR') : "Agora mesmo";
             
             const html = `
                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 animate-in slide-in-from-top duration-300">
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Estudante MedQuest</span>
-                        <span class="text-[9px] text-gray-400">${dataFormatada}</span>
+                        <span class="text-[9px] text-gray-400 italic">${dataFormatada}</span>
                     </div>
-                    <p class="text-sm text-gray-700">${texto}</p>
+                    <p class="text-sm text-gray-700 leading-relaxed">${texto}</p>
                 </div>
             `;
-            lista.insertAdjacentHTML('afterbegin', html); // Adiciona no topo da lista
+            lista.insertAdjacentHTML('afterbegin', html);
         }
 
-        // 3. SALVAR E MOSTRAR NA HORA
         async function salvarNoSupabase() {
             const campo = document.getElementById('textoComentario');
             const texto = campo.value;
@@ -121,10 +139,10 @@
                 .insert({ questao_id: questaoID, texto: texto });
 
             if (error) {
-                alert("Erro: " + error.message);
+                alert("Erro ao salvar: " + error.message);
             } else {
-                adicionarNaTela(texto); // MOSTRA NA TELA NA HORA
-                campo.value = ""; // Limpa a caixa de texto
+                adicionarNaTela(texto);
+                campo.value = "";
             }
         }
     </script>
