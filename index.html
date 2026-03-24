@@ -13,7 +13,7 @@
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full">
         <div class="p-6 flex items-center gap-3">
             <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
                 <i class="fas fa-brain text-xl"></i>
@@ -26,12 +26,15 @@
 
         <nav class="flex-1 px-4 space-y-1 mt-4">
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Navegação</p>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
+            
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
                 <i class="fas fa-home w-5"></i> Página Inicial
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+            
+            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
+            
             <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
                 <i class="fas fa-stopwatch w-5"></i> Simulados
             </a>
@@ -52,7 +55,7 @@
         </div>
     </aside>
 
-    <main class="flex-1 p-8">
+    <main class="flex-1 p-8 ml-64">
         <header class="mb-8">
             <div class="flex items-center gap-3 text-blue-600 mb-2">
                 <i class="fas fa-users text-2xl"></i>
@@ -62,35 +65,35 @@
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                 <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-3">
                     <i class="fas fa-user-friends"></i>
                 </div>
                 <span class="text-2xl font-bold text-gray-800">4</span>
                 <span class="text-xs text-gray-400">Total de Usuários</span>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                 <div class="w-10 h-10 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mb-3">
                     <i class="fas fa-sparkles"></i>
                 </div>
                 <span class="text-2xl font-bold text-gray-800">1</span>
                 <span class="text-xs text-gray-400">Plano Gratuito</span>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                 <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3">
                     <i class="fas fa-gem"></i>
                 </div>
                 <span class="text-2xl font-bold text-blue-600">2</span>
                 <span class="text-xs text-gray-400">Plano Pro</span>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                 <div class="w-10 h-10 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center mb-3">
                     <i class="fas fa-crown"></i>
                 </div>
                 <span class="text-2xl font-bold text-yellow-600">1</span>
                 <span class="text-xs text-gray-400">Plano Premium</span>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                 <div class="w-10 h-10 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-3">
                     <i class="fas fa-chart-line"></i>
                 </div>
@@ -103,20 +106,3 @@
             <div class="flex items-center gap-2 mb-4 text-gray-700 font-semibold">
                 <i class="fas fa-filter"></i> Filtros
             </div>
-            <div class="flex gap-4">
-                <div class="relative flex-1">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" placeholder="Buscar por nome ou email..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                </div>
-                <select class="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none">
-                    <option>Todos os Planos</option>
-                    <option>Gratuito</option>
-                    <option>Pro</option>
-                    <option>Premium</option>
-                </select>
-            </div>
-        </div>
-    </main>
-
-</body>
-</html>
