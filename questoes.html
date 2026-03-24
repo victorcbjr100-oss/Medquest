@@ -11,26 +11,23 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
-        .selecionada .letra { background-color: #3b82f6 !important; color: white !important; }
         .correta { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
-        .correta .letra { background-color: #22c55e !important; color: white !important; }
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
-        .errada .letra { background-color: #ef4444 !important; color: white !important; }
         .travado { pointer-events: none; opacity: 0.8; }
+        .resposta-container { margin-left: 2rem; border-left: 2px solid #e2e8f0; padding-left: 1rem; margin-top: 0.5rem; }
     </style>
 </head>
 <body class="bg-[#f8fafc] min-h-screen pb-20">
 
     <header class="bg-white border-b border-gray-200 p-4 sticky top-0 z-50 flex items-center justify-between">
         <a href="temas.html" class="text-gray-400 hover:text-blue-600 transition"><i class="fas fa-times"></i></a>
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Questão 1 de 5</span>
-        <div class="w-4"></div>
+        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest text-center flex-1">Questão 1 de 5</span>
     </header>
 
     <main class="max-w-3xl mx-auto p-6 mt-6">
         <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-6">
             <div class="mb-6"><span class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded uppercase">Cardiologia</span></div>
-            <p class="text-gray-800 text-lg leading-relaxed mb-10 font-medium text-center">Paciente com dor precordial e infra de ST em V5 e V6. Qual a conduta inicial?</p>
+            <p class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">Paciente com dor precordial e infra de ST em V5 e V6. Qual a conduta inicial?</p>
 
             <div class="space-y-3" id="campoAlternativas">
                 <button onclick="marcar(this)" data-certa="false" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
@@ -60,17 +57,17 @@
             </div>
         </div>
 
-        <div id="comentarios" class="hidden animate-in fade-in duration-500">
+        <div id="comentarios" class="hidden">
             <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
                 <div class="flex items-center gap-2 mb-4">
                     <i class="far fa-comments text-blue-600"></i>
-                    <h3 class="font-bold text-gray-800 text-sm">Comentários e Notas</h3>
+                    <h3 class="font-bold text-gray-800 text-sm">Fórum de Discussão</h3>
                 </div>
                 
-                <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-24 focus:outline-none focus:ring-2 focus:ring-blue-100" placeholder="Adicione um comentário..."></textarea>
-                <button onclick="salvarNoSupabase()" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md hover:bg-blue-700 mb-8 transition-all">Enviar Comentário</button>
+                <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-24 focus:outline-none focus:ring-2 focus:ring-blue-100" placeholder="Inicie uma discussão..."></textarea>
+                <button onclick="salvarNoSupabase(null)" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md hover:bg-blue-700 mb-8 transition-all">Postar Comentário</button>
 
-                <div id="listaComentarios" class="space-y-4 border-t border-gray-100 pt-6">
+                <div id="listaComentarios" class="space-y-6 border-t border-gray-100 pt-6">
                     </div>
             </div>
         </div>
@@ -80,19 +77,33 @@
         const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         const questaoID = "q1_cardiologia";
         let elementoSelecionado = null;
 
-        window.onload = async () => {
+        window.onload = carregarComentarios;
+
+        async function carregarComentarios() {
             const { data } = await supabaseClient
                 .from('comentarios_questoes')
-                .select('texto, created_at')
+                .select('*')
                 .eq('questao_id', questaoID)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: true });
             
-            if (data) data.forEach(c => adicionarNaTela(c.texto, c.created_at));
-        };
+            if (data) {
+                const lista = document.getElementById('listaComentarios');
+                lista.innerHTML = "";
+                // Separa comentários principais de respostas
+                const principais = data.filter(c => !c.pai_id);
+                const respostas = data.filter(c => c.pai_id);
+
+                principais.forEach(p => {
+                    adicionarNaTela(p.texto, p.created_at, p.id, false);
+                    respostas.filter(r => r.pai_id === p.id).forEach(r => {
+                        adicionarNaTela(r.texto, r.created_at, r.id, true, p.id);
+                    });
+                });
+            }
+        }
 
         function marcar(el) {
             document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.remove('selecionada'));
@@ -102,47 +113,61 @@
 
         function verificar() {
             if (!elementoSelecionado) return;
-            document.querySelectorAll('.botao-opcao').forEach(btn => {
-                btn.classList.add('travado');
-                if (btn.getAttribute('data-certa') === 'true') btn.classList.add('correta');
-            });
-            if (elementoSelecionado.getAttribute('data-certa') !== 'true') elementoSelecionado.classList.add('errada');
-            
+            document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.add('travado'));
+            if (elementoSelecionado.getAttribute('data-certa') === 'true') elementoSelecionado.classList.add('correta');
+            else elementoSelecionado.classList.add('errada');
             document.getElementById('comentarios').classList.remove('hidden');
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        function adicionarNaTela(texto, dataHora) {
-            const lista = document.getElementById('listaComentarios');
-            const dataFormatada = dataHora ? new Date(dataHora).toLocaleString('pt-BR') : "Agora mesmo";
+        function mostrarCampoResposta(id) {
+            const div = document.getElementById(`box-resposta-${id}`);
+            div.classList.toggle('hidden');
+        }
+
+        function adicionarNaTela(texto, dataHora, id, ehResposta, paiId = null) {
+            const container = ehResposta ? document.getElementById(`respostas-de-${paiId}`) : document.getElementById('listaComentarios');
+            const dataFormatada = new Date(dataHora).toLocaleString('pt-BR');
             
             const html = `
-                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 animate-in slide-in-from-top duration-300">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Estudante MedQuest</span>
-                        <span class="text-[9px] text-gray-400 italic">${dataFormatada}</span>
+                <div class="${ehResposta ? 'resposta-container' : 'bg-gray-50 p-4 rounded-2xl border border-gray-100'} mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold ${ehResposta ? 'text-gray-500' : 'text-blue-600'} uppercase">Estudante MedQuest</span>
+                        <span class="text-[8px] text-gray-400">${dataFormatada}</span>
                     </div>
-                    <p class="text-sm text-gray-700 leading-relaxed">${texto}</p>
+                    <p class="text-sm text-gray-700">${texto}</p>
+                    ${!ehResposta ? `
+                        <button onclick="mostrarCampoResposta('${id}')" class="text-[9px] font-bold text-blue-500 mt-2 hover:underline">RESPONDER</button>
+                        <div id="box-resposta-${id}" class="hidden mt-3">
+                            <textarea id="input-${id}" class="w-full p-2 text-xs bg-white border rounded-lg h-16 mb-2 focus:ring-1 focus:ring-blue-400 outline-none" placeholder="Escreva sua resposta..."></textarea>
+                            <button onclick="salvarNoSupabase('${id}')" class="bg-blue-600 text-white text-[8px] px-4 py-1 rounded shadow-sm font-bold uppercase">Enviar Resposta</button>
+                        </div>
+                        <div id="respostas-de-${id}"></div>
+                    ` : ''}
                 </div>
             `;
-            lista.insertAdjacentHTML('afterbegin', html);
+            
+            if (ehResposta) container.insertAdjacentHTML('beforeend', html);
+            else container.insertAdjacentHTML('beforeend', html);
         }
 
-        async function salvarNoSupabase() {
-            const campo = document.getElementById('textoComentario');
+        async function salvarNoSupabase(paiId = null) {
+            const campo = paiId ? document.getElementById(`input-${paiId}`) : document.getElementById('textoComentario');
             const texto = campo.value;
-
             if (texto.trim() === "") return;
 
             const { error } = await supabaseClient
                 .from('comentarios_questoes')
-                .insert({ questao_id: questaoID, texto: texto });
+                .insert({ 
+                    questao_id: questaoID, 
+                    texto: texto,
+                    pai_id: paiId 
+                });
 
-            if (error) {
-                alert("Erro ao salvar: " + error.message);
-            } else {
-                adicionarNaTela(texto);
+            if (!error) {
                 campo.value = "";
+                carregarComentarios(); // Recarrega para organizar a hierarquia
+            } else {
+                alert("Erro: " + error.message);
             }
         }
     </script>
