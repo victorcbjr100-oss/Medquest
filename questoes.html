@@ -14,6 +14,7 @@
         .correta { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
         .travado { pointer-events: none; opacity: 0.8; }
+        .resposta-container { margin-left: 2rem; border-left: 2px solid #e2e8f0; padding-left: 1rem; margin-top: 0.5rem; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
@@ -82,14 +83,24 @@
                 <button id="btn-anterior" onclick="questaoAnterior()" class="bg-white border border-gray-200 text-gray-600 px-6 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2">
                     <i class="fas fa-chevron-left text-xs"></i> Anterior
                 </button>
-
                 <button id="btn-confirmar" onclick="verificar()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg hover:scale-105 transition-all flex-1 order-first md:order-none mb-4 md:mb-0 w-full md:w-auto">
                     Confirmar Resposta
                 </button>
-                
                 <button id="btn-proxima" onclick="proximaQuestao()" class="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2">
                     Próxima <i class="fas fa-chevron-right text-xs"></i>
                 </button>
+            </div>
+        </div>
+
+        <div id="secao-comentarios" class="hidden">
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="far fa-comments text-blue-600"></i>
+                    <h3 class="font-bold text-gray-800 text-sm">Fórum de Discussão</h3>
+                </div>
+                <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-24 focus:outline-none focus:ring-2 focus:ring-blue-100" placeholder="Inicie uma discussão..."></textarea>
+                <button onclick="salvarNoSupabase(null)" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md hover:bg-blue-700 mb-8 transition-all">Postar Comentário</button>
+                <div id="listaComentarios" class="space-y-6 border-t border-gray-100 pt-6"></div>
             </div>
         </div>
     </main>
@@ -100,7 +111,7 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const urlParams = new URLSearchParams(window.location.search);
-        const temaAlvo = urlParams.get('tema') || 'Geral';
+        let temaAlvo = urlParams.get('tema') || 'Geral';
         let questaoAtualId = null;
         let elementoSelecionado = null;
         let totalNoTema = 0;
@@ -108,30 +119,27 @@
         window.onload = carregarQuestao;
 
         async function carregarQuestao() {
-            // Busca o total de questões do tema de uma vez para o contador
+            // 1. Contador
             const { count } = await supabaseClient
                 .from('banco_questoes')
                 .select('*', { count: 'exact', head: true })
                 .eq('tema', temaAlvo);
             totalNoTema = count || 0;
 
+            // 2. Busca Questão
             const idUrl = urlParams.get('id');
             let query = supabaseClient.from('banco_questoes').select('*').eq('tema', temaAlvo);
+            
+            if (idUrl) query = query.eq('id', idUrl);
+            else query = query.order('id', { ascending: true }).limit(1);
 
-            if (idUrl) {
-                query = query.eq('id', idUrl);
-            } else {
-                query = query.order('id', { ascending: true }).limit(1);
-            }
-
-            const { data, error } = await query.single();
+            const { data } = await query.single();
 
             if (data) {
                 questaoAtualId = data.id;
                 renderizarQuestao(data);
+                carregarComentarios(); // Carrega os comentários da questão
                 atualizarContador();
-            } else {
-                document.getElementById('enunciado').innerText = "Nenhuma questão encontrada para este tema.";
             }
         }
 
@@ -139,19 +147,13 @@
             document.getElementById('enunciado').innerHTML = q.enunciado;
             document.getElementById('label-tema').innerText = q.tema;
             
-            const alternativas = [
-                { letra: 'A', texto: q.opcao_a },
-                { letra: 'B', texto: q.opcao_b },
-                { letra: 'C', texto: q.opcao_c },
-                { letra: 'D', texto: q.opcao_d },
-                { letra: 'E', texto: q.opcao_e }
-            ];
-
-            alternativas.forEach(alt => {
-                const btn = document.getElementById(`btn-${alt.letra}`);
-                if (alt.texto) {
-                    btn.querySelector('.texto-alternativa').innerText = alt.texto;
-                    btn.setAttribute('data-certa', alt.letra === q.correta ? 'true' : 'false');
+            const alternativas = ['A', 'B', 'C', 'D', 'E'];
+            alternativas.forEach(letra => {
+                const btn = document.getElementById(`btn-${letra}`);
+                const texto = q[`opcao_${letra.toLowerCase()}`];
+                if (texto) {
+                    btn.querySelector('.texto-alternativa').innerText = texto;
+                    btn.setAttribute('data-certa', letra === q.correta ? 'true' : 'false');
                     btn.classList.remove('selecionada', 'correta', 'errada', 'travado');
                     btn.style.display = 'flex';
                 } else {
@@ -161,6 +163,7 @@
 
             document.getElementById('btn-confirmar').classList.remove('travado');
             document.getElementById('btn-confirmar').style.opacity = "1";
+            document.getElementById('secao-comentarios').classList.add('hidden');
             elementoSelecionado = null;
         }
 
@@ -171,10 +174,7 @@
         }
 
         function verificar() {
-            if (!elementoSelecionado) {
-                alert("Selecione uma alternativa!");
-                return;
-            }
+            if (!elementoSelecionado) return alert("Selecione uma alternativa!");
             document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.add('travado'));
             const eCorreta = elementoSelecionado.getAttribute('data-certa') === 'true';
             
@@ -187,6 +187,7 @@
             }
             document.getElementById('btn-confirmar').classList.add('travado');
             document.getElementById('btn-confirmar').style.opacity = "0.5";
+            document.getElementById('secao-comentarios').classList.remove('hidden');
         }
 
         async function proximaQuestao() {
@@ -216,14 +217,55 @@
         }
 
         function navegarPara(id) {
-            const novaUrl = `questoes.html?tema=${temaAlvo}&id=${id}`;
-            window.history.pushState({path: novaUrl}, '', novaUrl);
-            questaoAtualId = id;
-            carregarQuestao();
+            window.location.href = `questoes.html?tema=${temaAlvo}&id=${id}`;
         }
 
         function atualizarContador() {
             document.getElementById('contador-questoes').innerText = `TEMA: ${temaAlvo} | TOTAL: ${totalNoTema}`;
+        }
+
+        // --- LÓGICA DE COMENTÁRIOS ---
+        async function carregarComentarios() {
+            const { data } = await supabaseClient.from('comentarios_questoes')
+                .select('*').eq('questao_id', questaoAtualId).order('created_at', { ascending: true });
+            const lista = document.getElementById('listaComentarios');
+            lista.innerHTML = "";
+            if (data) {
+                data.filter(c => !c.pai_id).forEach(p => {
+                    adicionarNaTela(p.texto, p.created_at, p.id, false);
+                    data.filter(r => r.pai_id === p.id).forEach(r => adicionarNaTela(r.texto, r.created_at, r.id, true, p.id));
+                });
+            }
+        }
+
+        async function salvarNoSupabase(paiId = null) {
+            const campo = paiId ? document.getElementById(`input-${paiId}`) : document.getElementById('textoComentario');
+            if (!campo.value.trim()) return;
+            await supabaseClient.from('comentarios_questoes').insert({ questao_id: questaoAtualId, texto: campo.value, pai_id: paiId });
+            campo.value = "";
+            carregarComentarios();
+        }
+
+        function adicionarNaTela(texto, dataHora, id, ehResposta, paiId = null) {
+            const container = ehResposta ? document.getElementById(`respostas-de-${paiId}`) : document.getElementById('listaComentarios');
+            const dataF = new Date(dataHora).toLocaleString('pt-BR');
+            const html = `
+                <div class="${ehResposta ? 'resposta-container' : 'bg-gray-50 p-4 rounded-2xl border border-gray-100'} mb-2">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-blue-600 uppercase">Estudante</span>
+                        <span class="text-[8px] text-gray-400">${dataF}</span>
+                    </div>
+                    <p class="text-sm text-gray-700">${texto}</p>
+                    ${!ehResposta ? `
+                        <button onclick="document.getElementById('box-${id}').classList.toggle('hidden')" class="text-[9px] font-bold text-blue-500 mt-2 hover:underline">RESPONDER</button>
+                        <div id="box-${id}" class="hidden mt-3">
+                            <textarea id="input-${id}" class="w-full p-2 text-xs bg-white border rounded-lg h-16 mb-2 outline-none" placeholder="Sua resposta..."></textarea>
+                            <button onclick="salvarNoSupabase('${id}')" class="bg-blue-600 text-white text-[8px] px-4 py-1 rounded font-bold uppercase">Enviar</button>
+                        </div>
+                        <div id="respostas-de-${id}"></div>
+                    ` : ''}
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
         }
     </script>
 </body>
