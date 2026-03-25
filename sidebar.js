@@ -11,35 +11,60 @@ document.addEventListener("DOMContentLoaded", function() {
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Provas e Questões</p>
             </div>
         </div>
+
         <nav class="flex-1 px-4 mt-4 space-y-1 overflow-y-auto">
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Navegação</p>
+            
             <a href="index.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-home w-5"></i> Página Inicial
             </a>
+            
             <a href="temas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
-            <a href="estatisticas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-chart-bar w-5"></i> Estatísticas
+
+            <a href="simulados.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-stopwatch w-5"></i> Simulados
             </a>
-            </nav>
+
+            <a href="estatisticas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-chart-line w-5"></i> Estatísticas
+            </a>
+
+            <a href="favoritas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-star w-5"></i> Favoritas
+            </a>
+
+            <div class="pt-4">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Admin</p>
+                <a href="gerenciar-usuarios.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-users w-5"></i> Gerenciar Usuários
+                </a>
+                <a href="gerenciar-questoes.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-tasks w-5"></i> Gerenciar Questões
+                </a>
+            </div>
+        </nav>
+
         <div class="p-4 border-t border-gray-100">
             <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer">
                 <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">V</div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold text-gray-800 truncate">Dr. Victor</p>
+                    <p class="text-xs font-bold text-gray-800 truncate" id="sidebar-user-name">Dr. Victor</p>
                 </div>
             </div>
         </div>
     </aside>`;
 
-    // Insere a sidebar no início do body
+    // Inserção segura no body
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // Destaca o link ativo baseado na URL atual
-    const currentPage = window.location.pathname.split("/").pop();
+    // Lógica para marcar o link ativo
+    const path = window.location.pathname;
+    const page = path.split("/").pop() || "index.html";
+    
     document.querySelectorAll(".nav-link").forEach(link => {
-        if (link.getAttribute("href") === currentPage) {
+        if (link.getAttribute("href") === page) {
             link.classList.add("bg-blue-50", "text-blue-600");
             link.classList.remove("text-gray-500");
         }
