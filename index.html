@@ -138,6 +138,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             const dados = JSON.parse(localStorage.getItem('medquest_perfil'));
             if (dados && dados.nome) {
+                // Pega apenas o primeiro nome para a saudação
                 document.getElementById('welcome-name').innerText = dados.nome.split(' ');
             }
         });
