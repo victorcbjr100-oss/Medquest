@@ -6,29 +6,48 @@
     <title>Dashboard - MedQuest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="sidebar.js"></script> <style>
+    <script src="sidebar.js"></script> 
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        
+        /* Ajuste de margem para não conflitar com a sidebar fixa */
+        main { 
+            margin-left: 16rem; /* Equivalente a w-64 */
+            width: calc(100% - 16rem);
+        }
+
+        /* Ajuste para telas menores (opcional) */
+        @media (max-width: 768px) {
+            main { margin-left: 0; width: 100%; }
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
-    <main class="ml-64 flex-1 p-10">
+    <main class="flex-1 p-10">
         <div class="max-w-6xl mx-auto">
             
-            <div class="mb-10">
-                <h2 class="text-3xl font-bold text-gray-800">Olá, <span id="welcome-name">Victor</span>! 👋</h2>
+            <header class="mb-10">
+                <h2 class="text-3xl font-bold text-gray-800">
+                    Olá, <span id="welcome-name">Victor</span>! 👋
+                </h2>
                 <p class="text-gray-500 mt-1">Continue seus estudos médicos e acompanhe seu progresso</p>
-            </div>
+            </header>
 
-            </div>
+            <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                </div>
+
+        </div>
     </main>
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const dados = JSON.parse(localStorage.getItem('medquest_perfil'));
             if (dados && dados.nome) {
-                document.getElementById('welcome-name').innerText = dados.nome.split(' ');
+                // Pegamos apenas o primeiro nome para a saudação
+                const primeiroNome = dados.nome.trim().split(' ');
+                document.getElementById('welcome-name').innerText = primeiroNome;
             }
         });
     </script>
