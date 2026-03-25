@@ -22,7 +22,7 @@
         <nav class="flex-1 px-4 space-y-1">
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Navegação</p>
             <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
-                <i class="fas fa-home"></i> Página Inicial
+                <i class="fas fa-home"></i> Dashboard
             </a>
             <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
                 <i class="fas fa-arrow-left"></i> Voltar aos Temas
@@ -36,62 +36,78 @@
             <div class="mb-8 flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800">Cardiologia</h2>
-                    <p class="text-sm text-gray-500">Selecione um subtema para praticar questões</p>
+                    <p class="text-sm text-gray-500">Selecione uma área específica para focar seus estudos</p>
                 </div>
-                <div class="bg-red-50 text-red-600 px-4 py-2 rounded-xl border border-red-100 flex items-center gap-2">
-                    <i class="fas fa-heart"></i>
-                    <span class="font-bold text-sm">646 Questões</span>
+                <div class="bg-red-50 text-red-600 px-4 py-2 rounded-xl border border-red-100 flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-heartbeat"></i>
+                    <span class="font-bold text-sm">850 Questões Ativas</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 
                 <a href="questoes.html?tema=IAM" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
-                        <i class="fas fa-bolt text-2xl"></i>
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-bolt text-xl"></i>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-sm">IAM com e sem Supra</h3>
-                    <p class="text-[11px] text-gray-400 mt-1">Clique para iniciar</p>
+                    <h3 class="font-bold text-gray-800 text-sm">Síndromes Coronarianas</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">IAM com e sem Supra</p>
                 </a>
 
                 <a href="questoes.html?tema=HAS" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
-                        <i class="fas fa-tint text-2xl"></i>
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-stethoscope text-xl"></i>
                     </div>
                     <h3 class="font-bold text-gray-800 text-sm">Hipertensão (HAS)</h3>
-                    <p class="text-[11px] text-gray-400 mt-1">Clique para iniciar</p>
-                </a>
-
-                <a href="questoes.html?tema=Bradiarritmias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                        <i class="fas fa-wave-square text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-sm">Bradiarritmias</h3>
-                    <p class="text-[11px] text-gray-400 mt-1">30 questões</p>
-                </a>
-                
-                <a href="questoes.html?tema=Arritmias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
-                        <i class="fas fa-wave-square text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-sm">Arritmias e ECG</h3>
-                    <p class="text-[11px] text-gray-400 mt-1">Clique para iniciar</p>
-                </a>
-
-                <a href="questoes.html?tema=Valvopatias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
-                        <i class="fas fa-sync text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-sm">Valvopatias</h3>
-                    <p class="text-[11px] text-gray-400 mt-1">Clique para iniciar</p>
+                    <p class="text-[11px] text-gray-400 mt-1">Diretrizes e Tratamento</p>
                 </a>
 
                 <a href="questoes.html?tema=IC" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
-                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
-                        <i class="fas fa-heart-broken text-2xl"></i>
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-lungs text-xl"></i>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-sm">Insuficiência Cardíaca</h3>
-                    <p class="text-[11px] text-gray-400 mt-1">Clique para iniciar</p>
+                    <h3 class="font-bold text-gray-800 text-sm">Insuf. Cardíaca</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">ICFER e ICFEP</p>
+                </a>
+
+                <a href="questoes.html?tema=Arritmias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-wave-square text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Arritmias e ECG</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">Taquiarritmias e Fibrilação</p>
+                </a>
+
+                <a href="questoes.html?tema=Valvopatias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-redo-alt text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Valvopatias</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">Estenoses e Insuficiências</p>
+                </a>
+
+                <a href="questoes.html?tema=Bradi" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-stopwatch-20 text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Bradiarritmias</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">BAVs e Conduta</p>
+                </a>
+
+                <a href="questoes.html?tema=Dislipidemias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-vial text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Dislipidemias</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">Estatinas e Prevenção</p>
+                </a>
+
+                <a href="questoes.html?tema=PCR" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-red-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-hand-holding-heart text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">RCP e ACLS</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">Emergências Cardíacas</p>
                 </a>
 
             </div>
