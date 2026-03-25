@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temas - MedQuest</title>
+    <title>Temas - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .card-tema:hover { transform: translateY(-4px); }
+        .card-tema { transition: all 0.3s ease; cursor: pointer; }
+        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
     <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full">
         <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                 <i class="fas fa-brain text-xl"></i>
             </div>
             <div>
@@ -24,179 +26,114 @@
                 <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Provas e Questões</p>
             </div>
         </div>
-
-        <nav class="flex-1 px-4 space-y-1 mt-4">
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Navegação</p>
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+        <nav class="flex-1 px-4 mt-4 space-y-1">
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
                 <i class="fas fa-home w-5"></i> Página Inicial
             </a>
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-clock w-5"></i> Simulados
-            </a>
-            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-chart-bar w-5"></i> Estatísticas
-            </a>
         </nav>
-        
-        <div class="p-4 border-t border-gray-100">
-            <div class="flex items-center gap-3 px-2 py-2">
-                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">V</div>
-                <div class="overflow-hidden">
-                    <p class="text-xs font-bold text-gray-800 truncate">Victor Hugo</p>
-                </div>
-            </div>
-        </div>
     </aside>
 
     <main class="ml-64 flex-1 p-10">
         <div class="max-w-6xl mx-auto">
             
             <header class="mb-10">
-                <h2 class="text-3xl font-bold text-gray-800">Estudar por Temas</h2>
-                <p class="text-gray-500 mt-1">Escolha uma especialidade para ver os subtemas disponíveis</p>
+                <div id="breadcrumb" class="hidden items-center gap-2 text-xs font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline" onclick="voltarParaGrandesTemas()">
+                    <i class="fas fa-arrow-left"></i> Voltar aos Grandes Temas
+                </div>
+                <h2 id="main-title" class="text-3xl font-bold text-gray-800">Escolha um Tema</h2>
+                <p id="main-subtitle" class="text-gray-500 mt-1">Selecione uma área para começar a praticar</p>
             </header>
 
-            <div class="flex flex-wrap items-center gap-4 mb-10">
-                <div class="relative flex-1 min-w-[300px]">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 text-sm"></i>
-                    <input type="text" placeholder="Buscar especialidade ou subtema..." class="w-full pl-12 pr-4 py-3 bg-white border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-50 transition-all">
+            <div id="grade-grandes-temas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div onclick="mostrarSubtemas('Clínica Médica')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="fas fa-stethoscope text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-lg">Clínica Médica</h4>
+                    <p class="text-xs text-gray-400 mt-2">Cardiologia, Nefrologia, etc.</p>
                 </div>
-                <div class="flex bg-white border border-gray-100 p-1 rounded-xl shadow-sm">
-                    <button class="px-4 py-2 text-[10px] font-bold uppercase rounded-lg bg-blue-600 text-white">Todas dificuldades</button>
-                    <button class="px-4 py-2 text-[10px] font-bold uppercase rounded-lg text-gray-400 hover:bg-gray-50">Fácil</button>
-                    <button class="px-4 py-2 text-[10px] font-bold uppercase rounded-lg text-gray-400 hover:bg-gray-50">Médio</button>
-                    <button class="px-4 py-2 text-[10px] font-bold uppercase rounded-lg text-gray-400 hover:bg-gray-50">Difícil</button>
-                </div>
-            </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                
-                <a href="questoes.html?tema=Cardiologia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-heart text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Cardiologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">646 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Pediatria" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-baby text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Pediatria</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">482 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Ginecologia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-female text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Ginecologia e Obstetrícia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">390 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Cirurgia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div onclick="mostrarSubtemas('Cirurgia')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-4">
                         <i class="fas fa-hand-holding-medical text-2xl"></i>
                     </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Cirurgia Geral</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">215 questões</p>
-                </a>
+                    <h4 class="font-bold text-gray-800 text-lg">Cirurgia</h4>
+                    <p class="text-xs text-gray-400 mt-2">Geral, Trauma, Urologia</p>
+                </div>
 
-                <a href="questoes.html?tema=Preventiva" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-hospital-user text-2xl"></i>
+                <div onclick="mostrarSubtemas('Pediatria')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4">
+                        <i class="fas fa-baby text-2xl"></i>
                     </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Preventiva</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">156 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Neurologia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-brain text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Neurologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">89 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Ortopedia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-bone text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Ortopedia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">74 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Pneumologia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-cyan-50 text-cyan-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-lungs text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Pneumologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">112 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Psiquiatria" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-head-side-virus text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Psiquiatria</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">95 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Gastro" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-stomach text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Gastroenterologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">134 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Infecto" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-lime-50 text-lime-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-virus-slash text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Infectologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">178 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Endocrino" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-syringes text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Endocrinologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">102 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Nefro" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-tint text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Nefrologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">65 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Dermato" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-orange-50 text-orange-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-allergies text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Dermatologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">48 questões</p>
-                </a>
-
-                <a href="questoes.html?tema=Anestesia" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center justify-center text-center transition-all group">
-                    <div class="w-14 h-14 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-lungs-virus text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm">Anestesiologia</h4>
-                    <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-widest">32 questões</p>
-                </a>
-
+                    <h4 class="font-bold text-gray-800 text-lg">Pediatria</h4>
+                    <p class="text-xs text-gray-400 mt-2">Puericultura, Neonatologia</p>
+                </div>
             </div>
+
+            <div id="grade-subtemas" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4">
+                </div>
+
         </div>
     </main>
 
+    <script>
+        const subtemasPorArea = {
+            'Clínica Médica': [
+                { nome: 'Cardiologia', icon: 'fa-heart', cor: 'red' },
+                { nome: 'Pneumologia', icon: 'fa-lungs', cor: 'cyan' },
+                { nome: 'Nefrologia', icon: 'fa-tint', cor: 'blue' },
+                { nome: 'Infectologia', icon: 'fa-virus', cor: 'lime' }
+            ],
+            'Cirurgia': [
+                { nome: 'Cirurgia Geral', icon: 'fa-scalpel', cor: 'slate' },
+                { nome: 'Traumatologia', icon: 'fa-bone', cor: 'orange' },
+                { nome: 'Urologia', icon: 'fa-pills', cor: 'indigo' }
+            ],
+            'Pediatria': [
+                { nome: 'Neonatologia', icon: 'fa-baby-carriage', cor: 'pink' },
+                { nome: 'Puericultura', icon: 'fa-child', cor: 'emerald' }
+            ]
+        };
+
+        function mostrarSubtemas(area) {
+            // Esconde a grade principal
+            document.getElementById('grade-grandes-temas').classList.add('hidden');
+            
+            // Mostra a grade de subtemas e o botão de voltar
+            const gradeSub = document.getElementById('grade-subtemas');
+            gradeSub.classList.remove('hidden');
+            document.getElementById('breadcrumb').classList.remove('hidden');
+            
+            // Atualiza títulos
+            document.getElementById('main-title').innerText = area;
+            document.getElementById('main-subtitle').innerText = `Subtemas de ${area}`;
+
+            // Limpa e popula subtemas
+            gradeSub.innerHTML = '';
+            subtemasPorArea[area].forEach(sub => {
+                gradeSub.innerHTML += `
+                    <div class="card-tema bg-white border border-gray-100 p-6 rounded-[20px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-12 h-12 bg-${sub.cor}-50 text-${sub.cor}-500 rounded-xl flex items-center justify-center mb-3">
+                            <i class="fas ${sub.icon} text-xl"></i>
+                        </div>
+                        <h5 class="font-bold text-gray-800 text-sm">${sub.nome}</h5>
+                        <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold">Ver Questões</p>
+                    </div>
+                `;
+            });
+        }
+
+        function voltarParaGrandesTemas() {
+            document.getElementById('grade-grandes-temas').classList.remove('hidden');
+            document.getElementById('grade-subtemas').classList.add('hidden');
+            document.getElementById('breadcrumb').classList.add('hidden');
+            
+            document.getElementById('main-title').innerText = "Escolha um Tema";
+            document.getElementById('main-subtitle').innerText = "Selecione uma área para começar a praticar";
+        }
+    </script>
 </body>
 </html>
