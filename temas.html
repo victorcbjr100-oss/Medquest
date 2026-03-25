@@ -4,70 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest - Estudar por Temas</title>
-    <script>
-    // 1. CONFIGURAÇÃO INICIAL (Mantenha suas chaves aqui)
-    const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co'; 
-    const SUPABASE_KEY = 'SUA_CHAVE_AQUI'; 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // 2. CAPTURA DE PARÂMETROS DA URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const temaAlvo = urlParams.get('tema'); // Pega ?tema=Bradiarritmias
-    const idAlvo = urlParams.get('id');     // Pega ?id=bradi_q1
-
-    // 3. FUNÇÃO DE CARREGAMENTO INTELIGENTE
-    window.onload = async () => {
-        let consulta = supabaseClient.from('banco_questoes').select('*');
-
-        if (idAlvo) {
-            // Se você enviou um ID específico na URL
-            consulta = consulta.eq('id', idAlvo);
-        } else if (temaAlvo) {
-            // Se você clicou no subtema "Bradiarritmias"
-            consulta = consulta.eq('tema', temaAlvo).limit(1);
-        } else {
-            // Fallback: Questão padrão caso o link esteja "puro"
-            consulta = consulta.eq('id', 'bradi_q1');
-        }
-
-        const { data: questao, error } = await consulta.single();
-
-        if (questao) {
-            renderizarQuestao(questao);
-        } else {
-            console.error("Questão não encontrada. Verifique o tema no SQL.");
-        }
-
-        // Carrega os comentários vinculados a esse ID
-        carregarComentarios(); 
-    };
-
-    // 4. FUNÇÃO PARA EXIBIR A QUESTÃO NA TELA
-    function renderizarQuestao(q) {
-        // Atualiza enunciado e tema no HTML
-        document.querySelector('p.text-lg').innerHTML = q.enunciado; 
-        document.querySelector('.bg-red-50').innerText = q.tema;
-
-        const botoes = document.querySelectorAll('.botao-opcao');
-        const textos = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d, q.opcao_e];
-        const letras = ['A', 'B', 'C', 'D', 'E'];
-
-        botoes.forEach((btn, index) => {
-            const textoOpcao = textos[index];
-            if (textoOpcao && textoOpcao.trim() !== "") {
-                btn.querySelector('.text-sm').innerHTML = textoOpcao;
-                // Vincula a resposta correta do banco ao botão
-                btn.setAttribute('data-certa', letras[index] === q.correta ? 'true' : 'false');
-                btn.style.display = "flex"; 
-            } else {
-                // Esconde opções que não existem no PDF (ex: questões com apenas 4 alternativas)
-                btn.style.display = "none"; 
-            }
-        });
-    }
-
-    // Mantenha aqui as suas funções de marcar(), verificar() e salvarNoSupabase() que já criamos
-</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -84,10 +20,10 @@
         </div>
         <nav class="flex-1 px-4 space-y-1">
             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Navegação</p>
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
                 <i class="fas fa-home"></i> Página Inicial
             </a>
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
+            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg transition-all">
                 <i class="fas fa-layer-group"></i> Temas
             </a>
         </nav>
@@ -103,32 +39,41 @@
             <div class="flex flex-wrap items-center gap-4 mb-8">
                 <div class="relative flex-1 min-w-[300px]">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" placeholder="Buscar especialidade..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none">
+                    <input type="text" placeholder="Buscar especialidade..." class="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all">
                 </div>
                 <div class="flex bg-white border border-gray-200 rounded-lg p-1 gap-1">
                     <button class="px-4 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-md">Todas</button>
-                    <button class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-md">Fácil</button>
-                    <button class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-md">Médio</button>
-                    <button class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-md">Difícil</button>
+                    <button class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all">Fácil</button>
+                    <button class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all">Médio</button>
+                    <button class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-50 rounded-md transition-all">Difícil</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                 
-               <a href="cardiologia.html" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
-    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
-        <i class="fas fa-heart text-2xl"></i>
-    </div>
-    <h3 class="font-bold text-gray-800 text-sm">Cardiologia</h3>
-    <p class="text-[11px] text-gray-400 mt-1">646 questões</p>
+                <a href="cardiologia.html" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-500 group-hover:text-white transition-all">
+                        <i class="fas fa-heart text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Cardiologia</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">646 questões</p>
+                </a>
 
-                   <a href="pediatria.html" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
-    <div class="w-16 h-16 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-green-500 group-hover:text-white transition-all">
-        <i class="fas fa-child text-2xl"></i>
-    </div>
-    <h3 class="font-bold text-gray-800 text-sm">Pediatria</h3>
-    <p class="text-[11px] text-gray-400 mt-1">28 questões</p>
-</a>
+                <a href="questoes.html?tema=Bradiarritmias" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-red-600 group-hover:text-white transition-all">
+                        <i class="fas fa-heartbeat text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Bradiarritmias</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">30 questões</p>
+                </a>
+
+                <a href="pediatria.html" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
+                    <div class="w-16 h-16 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-green-500 group-hover:text-white transition-all">
+                        <i class="fas fa-child text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Pediatria</h3>
+                    <p class="text-[11px] text-gray-400 mt-1">28 questões</p>
+                </a>
 
                 <a href="#" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
                     <div class="w-16 h-16 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-pink-500 group-hover:text-white transition-all">
@@ -137,14 +82,6 @@
                     <h3 class="font-bold text-gray-800 text-sm">Ginecologia</h3>
                     <p class="text-[11px] text-gray-400 mt-1">412 questões</p>
                 </a>
-
-                   <a href="questoes.html?tema=Bradiarritmias" class="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col items-center gap-3">
-    <div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center">
-        <i class="fas fa-heartbeat text-xl"></i>
-    </div>
-    <span class="font-bold text-gray-800 text-sm">Bradiarritmias</span>
-    <span class="text-[10px] text-gray-400 uppercase font-medium">30 Questões</span>
-</a>
 
                 <a href="#" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group">
                     <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-orange-500 group-hover:text-white transition-all">
