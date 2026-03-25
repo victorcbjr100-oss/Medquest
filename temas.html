@@ -6,43 +6,18 @@
     <title>Temas - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="sidebar.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .card-tema { transition: all 0.3s ease; cursor: pointer; }
         .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; }
-        .hidden { display: none; }
+        main { margin-left: 16rem; } /* Garante espaço para a sidebar */
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full">
-        <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                <i class="fas fa-brain text-xl"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Provas e Questões</p>
-            </div>
-        </div>
-        <nav class="flex-1 px-4 mt-4 space-y-1">
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
-                <i class="fas fa-home w-5"></i> Página Inicial
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
-                <i class="fas fa-layer-group w-5"></i> Temas
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
-                <i class="fas fa-clock w-5"></i> Simulados
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
-                <i class="fas fa-chart-bar w-5"></i> Estatísticas
-            </a>
-        </nav>
-    </aside>
-
-    <main class="ml-64 flex-1 p-10">
+    <main class="flex-1 p-10">
         <div class="max-w-6xl mx-auto">
             
             <header class="mb-10">
@@ -82,10 +57,8 @@
             </div>
 
             <div id="grade-subtemas" class="hidden">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="container-subtemas">
-                    </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="container-subtemas"></div>
             </div>
-
         </div>
     </main>
 
@@ -106,12 +79,9 @@
             document.getElementById('secao-principal').classList.add('hidden');
             document.getElementById('grade-subtemas').classList.remove('hidden');
             document.getElementById('btn-voltar').classList.remove('hidden');
-            
             document.getElementById('titulo-pagina').innerText = area;
-            
             const container = document.getElementById('container-subtemas');
             container.innerHTML = '';
-
             dadosSubtemas[area].forEach(esp => {
                 container.innerHTML += `
                     <div onclick="abrirAssuntos('${area}', '${esp.nome}')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
@@ -128,10 +98,8 @@
         function abrirAssuntos(area, espNome) {
             const especialidade = dadosSubtemas[area].find(e => e.nome === espNome);
             document.getElementById('titulo-pagina').innerText = espNome;
-            
             const container = document.getElementById('container-subtemas');
             container.innerHTML = '';
-
             especialidade.sub.forEach(assunto => {
                 container.innerHTML += `
                     <div class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
