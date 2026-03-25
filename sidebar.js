@@ -35,6 +35,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 <i class="fas fa-star w-5"></i> Favoritas
             </a>
 
+            <a href="caderno.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-edit w-5"></i> Meu Caderno
+            </a>
+
+            <a href="temas-quentes.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-fire w-5"></i> Temas Quentes
+            </a>
+
             <div class="pt-4">
                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Admin</p>
                 <a href="gerenciar-usuarios.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
@@ -56,10 +64,10 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </aside>`;
 
-    // Inserção segura no body
+    // Inserção no body
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // Lógica para marcar o link ativo
+    // Lógica para marcar o link ativo baseado na página atual
     const path = window.location.pathname;
     const page = path.split("/").pop() || "index.html";
     
@@ -69,4 +77,11 @@ document.addEventListener("DOMContentLoaded", function() {
             link.classList.remove("text-gray-500");
         }
     });
+
+    // Sincroniza o nome do perfil se houver dados no localStorage
+    const dados = JSON.parse(localStorage.getItem('medquest_perfil'));
+    if (dados && dados.nome) {
+        const nomeSidebar = document.getElementById('sidebar-user-name');
+        if (nomeSidebar) nomeSidebar.innerText = dados.nome;
+    }
 });
