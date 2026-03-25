@@ -9,8 +9,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .card-tema { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1); }
+        .card-tema { transition: all 0.3s ease; cursor: pointer; }
+        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; }
         .hidden { display: none; }
     </style>
 </head>
@@ -18,7 +18,7 @@
 
     <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full">
         <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                 <i class="fas fa-brain text-xl"></i>
             </div>
             <div>
@@ -33,6 +33,12 @@
             <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
+                <i class="fas fa-clock w-5"></i> Simulados
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
+                <i class="fas fa-chart-bar w-5"></i> Estatísticas
+            </a>
         </nav>
     </aside>
 
@@ -40,134 +46,111 @@
         <div class="max-w-6xl mx-auto">
             
             <header class="mb-10">
-                <div id="btn-voltar" class="hidden items-center gap-2 text-[10px] font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline">
-                    <i class="fas fa-arrow-left"></i> Voltar
+                <div id="btn-voltar" class="hidden items-center gap-2 text-[10px] font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline" onclick="resetarNavegacao()">
+                    <i class="fas fa-arrow-left"></i> Voltar aos Grandes Temas
                 </div>
-                <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800">Escolha um Tema</h2>
-                <p id="subtitulo-pagina" class="text-gray-500 mt-1">Selecione uma área para começar a praticar</p>
+                <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800">Estudar por Temas</h2>
+                <p id="subtitulo-pagina" class="text-gray-500 mt-1">Escolha uma especialidade para ver os subtemas disponíveis</p>
             </header>
 
-            <div id="grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div id="secao-principal">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div onclick="abrirEspecialidades('Clínica Médica')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fas fa-stethoscope text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-lg">Clínica Médica</h4>
+                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Ver Especialidades</p>
+                    </div>
+
+                    <div onclick="abrirEspecialidades('Pediatria')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fas fa-baby text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-lg">Pediatria</h4>
+                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Ver Especialidades</p>
+                    </div>
+
+                    <div class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fas fa-microscope text-2xl"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-lg">Ciclo Básico</h4>
+                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Anatomia, Fisiologia...</p>
+                    </div>
                 </div>
+            </div>
+
+            <div id="grade-subtemas" class="hidden">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="container-subtemas">
+                    </div>
+            </div>
 
         </div>
     </main>
 
     <script>
-        // Estrutura de Dados do MedQuest Pro
-        const bancoDeDados = {
-            'Clínica Médica': {
-                icon: 'fa-stethoscope', color: 'blue',
-                especialidades: {
-                    'Cardiologia': [
-                        { nome: 'Hipertensão Arterial (HAS)', questoes: 120 },
-                        { nome: 'Infarto Agudo (IAM)', questoes: 85 },
-                        { nome: 'Bradiarritmias', questoes: 45 },
-                        { nome: 'Insuficiência Cardíaca', questoes: 92 }
-                    ],
-                    'Pneumologia': [
-                        { nome: 'Asma brônquica', questoes: 55 },
-                        { nome: 'DPOC', questoes: 70 },
-                        { nome: 'Pneumonias', questoes: 110 }
-                    ],
-                    'Nefrologia': [
-                        { nome: 'Glomerulopatias', questoes: 40 },
-                        { nome: 'IRA e DRC', questoes: 65 }
-                    ]
-                }
-            },
-            'Pediatria': {
-                icon: 'fa-baby', color: 'emerald',
-                especialidades: {
-                    'Puericultura': [
-                        { nome: 'Desenvolvimento Neuropsicomotor', questoes: 30 },
-                        { nome: 'Crescimento e Estatura', questoes: 25 }
-                    ],
-                    'Neonatologia': [
-                        { nome: 'Reanimação Neonatal', questoes: 50 },
-                        { nome: 'Icterícia Neonatal', questoes: 42 }
-                    ]
-                }
-            }
+        const dadosSubtemas = {
+            'Clínica Médica': [
+                { nome: 'Cardiologia', icon: 'fa-heart', cor: 'red', sub: ['HAS', 'IAM', 'Bradiarritmias', 'Valvopatias'] },
+                { nome: 'Pneumologia', icon: 'fa-lungs', cor: 'cyan', sub: ['DPOC', 'Asma', 'TEP'] },
+                { nome: 'Nefrologia', icon: 'fa-tint', cor: 'blue', sub: ['IRA', 'DRC', 'Glomerulopatias'] }
+            ],
+            'Pediatria': [
+                { nome: 'Puericultura', icon: 'fa-child', cor: 'emerald', sub: ['Crescimento', 'Desenvolvimento', 'Vacinação'] },
+                { nome: 'Neonatologia', icon: 'fa-baby-carriage', cor: 'pink', sub: ['Icterícia', 'Reanimação'] }
+            ]
         };
 
-        let nivelAtual = 'areas'; // areas -> especialidades -> subtemas
-        let areaSelecionada = '';
-        let especialidadeSelecionada = '';
-
-        const grid = document.getElementById('grid-container');
-        const titulo = document.getElementById('titulo-pagina');
-        const subtitulo = document.getElementById('subtitulo-pagina');
-        const btnVoltar = document.getElementById('btn-voltar');
-
-        function renderizar() {
-            grid.innerHTML = '';
+        function abrirEspecialidades(area) {
+            document.getElementById('secao-principal').classList.add('hidden');
+            document.getElementById('grade-subtemas').classList.remove('hidden');
+            document.getElementById('btn-voltar').classList.remove('hidden');
             
-            if (nivelAtual === 'areas') {
-                btnVoltar.classList.add('hidden');
-                titulo.innerText = "Escolha um Tema";
-                subtitulo.innerText = "Selecione uma área para começar a praticar";
-                
-                Object.keys(bancoDeDados).forEach(area => {
-                    const info = bancoDeDados[area];
-                    grid.innerHTML += criarCard(area, info.icon, info.color, `Ver especialidades`, () => selecionarArea(area));
-                });
-            } 
-            else if (nivelAtual === 'especialidades') {
-                btnVoltar.classList.remove('hidden');
-                titulo.innerText = areaSelecionada;
-                subtitulo.innerText = "Selecione a especialidade desejada";
-                
-                const especialidades = bancoDeDados[areaSelecionada].especialidades;
-                Object.keys(especialidades).forEach(esp => {
-                    grid.innerHTML += criarCard(esp, 'fa-layer-group', 'blue', `${especialidades[esp].length} subtemas`, () => selecionarEspecialidade(esp));
-                });
-            }
-            else if (nivelAtual === 'subtemas') {
-                titulo.innerText = especialidadeSelecionada;
-                subtitulo.innerText = "Selecione um assunto específico para ver as questões";
-                
-                const subtemas = bancoDeDados[areaSelecionada].especialidades[especialidadeSelecionada];
-                subtemas.forEach(sub => {
-                    grid.innerHTML += criarCard(sub.nome, 'fa-file-medical', 'slate', `${sub.questoes} questões`, () => alert('Abrindo questões de: ' + sub.nome));
-                });
-            }
+            document.getElementById('titulo-pagina').innerText = area;
+            
+            const container = document.getElementById('container-subtemas');
+            container.innerHTML = '';
+
+            dadosSubtemas[area].forEach(esp => {
+                container.innerHTML += `
+                    <div onclick="abrirAssuntos('${area}', '${esp.nome}')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-14 h-14 bg-${esp.cor}-50 text-${esp.cor}-500 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fas ${esp.icon} text-xl"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-sm">${esp.nome}</h4>
+                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Ver Assuntos</p>
+                    </div>
+                `;
+            });
         }
 
-        function criarCard(nome, icon, cor, textoApoio, acao) {
-            const div = document.createElement('div');
-            div.className = "card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center";
-            div.onclick = acao;
-            div.innerHTML = `
-                <div class="w-16 h-16 bg-${cor}-50 text-${cor}-500 rounded-2xl flex items-center justify-center mb-4">
-                    <i class="fas ${icon} text-2xl"></i>
-                </div>
-                <h4 class="font-bold text-gray-800 text-sm">${nome}</h4>
-                <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">${textoApoio}</p>
-            `;
-            return div.outerHTML;
+        function abrirAssuntos(area, espNome) {
+            const especialidade = dadosSubtemas[area].find(e => e.nome === espNome);
+            document.getElementById('titulo-pagina').innerText = espNome;
+            
+            const container = document.getElementById('container-subtemas');
+            container.innerHTML = '';
+
+            especialidade.sub.forEach(assunto => {
+                container.innerHTML += `
+                    <div class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-12 h-12 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center mb-3">
+                            <i class="fas fa-file-medical text-lg"></i>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-xs">${assunto}</h4>
+                        <p class="text-[9px] text-blue-600 mt-2 font-bold uppercase">Praticar Questões</p>
+                    </div>
+                `;
+            });
         }
 
-        function selecionarArea(area) {
-            areaSelecionada = area;
-            nivelAtual = 'especialidades';
-            renderizar();
+        function resetarNavegacao() {
+            document.getElementById('secao-principal').classList.remove('hidden');
+            document.getElementById('grade-subtemas').classList.add('hidden');
+            document.getElementById('btn-voltar').classList.add('hidden');
+            document.getElementById('titulo-pagina').innerText = "Estudar por Temas";
         }
-
-        function selecionarEspecialidade(esp) {
-            especialidadeSelecionada = esp;
-            nivelAtual = 'subtemas';
-            renderizar();
-        }
-
-        btnVoltar.onclick = () => {
-            if (nivelAtual === 'subtemas') nivelAtual = 'especialidades';
-            else if (nivelAtual === 'especialidades') nivelAtual = 'areas';
-            renderizar();
-        };
-
-        // Início
-        renderizar();
     </script>
 </body>
 </html>
