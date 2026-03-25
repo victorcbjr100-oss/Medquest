@@ -3,302 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - MedQuest</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Temas - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; ring: 2px; ring-color: #3b82f6; }
-        .correta { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
-        .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
-        .travado { pointer-events: none; }
-        .resposta-container { margin-left: 1.5rem; border-left: 2px solid #e2e8f0; padding-left: 1rem; margin-top: 0.75rem; }
+        .card-tema { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.05); }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full">
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-10">
         <div class="p-6 flex items-center gap-3">
             <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
                 <i class="fas fa-brain text-xl"></i>
             </div>
             <div>
                 <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
-                <p class="text-[10px] font-bold text-blue-500 uppercase tracking-tighter">Plataforma de Estudos</p>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Provas e Questões</p>
             </div>
         </div>
-        <nav class="flex-1 px-4 space-y-1 mt-4">
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Menu Principal</p>
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-home w-5 text-gray-400"></i> Dashboard
+        <nav class="flex-1 px-4 mt-4 space-y-1">
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-home w-5"></i> Página Inicial
             </a>
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
-            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-chart-bar w-5 text-gray-400"></i> Estatísticas
+            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-chart-bar w-5"></i> Estatísticas
             </a>
         </nav>
+        <div class="p-4 border-t border-gray-50">
+            <div class="flex items-center gap-3 px-2 py-2">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">V</div>
+                <p class="text-xs font-bold text-gray-800">Victor Hugo</p>
+            </div>
+        </div>
     </aside>
 
-    <main class="flex-1 p-8 ml-64">
-        <header class="max-w-4xl mx-auto mb-6 flex items-center justify-between">
-            <a href="temas.html" class="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors font-semibold text-sm group">
-                <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i> Voltar aos Temas
-            </a>
-            <div class="px-4 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm">
-                <span id="contador-questoes" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Carregando...</span>
-            </div>
-        </header>
-
-        <div class="max-w-4xl mx-auto">
-            <div id="card-questao" class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-10 mb-8">
-                <div class="flex items-center justify-between mb-8">
-                    <span id="label-tema" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase">CARREGANDO...</span>
-                    <button class="text-gray-300 hover:text-yellow-500 transition-colors"><i class="far fa-star"></i></button>
+    <main class="ml-64 flex-1 p-8 md:p-12">
+        <div class="max-w-6xl mx-auto">
+            
+            <header class="mb-10">
+                <div id="btn-voltar" class="hidden items-center gap-2 text-[10px] font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline transition-all" onclick="voltar()">
+                    <i class="fas fa-arrow-left"></i> Voltar
                 </div>
-                
-                <p id="enunciado" class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">Buscando questão no banco de dados...</p>
+                <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800 tracking-tight">Estudar por Temas</h2>
+                <p id="subtitulo-pagina" class="text-gray-500 mt-1 text-sm">Selecione uma grande área para começar sua revisão</p>
+            </header>
 
-                <div class="space-y-3" id="campoAlternativas">
-                    <button onclick="marcar(this)" id="btn-A" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
-                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500 transition-colors">A</span>
-                        <span class="texto-alternativa text-sm text-gray-600"></span>
-                    </button>
-                    <button onclick="marcar(this)" id="btn-B" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
-                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">B</span>
-                        <span class="texto-alternativa text-sm text-gray-600"></span>
-                    </button>
-                    <button onclick="marcar(this)" id="btn-C" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
-                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">C</span>
-                        <span class="texto-alternativa text-sm text-gray-600"></span>
-                    </button>
-                    <button onclick="marcar(this)" id="btn-D" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
-                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">D</span>
-                        <span class="texto-alternativa text-sm text-gray-600"></span>
-                    </button>
-                    <button onclick="marcar(this)" id="btn-E" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
-                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">E</span>
-                        <span class="texto-alternativa text-sm text-gray-600"></span>
-                    </button>
+            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-500">
                 </div>
 
-                <div class="mt-12 flex items-center justify-between border-t border-gray-50 pt-8">
-                    <button id="btn-anterior" onclick="questaoAnterior()" class="text-gray-400 hover:text-gray-600 font-bold text-sm transition-all flex items-center gap-2">
-                        <i class="fas fa-arrow-left text-xs"></i> Anterior
-                    </button>
-                    
-                    <button id="btn-confirmar" onclick="verificar()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">
-                        Confirmar Resposta
-                    </button>
-
-                    <button id="btn-proxima" onclick="proximaQuestao()" class="text-blue-600 hover:text-blue-800 font-bold text-sm transition-all flex items-center gap-2">
-                        Próxima <i class="fas fa-arrow-right text-xs"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="secao-comentarios" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-10">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
-                            <i class="far fa-comments"></i>
-                        </div>
-                        <h3 class="font-bold text-gray-800">Discussão Acadêmica</h3>
-                    </div>
-                    <textarea id="textoComentario" class="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-28 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all" placeholder="Dúvida sobre a fisiopatologia ou conduta? Comente aqui..."></textarea>
-                    <div class="flex justify-end">
-                        <button onclick="salvarNoSupabase(null)" class="bg-gray-800 text-white text-[11px] font-bold px-8 py-3 rounded-xl uppercase tracking-wider hover:bg-black transition-all">Enviar Comentário</button>
-                    </div>
-                    
-                    <div id="listaComentarios" class="mt-10 space-y-6 border-t border-gray-50 pt-8">
-                        </div>
-                </div>
-            </div>
         </div>
     </main>
 
     <script>
-        // Configuração Supabase (Sua Key original mantida)
-        const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI'; 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const urlParams = new URLSearchParams(window.location.search);
-        let temaAlvo = urlParams.get('tema') || 'Geral';
-        let questaoAtualId = null;
-        let elementoSelecionado = null;
-        let totalNoTema = 0;
-
-        window.onload = carregarQuestao;
-
-        async function carregarQuestao() {
-            // 1. Contador de progresso
-            const { count } = await supabaseClient
-                .from('banco_questoes')
-                .select('*', { count: 'exact', head: true })
-                .eq('tema', temaAlvo);
-            totalNoTema = count || 0;
-
-            // 2. Lógica de busca
-            const idUrl = urlParams.get('id');
-            let query = supabaseClient.from('banco_questoes').select('*').eq('tema', temaAlvo);
-            
-            if (idUrl) query = query.eq('id', idUrl);
-            else query = query.order('id', { ascending: true }).limit(1);
-
-            const { data, error } = await query.single();
-
-            if (data) {
-                questaoAtualId = data.id;
-                renderizarQuestao(data);
-                carregarComentarios();
-                atualizarContador();
-            } else {
-                document.getElementById('enunciado').innerText = "Nenhuma questão encontrada para este tema.";
-            }
-        }
-
-        function renderizarQuestao(q) {
-            document.getElementById('enunciado').innerHTML = q.enunciado;
-            document.getElementById('label-tema').innerText = q.tema;
-            
-            const alternativas = ['A', 'B', 'C', 'D', 'E'];
-            alternativas.forEach(letra => {
-                const btn = document.getElementById(`btn-${letra}`);
-                const texto = q[`opcao_${letra.toLowerCase()}`];
-                if (texto) {
-                    btn.querySelector('.texto-alternativa').innerText = texto;
-                    btn.setAttribute('data-certa', letra === q.correta ? 'true' : 'false');
-                    btn.classList.remove('selecionada', 'correta', 'errada', 'travado');
-                    btn.style.display = 'flex';
-                } else {
-                    btn.style.display = 'none';
+        // Estrutura de Dados Organizada
+        const bancoDeDados = {
+            'Clínica Médica': {
+                icon: 'fa-stethoscope', color: 'blue',
+                especialidades: {
+                    'Cardiologia': ['HAS', 'IAM', 'Bradiarritmias', 'Insuficiência Cardíaca', 'Valvopatias'],
+                    'Pneumologia': ['Asma', 'DPOC', 'TEP', 'Pneumonias'],
+                    'Nefrologia': ['IRA', 'DRC', 'Glomerulopatias']
                 }
-            });
+            },
+            'Pediatria': {
+                icon: 'fa-baby', color: 'emerald',
+                especialidades: {
+                    'Puericultura': ['Desenvolvimento PM', 'Crescimento', 'Vacinação'],
+                    'Neonatologia': ['Icterícia Neonatal', 'Reanimação Neonatal']
+                }
+            },
+            'Ciclo Básico': {
+                icon: 'fa-microscope', color: 'purple',
+                especialidades: {
+                    'Anatomia': ['Sist. Cardiovascular', 'Sist. Nervoso', 'Sist. Digestório'],
+                    'Fisiologia': ['Fisiologia Renal', 'Fisiologia Endócrina']
+                }
+            }
+        };
 
-            document.getElementById('btn-confirmar').classList.remove('opacity-50', 'cursor-not-allowed', 'travado');
-            document.getElementById('secao-comentarios').classList.add('hidden');
-            elementoSelecionado = null;
-        }
+        let estado = 'areas'; // areas -> especialidades -> subtemas
+        let areaSelecionada = '';
 
-        function marcar(el) {
-            document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.remove('selecionada'));
-            el.classList.add('selecionada');
-            elementoSelecionado = el;
-        }
-
-        function verificar() {
-            if (!elementoSelecionado) return alert("Selecione uma alternativa antes de confirmar.");
+        function renderizar() {
+            const grid = document.getElementById('grid-container');
+            const titulo = document.getElementById('titulo-pagina');
+            const subtitulo = document.getElementById('subtitulo-pagina');
+            const btnVoltar = document.getElementById('btn-voltar');
             
-            document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.add('travado'));
-            const eCorreta = elementoSelecionado.getAttribute('data-certa') === 'true';
-            
-            if (eCorreta) {
-                elementoSelecionado.classList.add('correta');
-            } else {
-                elementoSelecionado.classList.add('errada');
-                document.querySelectorAll('.botao-opcao').forEach(btn => {
-                    if (btn.getAttribute('data-certa') === 'true') btn.classList.add('correta');
+            grid.innerHTML = '';
+
+            if (estado === 'areas') {
+                btnVoltar.classList.add('hidden');
+                titulo.innerText = "Estudar por Temas";
+                subtitulo.innerText = "Selecione uma grande área para começar sua revisão";
+
+                Object.keys(bancoDeDados).forEach(area => {
+                    const info = bancoDeDados[area];
+                    grid.innerHTML += criarCard(area, info.icon, info.color, 'Ver Especialidades', () => {
+                        areaSelecionada = area;
+                        estado = 'especialidades';
+                        renderizar();
+                    });
+                });
+            } 
+            else if (estado === 'especialidades') {
+                btnVoltar.classList.remove('hidden');
+                titulo.innerText = areaSelecionada;
+                subtitulo.innerText = "Escolha a especialidade desejada";
+
+                const especialidades = bancoDeDados[areaSelecionada].especialidades;
+                Object.keys(especialidades).forEach(esp => {
+                    grid.innerHTML += criarCard(esp, 'fa-layer-group', 'blue', 'Ver Assuntos', () => {
+                        especialidadeSelecionada = esp;
+                        estado = 'subtemas';
+                        renderizar();
+                    });
                 });
             }
-            
-            document.getElementById('btn-confirmar').classList.add('opacity-50', 'cursor-not-allowed', 'travado');
-            document.getElementById('secao-comentarios').classList.remove('hidden');
-        }
+            else if (estado === 'subtemas') {
+                titulo.innerText = especialidadeSelecionada;
+                subtitulo.innerText = "Clique em um assunto para abrir as questões";
 
-        async function proximaQuestao() {
-            const { data } = await supabaseClient
-                .from('banco_questoes')
-                .select('id')
-                .eq('tema', temaAlvo)
-                .gt('id', questaoAtualId)
-                .order('id', { ascending: true })
-                .limit(1).single();
-
-            if (data) navegarPara(data.id);
-            else alert("Você chegou ao fim das questões deste tema!");
-        }
-
-        async function questaoAnterior() {
-            const { data } = await supabaseClient
-                .from('banco_questoes')
-                .select('id')
-                .eq('tema', temaAlvo)
-                .lt('id', questaoAtualId)
-                .order('id', { ascending: false })
-                .limit(1).single();
-
-            if (data) navegarPara(data.id);
-            else alert("Esta é a primeira questão do tema.");
-        }
-
-        function navegarPara(id) {
-            window.location.href = `questoes.html?tema=${temaAlvo}&id=${id}`;
-        }
-
-        function atualizarContador() {
-            document.getElementById('contador-questoes').innerText = `${temaAlvo.toUpperCase()} • Questão ID: ${questaoAtualId}`;
-        }
-
-        // --- Comentários ---
-        async function carregarComentarios() {
-            const { data } = await supabaseClient.from('comentarios_questoes')
-                .select('*').eq('questao_id', questaoAtualId).order('created_at', { ascending: true });
-            
-            const lista = document.getElementById('listaComentarios');
-            lista.innerHTML = "";
-            
-            if (data && data.length > 0) {
-                data.filter(c => !c.pai_id).forEach(p => {
-                    adicionarNaTela(p.texto, p.created_at, p.id, false);
-                    data.filter(r => r.pai_id === p.id).forEach(r => adicionarNaTela(r.texto, r.created_at, r.id, true, p.id));
+                const subtemas = bancoDeDados[areaSelecionada].especialidades[especialidadeSelecionada];
+                subtemas.forEach(assunto => {
+                    // LINK PARA O SEU ARQUIVO QUESTOES.HTML
+                    grid.innerHTML += criarCard(assunto, 'fa-file-medical', 'slate', 'Praticar Questões', () => {
+                        window.location.href = `questoes.html?tema=${encodeURIComponent(assunto)}`;
+                    });
                 });
-            } else {
-                lista.innerHTML = "<p class='text-xs text-gray-400 text-center italic'>Nenhum comentário ainda. Seja o primeiro a discutir!</p>";
             }
         }
 
-        async function salvarNoSupabase(paiId = null) {
-            const campo = paiId ? document.getElementById(`input-${paiId}`) : document.getElementById('textoComentario');
-            if (!campo.value.trim()) return;
-
-            const { error } = await supabaseClient.from('comentarios_questoes').insert({ 
-                questao_id: questaoAtualId, 
-                texto: campo.value, 
-                pai_id: paiId 
-            });
-
-            if (!error) {
-                campo.value = "";
-                carregarComentarios();
-            }
-        }
-
-        function adicionarNaTela(texto, dataHora, id, ehResposta, paiId = null) {
-            const container = ehResposta ? document.getElementById(`respostas-de-${paiId}`) : document.getElementById('listaComentarios');
-            const dataF = new Date(dataHora).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-            
-            const html = `
-                <div class="${ehResposta ? 'resposta-container' : 'bg-gray-50 p-6 rounded-2xl border border-gray-100'} mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Estudante MedQuest</span>
-                        <span class="text-[9px] text-gray-400 font-medium">${dataF}</span>
+        function criarCard(nome, icon, cor, footer, acao) {
+            return `
+                <div onclick="(${acao})()" class="card-tema bg-white border border-gray-100 p-8 rounded-[32px] shadow-sm flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-${cor}-50 text-${cor}-500 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110">
+                        <i class="fas ${icon} text-2xl"></i>
                     </div>
-                    <p class="text-sm text-gray-700 leading-relaxed">${texto}</p>
-                    ${!ehResposta ? `
-                        <button onclick="document.getElementById('box-${id}').classList.toggle('hidden')" class="text-[10px] font-bold text-gray-400 mt-3 hover:text-blue-600 transition-colors uppercase">Responder</button>
-                        <div id="box-${id}" class="hidden mt-4">
-                            <textarea id="input-${id}" class="w-full p-3 text-xs bg-white border border-gray-200 rounded-xl h-20 mb-2 focus:ring-2 focus:ring-blue-50 outline-none" placeholder="Escreva sua resposta..."></textarea>
-                            <button onclick="salvarNoSupabase('${id}')" class="bg-blue-600 text-white text-[9px] px-4 py-2 rounded-lg font-bold uppercase shadow-md shadow-blue-50">Enviar Resposta</button>
-                        </div>
-                        <div id="respostas-de-${id}"></div>
-                    ` : ''}
-                </div>`;
-            container.insertAdjacentHTML('beforeend', html);
+                    <h4 class="font-bold text-gray-800 text-sm mb-2">${nome}</h4>
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${footer}</span>
+                </div>
+            `;
         }
+
+        function voltar() {
+            if (estado === 'subtemas') estado = 'especialidades';
+            else if (estado === 'especialidades') estado = 'areas';
+            renderizar();
+        }
+
+        // Inicializa a página
+        renderizar();
     </script>
 </body>
 </html>
