@@ -9,8 +9,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .card-tema { transition: all 0.3s ease; cursor: pointer; }
-        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; }
+        .card-tema { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1); }
         .hidden { display: none; }
     </style>
 </head>
@@ -18,7 +18,7 @@
 
     <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full">
         <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
                 <i class="fas fa-brain text-xl"></i>
             </div>
             <div>
@@ -40,100 +40,134 @@
         <div class="max-w-6xl mx-auto">
             
             <header class="mb-10">
-                <div id="breadcrumb" class="hidden items-center gap-2 text-xs font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline" onclick="voltarParaGrandesTemas()">
-                    <i class="fas fa-arrow-left"></i> Voltar aos Grandes Temas
+                <div id="btn-voltar" class="hidden items-center gap-2 text-[10px] font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline">
+                    <i class="fas fa-arrow-left"></i> Voltar
                 </div>
-                <h2 id="main-title" class="text-3xl font-bold text-gray-800">Escolha um Tema</h2>
-                <p id="main-subtitle" class="text-gray-500 mt-1">Selecione uma área para começar a praticar</p>
+                <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800">Escolha um Tema</h2>
+                <p id="subtitulo-pagina" class="text-gray-500 mt-1">Selecione uma área para começar a praticar</p>
             </header>
 
-            <div id="grade-grandes-temas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div onclick="mostrarSubtemas('Clínica Médica')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
-                        <i class="fas fa-stethoscope text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-lg">Clínica Médica</h4>
-                    <p class="text-xs text-gray-400 mt-2">Cardiologia, Nefrologia, etc.</p>
-                </div>
-
-                <div onclick="mostrarSubtemas('Cirurgia')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center mb-4">
-                        <i class="fas fa-hand-holding-medical text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-lg">Cirurgia</h4>
-                    <p class="text-xs text-gray-400 mt-2">Geral, Trauma, Urologia</p>
-                </div>
-
-                <div onclick="mostrarSubtemas('Pediatria')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4">
-                        <i class="fas fa-baby text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-lg">Pediatria</h4>
-                    <p class="text-xs text-gray-400 mt-2">Puericultura, Neonatologia</p>
-                </div>
-            </div>
-
-            <div id="grade-subtemas" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div id="grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 </div>
 
         </div>
     </main>
 
     <script>
-        const subtemasPorArea = {
-            'Clínica Médica': [
-                { nome: 'Cardiologia', icon: 'fa-heart', cor: 'red' },
-                { nome: 'Pneumologia', icon: 'fa-lungs', cor: 'cyan' },
-                { nome: 'Nefrologia', icon: 'fa-tint', cor: 'blue' },
-                { nome: 'Infectologia', icon: 'fa-virus', cor: 'lime' }
-            ],
-            'Cirurgia': [
-                { nome: 'Cirurgia Geral', icon: 'fa-scalpel', cor: 'slate' },
-                { nome: 'Traumatologia', icon: 'fa-bone', cor: 'orange' },
-                { nome: 'Urologia', icon: 'fa-pills', cor: 'indigo' }
-            ],
-            'Pediatria': [
-                { nome: 'Neonatologia', icon: 'fa-baby-carriage', cor: 'pink' },
-                { nome: 'Puericultura', icon: 'fa-child', cor: 'emerald' }
-            ]
+        // Estrutura de Dados do MedQuest Pro
+        const bancoDeDados = {
+            'Clínica Médica': {
+                icon: 'fa-stethoscope', color: 'blue',
+                especialidades: {
+                    'Cardiologia': [
+                        { nome: 'Hipertensão Arterial (HAS)', questoes: 120 },
+                        { nome: 'Infarto Agudo (IAM)', questoes: 85 },
+                        { nome: 'Bradiarritmias', questoes: 45 },
+                        { nome: 'Insuficiência Cardíaca', questoes: 92 }
+                    ],
+                    'Pneumologia': [
+                        { nome: 'Asma brônquica', questoes: 55 },
+                        { nome: 'DPOC', questoes: 70 },
+                        { nome: 'Pneumonias', questoes: 110 }
+                    ],
+                    'Nefrologia': [
+                        { nome: 'Glomerulopatias', questoes: 40 },
+                        { nome: 'IRA e DRC', questoes: 65 }
+                    ]
+                }
+            },
+            'Pediatria': {
+                icon: 'fa-baby', color: 'emerald',
+                especialidades: {
+                    'Puericultura': [
+                        { nome: 'Desenvolvimento Neuropsicomotor', questoes: 30 },
+                        { nome: 'Crescimento e Estatura', questoes: 25 }
+                    ],
+                    'Neonatologia': [
+                        { nome: 'Reanimação Neonatal', questoes: 50 },
+                        { nome: 'Icterícia Neonatal', questoes: 42 }
+                    ]
+                }
+            }
         };
 
-        function mostrarSubtemas(area) {
-            // Esconde a grade principal
-            document.getElementById('grade-grandes-temas').classList.add('hidden');
-            
-            // Mostra a grade de subtemas e o botão de voltar
-            const gradeSub = document.getElementById('grade-subtemas');
-            gradeSub.classList.remove('hidden');
-            document.getElementById('breadcrumb').classList.remove('hidden');
-            
-            // Atualiza títulos
-            document.getElementById('main-title').innerText = area;
-            document.getElementById('main-subtitle').innerText = `Subtemas de ${area}`;
+        let nivelAtual = 'areas'; // areas -> especialidades -> subtemas
+        let areaSelecionada = '';
+        let especialidadeSelecionada = '';
 
-            // Limpa e popula subtemas
-            gradeSub.innerHTML = '';
-            subtemasPorArea[area].forEach(sub => {
-                gradeSub.innerHTML += `
-                    <div class="card-tema bg-white border border-gray-100 p-6 rounded-[20px] shadow-sm flex flex-col items-center text-center">
-                        <div class="w-12 h-12 bg-${sub.cor}-50 text-${sub.cor}-500 rounded-xl flex items-center justify-center mb-3">
-                            <i class="fas ${sub.icon} text-xl"></i>
-                        </div>
-                        <h5 class="font-bold text-gray-800 text-sm">${sub.nome}</h5>
-                        <p class="text-[10px] text-gray-400 mt-1 uppercase font-bold">Ver Questões</p>
-                    </div>
-                `;
-            });
+        const grid = document.getElementById('grid-container');
+        const titulo = document.getElementById('titulo-pagina');
+        const subtitulo = document.getElementById('subtitulo-pagina');
+        const btnVoltar = document.getElementById('btn-voltar');
+
+        function renderizar() {
+            grid.innerHTML = '';
+            
+            if (nivelAtual === 'areas') {
+                btnVoltar.classList.add('hidden');
+                titulo.innerText = "Escolha um Tema";
+                subtitulo.innerText = "Selecione uma área para começar a praticar";
+                
+                Object.keys(bancoDeDados).forEach(area => {
+                    const info = bancoDeDados[area];
+                    grid.innerHTML += criarCard(area, info.icon, info.color, `Ver especialidades`, () => selecionarArea(area));
+                });
+            } 
+            else if (nivelAtual === 'especialidades') {
+                btnVoltar.classList.remove('hidden');
+                titulo.innerText = areaSelecionada;
+                subtitulo.innerText = "Selecione a especialidade desejada";
+                
+                const especialidades = bancoDeDados[areaSelecionada].especialidades;
+                Object.keys(especialidades).forEach(esp => {
+                    grid.innerHTML += criarCard(esp, 'fa-layer-group', 'blue', `${especialidades[esp].length} subtemas`, () => selecionarEspecialidade(esp));
+                });
+            }
+            else if (nivelAtual === 'subtemas') {
+                titulo.innerText = especialidadeSelecionada;
+                subtitulo.innerText = "Selecione um assunto específico para ver as questões";
+                
+                const subtemas = bancoDeDados[areaSelecionada].especialidades[especialidadeSelecionada];
+                subtemas.forEach(sub => {
+                    grid.innerHTML += criarCard(sub.nome, 'fa-file-medical', 'slate', `${sub.questoes} questões`, () => alert('Abrindo questões de: ' + sub.nome));
+                });
+            }
         }
 
-        function voltarParaGrandesTemas() {
-            document.getElementById('grade-grandes-temas').classList.remove('hidden');
-            document.getElementById('grade-subtemas').classList.add('hidden');
-            document.getElementById('breadcrumb').classList.add('hidden');
-            
-            document.getElementById('main-title').innerText = "Escolha um Tema";
-            document.getElementById('main-subtitle').innerText = "Selecione uma área para começar a praticar";
+        function criarCard(nome, icon, cor, textoApoio, acao) {
+            const div = document.createElement('div');
+            div.className = "card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center";
+            div.onclick = acao;
+            div.innerHTML = `
+                <div class="w-16 h-16 bg-${cor}-50 text-${cor}-500 rounded-2xl flex items-center justify-center mb-4">
+                    <i class="fas ${icon} text-2xl"></i>
+                </div>
+                <h4 class="font-bold text-gray-800 text-sm">${nome}</h4>
+                <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">${textoApoio}</p>
+            `;
+            return div.outerHTML;
         }
+
+        function selecionarArea(area) {
+            areaSelecionada = area;
+            nivelAtual = 'especialidades';
+            renderizar();
+        }
+
+        function selecionarEspecialidade(esp) {
+            especialidadeSelecionada = esp;
+            nivelAtual = 'subtemas';
+            renderizar();
+        }
+
+        btnVoltar.onclick = () => {
+            if (nivelAtual === 'subtemas') nivelAtual = 'especialidades';
+            else if (nivelAtual === 'especialidades') nivelAtual = 'areas';
+            renderizar();
+        };
+
+        // Início
+        renderizar();
     </script>
 </body>
 </html>
