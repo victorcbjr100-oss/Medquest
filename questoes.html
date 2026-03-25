@@ -8,104 +8,120 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; ring: 2px; ring-color: #3b82f6; }
         .correta { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
-        .travado { pointer-events: none; opacity: 0.8; }
-        .resposta-container { margin-left: 2rem; border-left: 2px solid #e2e8f0; padding-left: 1rem; margin-top: 0.5rem; }
+        .travado { pointer-events: none; }
+        .resposta-container { margin-left: 1.5rem; border-left: 2px solid #e2e8f0; padding-left: 1rem; margin-top: 0.75rem; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
     <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full">
         <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
                 <i class="fas fa-brain text-xl"></i>
             </div>
             <div>
                 <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
-                <p class="text-xs text-gray-400">Provas e Questões</p>
+                <p class="text-[10px] font-bold text-blue-500 uppercase tracking-tighter">Plataforma de Estudos</p>
             </div>
         </div>
         <nav class="flex-1 px-4 space-y-1 mt-4">
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Navegação</p>
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
-                <i class="fas fa-home w-5"></i> Página Inicial
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-3 mb-2">Menu Principal</p>
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-home w-5 text-gray-400"></i> Dashboard
             </a>
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
+            <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
-            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
-                <i class="fas fa-chart-bar w-5"></i> Estatísticas
+            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-chart-bar w-5 text-gray-400"></i> Estatísticas
             </a>
         </nav>
     </aside>
 
     <main class="flex-1 p-8 ml-64">
-        <header class="bg-white border border-gray-200 rounded-2xl p-4 mb-6 flex items-center justify-between shadow-sm">
-            <a href="temas.html" class="text-gray-400 hover:text-blue-600 transition font-bold text-sm"><i class="fas fa-arrow-left mr-2"></i> Voltar</a>
-            <span id="contador-questoes" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Carregando tema...</span>
+        <header class="max-w-4xl mx-auto mb-6 flex items-center justify-between">
+            <a href="temas.html" class="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors font-semibold text-sm group">
+                <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i> Voltar aos Temas
+            </a>
+            <div class="px-4 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm">
+                <span id="contador-questoes" class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Carregando...</span>
+            </div>
         </header>
 
-        <div id="card-questao" class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-6">
-            <div class="mb-6">
-                <span id="label-tema" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase">Tema</span>
-            </div>
-            
-            <p id="enunciado" class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">Carregando...</p>
-
-            <div class="space-y-3" id="campoAlternativas">
-                <button onclick="marcar(this)" id="btn-A" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">A</span>
-                    <span class="texto-alternativa text-sm text-gray-600"></span>
-                </button>
-                <button onclick="marcar(this)" id="btn-B" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">B</span>
-                    <span class="texto-alternativa text-sm text-gray-600"></span>
-                </button>
-                <button onclick="marcar(this)" id="btn-C" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">C</span>
-                    <span class="texto-alternativa text-sm text-gray-600"></span>
-                </button>
-                <button onclick="marcar(this)" id="btn-D" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">D</span>
-                    <span class="texto-alternativa text-sm text-gray-600"></span>
-                </button>
-                <button onclick="marcar(this)" id="btn-E" class="botao-opcao w-full text-left p-4 rounded-2xl border border-gray-100 transition-all flex items-center gap-4 group">
-                    <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-500">E</span>
-                    <span class="texto-alternativa text-sm text-gray-600"></span>
-                </button>
-            </div>
-
-            <div class="mt-10 flex flex-wrap md:flex-nowrap justify-between items-center border-t pt-6 gap-3">
-                <button id="btn-anterior" onclick="questaoAnterior()" class="bg-white border border-gray-200 text-gray-600 px-6 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2">
-                    <i class="fas fa-chevron-left text-xs"></i> Anterior
-                </button>
-                <button id="btn-confirmar" onclick="verificar()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold text-sm shadow-lg hover:scale-105 transition-all flex-1 order-first md:order-none mb-4 md:mb-0 w-full md:w-auto">
-                    Confirmar Resposta
-                </button>
-                <button id="btn-proxima" onclick="proximaQuestao()" class="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-gray-50 transition-all flex items-center gap-2">
-                    Próxima <i class="fas fa-chevron-right text-xs"></i>
-                </button>
-            </div>
-        </div>
-
-        <div id="secao-comentarios" class="hidden">
-            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-                <div class="flex items-center gap-2 mb-4">
-                    <i class="far fa-comments text-blue-600"></i>
-                    <h3 class="font-bold text-gray-800 text-sm">Fórum de Discussão</h3>
+        <div class="max-w-4xl mx-auto">
+            <div id="card-questao" class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-10 mb-8">
+                <div class="flex items-center justify-between mb-8">
+                    <span id="label-tema" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase">CARREGANDO...</span>
+                    <button class="text-gray-300 hover:text-yellow-500 transition-colors"><i class="far fa-star"></i></button>
                 </div>
-                <textarea id="textoComentario" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-24 focus:outline-none focus:ring-2 focus:ring-blue-100" placeholder="Inicie uma discussão..."></textarea>
-                <button onclick="salvarNoSupabase(null)" class="bg-blue-600 text-white text-[10px] font-bold px-8 py-2 rounded-lg uppercase shadow-md hover:bg-blue-700 mb-8 transition-all">Postar Comentário</button>
-                <div id="listaComentarios" class="space-y-6 border-t border-gray-100 pt-6"></div>
+                
+                <p id="enunciado" class="text-gray-800 text-lg leading-relaxed mb-10 font-medium">Buscando questão no banco de dados...</p>
+
+                <div class="space-y-3" id="campoAlternativas">
+                    <button onclick="marcar(this)" id="btn-A" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
+                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500 transition-colors">A</span>
+                        <span class="texto-alternativa text-sm text-gray-600"></span>
+                    </button>
+                    <button onclick="marcar(this)" id="btn-B" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
+                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">B</span>
+                        <span class="texto-alternativa text-sm text-gray-600"></span>
+                    </button>
+                    <button onclick="marcar(this)" id="btn-C" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
+                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">C</span>
+                        <span class="texto-alternativa text-sm text-gray-600"></span>
+                    </button>
+                    <button onclick="marcar(this)" id="btn-D" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
+                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">D</span>
+                        <span class="texto-alternativa text-sm text-gray-600"></span>
+                    </button>
+                    <button onclick="marcar(this)" id="btn-E" class="botao-opcao w-full text-left p-5 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-gray-50 transition-all flex items-center gap-4 group">
+                        <span class="letra w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 group-hover:text-blue-500">E</span>
+                        <span class="texto-alternativa text-sm text-gray-600"></span>
+                    </button>
+                </div>
+
+                <div class="mt-12 flex items-center justify-between border-t border-gray-50 pt-8">
+                    <button id="btn-anterior" onclick="questaoAnterior()" class="text-gray-400 hover:text-gray-600 font-bold text-sm transition-all flex items-center gap-2">
+                        <i class="fas fa-arrow-left text-xs"></i> Anterior
+                    </button>
+                    
+                    <button id="btn-confirmar" onclick="verificar()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-0.5 transition-all">
+                        Confirmar Resposta
+                    </button>
+
+                    <button id="btn-proxima" onclick="proximaQuestao()" class="text-blue-600 hover:text-blue-800 font-bold text-sm transition-all flex items-center gap-2">
+                        Próxima <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="secao-comentarios" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm p-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
+                            <i class="far fa-comments"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-800">Discussão Acadêmica</h3>
+                    </div>
+                    <textarea id="textoComentario" class="w-full p-5 bg-gray-50 border border-gray-100 rounded-2xl text-sm mb-4 h-28 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all" placeholder="Dúvida sobre a fisiopatologia ou conduta? Comente aqui..."></textarea>
+                    <div class="flex justify-end">
+                        <button onclick="salvarNoSupabase(null)" class="bg-gray-800 text-white text-[11px] font-bold px-8 py-3 rounded-xl uppercase tracking-wider hover:bg-black transition-all">Enviar Comentário</button>
+                    </div>
+                    
+                    <div id="listaComentarios" class="mt-10 space-y-6 border-t border-gray-50 pt-8">
+                        </div>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
+        // Configuração Supabase (Sua Key original mantida)
         const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -119,27 +135,29 @@
         window.onload = carregarQuestao;
 
         async function carregarQuestao() {
-            // 1. Contador
+            // 1. Contador de progresso
             const { count } = await supabaseClient
                 .from('banco_questoes')
                 .select('*', { count: 'exact', head: true })
                 .eq('tema', temaAlvo);
             totalNoTema = count || 0;
 
-            // 2. Busca Questão
+            // 2. Lógica de busca
             const idUrl = urlParams.get('id');
             let query = supabaseClient.from('banco_questoes').select('*').eq('tema', temaAlvo);
             
             if (idUrl) query = query.eq('id', idUrl);
             else query = query.order('id', { ascending: true }).limit(1);
 
-            const { data } = await query.single();
+            const { data, error } = await query.single();
 
             if (data) {
                 questaoAtualId = data.id;
                 renderizarQuestao(data);
-                carregarComentarios(); // Carrega os comentários da questão
+                carregarComentarios();
                 atualizarContador();
+            } else {
+                document.getElementById('enunciado').innerText = "Nenhuma questão encontrada para este tema.";
             }
         }
 
@@ -161,8 +179,7 @@
                 }
             });
 
-            document.getElementById('btn-confirmar').classList.remove('travado');
-            document.getElementById('btn-confirmar').style.opacity = "1";
+            document.getElementById('btn-confirmar').classList.remove('opacity-50', 'cursor-not-allowed', 'travado');
             document.getElementById('secao-comentarios').classList.add('hidden');
             elementoSelecionado = null;
         }
@@ -174,19 +191,21 @@
         }
 
         function verificar() {
-            if (!elementoSelecionado) return alert("Selecione uma alternativa!");
+            if (!elementoSelecionado) return alert("Selecione uma alternativa antes de confirmar.");
+            
             document.querySelectorAll('.botao-opcao').forEach(btn => btn.classList.add('travado'));
             const eCorreta = elementoSelecionado.getAttribute('data-certa') === 'true';
             
-            if (eCorreta) elementoSelecionado.classList.add('correta');
-            else {
+            if (eCorreta) {
+                elementoSelecionado.classList.add('correta');
+            } else {
                 elementoSelecionado.classList.add('errada');
                 document.querySelectorAll('.botao-opcao').forEach(btn => {
                     if (btn.getAttribute('data-certa') === 'true') btn.classList.add('correta');
                 });
             }
-            document.getElementById('btn-confirmar').classList.add('travado');
-            document.getElementById('btn-confirmar').style.opacity = "0.5";
+            
+            document.getElementById('btn-confirmar').classList.add('opacity-50', 'cursor-not-allowed', 'travado');
             document.getElementById('secao-comentarios').classList.remove('hidden');
         }
 
@@ -200,7 +219,7 @@
                 .limit(1).single();
 
             if (data) navegarPara(data.id);
-            else alert("Fim das questões deste tema.");
+            else alert("Você chegou ao fim das questões deste tema!");
         }
 
         async function questaoAnterior() {
@@ -213,7 +232,7 @@
                 .limit(1).single();
 
             if (data) navegarPara(data.id);
-            else alert("Esta é a primeira questão.");
+            else alert("Esta é a primeira questão do tema.");
         }
 
         function navegarPara(id) {
@@ -221,46 +240,59 @@
         }
 
         function atualizarContador() {
-            document.getElementById('contador-questoes').innerText = `TEMA: ${temaAlvo} | TOTAL: ${totalNoTema}`;
+            document.getElementById('contador-questoes').innerText = `${temaAlvo.toUpperCase()} • Questão ID: ${questaoAtualId}`;
         }
 
-        // --- LÓGICA DE COMENTÁRIOS ---
+        // --- Comentários ---
         async function carregarComentarios() {
             const { data } = await supabaseClient.from('comentarios_questoes')
                 .select('*').eq('questao_id', questaoAtualId).order('created_at', { ascending: true });
+            
             const lista = document.getElementById('listaComentarios');
             lista.innerHTML = "";
-            if (data) {
+            
+            if (data && data.length > 0) {
                 data.filter(c => !c.pai_id).forEach(p => {
                     adicionarNaTela(p.texto, p.created_at, p.id, false);
                     data.filter(r => r.pai_id === p.id).forEach(r => adicionarNaTela(r.texto, r.created_at, r.id, true, p.id));
                 });
+            } else {
+                lista.innerHTML = "<p class='text-xs text-gray-400 text-center italic'>Nenhum comentário ainda. Seja o primeiro a discutir!</p>";
             }
         }
 
         async function salvarNoSupabase(paiId = null) {
             const campo = paiId ? document.getElementById(`input-${paiId}`) : document.getElementById('textoComentario');
             if (!campo.value.trim()) return;
-            await supabaseClient.from('comentarios_questoes').insert({ questao_id: questaoAtualId, texto: campo.value, pai_id: paiId });
-            campo.value = "";
-            carregarComentarios();
+
+            const { error } = await supabaseClient.from('comentarios_questoes').insert({ 
+                questao_id: questaoAtualId, 
+                texto: campo.value, 
+                pai_id: paiId 
+            });
+
+            if (!error) {
+                campo.value = "";
+                carregarComentarios();
+            }
         }
 
         function adicionarNaTela(texto, dataHora, id, ehResposta, paiId = null) {
             const container = ehResposta ? document.getElementById(`respostas-de-${paiId}`) : document.getElementById('listaComentarios');
-            const dataF = new Date(dataHora).toLocaleString('pt-BR');
+            const dataF = new Date(dataHora).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+            
             const html = `
-                <div class="${ehResposta ? 'resposta-container' : 'bg-gray-50 p-4 rounded-2xl border border-gray-100'} mb-2">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-bold text-blue-600 uppercase">Estudante</span>
-                        <span class="text-[8px] text-gray-400">${dataF}</span>
+                <div class="${ehResposta ? 'resposta-container' : 'bg-gray-50 p-6 rounded-2xl border border-gray-100'} mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Estudante MedQuest</span>
+                        <span class="text-[9px] text-gray-400 font-medium">${dataF}</span>
                     </div>
-                    <p class="text-sm text-gray-700">${texto}</p>
+                    <p class="text-sm text-gray-700 leading-relaxed">${texto}</p>
                     ${!ehResposta ? `
-                        <button onclick="document.getElementById('box-${id}').classList.toggle('hidden')" class="text-[9px] font-bold text-blue-500 mt-2 hover:underline">RESPONDER</button>
-                        <div id="box-${id}" class="hidden mt-3">
-                            <textarea id="input-${id}" class="w-full p-2 text-xs bg-white border rounded-lg h-16 mb-2 outline-none" placeholder="Sua resposta..."></textarea>
-                            <button onclick="salvarNoSupabase('${id}')" class="bg-blue-600 text-white text-[8px] px-4 py-1 rounded font-bold uppercase">Enviar</button>
+                        <button onclick="document.getElementById('box-${id}').classList.toggle('hidden')" class="text-[10px] font-bold text-gray-400 mt-3 hover:text-blue-600 transition-colors uppercase">Responder</button>
+                        <div id="box-${id}" class="hidden mt-4">
+                            <textarea id="input-${id}" class="w-full p-3 text-xs bg-white border border-gray-200 rounded-xl h-20 mb-2 focus:ring-2 focus:ring-blue-50 outline-none" placeholder="Escreva sua resposta..."></textarea>
+                            <button onclick="salvarNoSupabase('${id}')" class="bg-blue-600 text-white text-[9px] px-4 py-2 rounded-lg font-bold uppercase shadow-md shadow-blue-50">Enviar Resposta</button>
                         </div>
                         <div id="respostas-de-${id}"></div>
                     ` : ''}
