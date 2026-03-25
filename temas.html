@@ -4,7 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest - Estudar por Temas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    // 1. CONFIGURAÇÃO INICIAL (Mantenha suas chaves aqui)
+    const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co'; 
+    const SUPABASE_KEY = 'SUA_CHAVE_AQUI'; 
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. CAPTURA DE PARÂMETROS DA URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const temaAlvo = urlParams.get('tema'); // Pega ?tema=Bradiarritmias
+    const idAlvo = urlParams.get('id');     // Pega ?id=bradi_q1
+
+    // 3. FUNÇÃO DE CARREGAMENTO INTELIGENTE
+    window.onload = async () => {
+        let consulta = supabaseClient.from('banco_questoes').select('*');
+
+        if (idAlvo) {
+            // Se você enviou um ID específico na URL
+            consulta = consulta.eq('id', idAlvo);
+        } else if (temaAlvo) {
+            // Se você clicou no subtema "Bradiarritmias"
+            consulta = consulta.eq('tema', temaAlvo).limit(1);
+        } else {
+            // Fallback: Questão padrão caso o link esteja "puro"
+            consulta = consulta.eq('id', 'bradi_q1');
+        }
+
+        const { data: questao, error } = await consulta.single();
+
+        if (questao) {
+            renderizarQuestao(questao);
+        } else {
+            console.error("Questão não encontrada. Verifique o tema no SQL.");
+        }
+
+        // Carrega os comentários vinculados a esse ID
+        carregarComentarios(); 
+    };
+
+    // 4. FUNÇÃO PARA EXIBIR A QUESTÃO NA TELA
+    function renderizarQuestao(q) {
+        // Atualiza enunciado e tema no HTML
+        document.querySelector('p.text-lg').innerHTML = q.enunciado; 
+        document.querySelector('.bg-red-50').innerText = q.tema;
+
+        const botoes = document.querySelectorAll('.botao-opcao');
+        const textos = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d, q.opcao_e];
+        const letras = ['A', 'B', 'C', 'D', 'E'];
+
+        botoes.forEach((btn, index) => {
+            const textoOpcao = textos[index];
+            if (textoOpcao && textoOpcao.trim() !== "") {
+                btn.querySelector('.text-sm').innerHTML = textoOpcao;
+                // Vincula a resposta correta do banco ao botão
+                btn.setAttribute('data-certa', letras[index] === q.correta ? 'true' : 'false');
+                btn.style.display = "flex"; 
+            } else {
+                // Esconde opções que não existem no PDF (ex: questões com apenas 4 alternativas)
+                btn.style.display = "none"; 
+            }
+        });
+    }
+
+    // Mantenha aqui as suas funções de marcar(), verificar() e salvarNoSupabase() que já criamos
+</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
