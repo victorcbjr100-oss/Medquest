@@ -3,66 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest Pro - Painel</title>
+    <title>Admin - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <script>tailwind.config = { darkMode: 'class' }</script>
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<body class="bg-[#f8fafc] dark:bg-slate-950 flex min-h-screen transition-colors">
 
-    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full">
+    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col fixed h-full">
         <div class="p-6 flex items-center gap-3">
             <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                <i class="fas fa-brain text-xl"></i>
+                <i class="fas fa-user-shield text-xl"></i>
             </div>
-            <div>
-                <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
-                <p class="text-xs text-gray-400">Provas e Questões</p>
-            </div>
+            <h1 class="font-bold text-gray-800 dark:text-white">Admin</h1>
         </div>
-
-        <nav class="flex-1 px-4 space-y-1 mt-4">
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Navegação</p>
-            
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
-                <i class="fas fa-home w-5"></i> Página Inicial
+        <nav class="flex-1 px-4 mt-4">
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <i class="fas fa-home w-5"></i> Dashboard
             </a>
-            
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
-                <i class="fas fa-layer-group w-5"></i> Temas
-            </a>
-            
-            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
-                <i class="fas fa-stopwatch w-5"></i> Simulados
-            </a>
-
-            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
-                <i class="fas fa-chart-bar w-5"></i> Estatísticas
+            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg">
+                <i class="fas fa-database w-5"></i> Questões
             </a>
         </nav>
-
-        <div class="p-4 border-t border-gray-100">
-            <div class="flex items-center justify-between px-2 py-2 text-gray-400">
-                <span class="text-[10px] font-bold uppercase tracking-wider">Sistema Offline</span>
-                <i class="fas fa-circle text-[8px] text-gray-300"></i>
-            </div>
-        </div>
-    </aside>
+        </aside>
 
     <main class="flex-1 p-8 ml-64">
         <header class="mb-8">
-            <div class="flex items-center gap-3 text-blue-600 mb-2">
-                <i class="fas fa-users text-2xl"></i>
-                <h2 class="text-2xl font-bold text-gray-800">Painel de Administração</h2>
-            </div>
-            <p class="text-gray-500">Gerencie todos os usuários da plataforma MedQuest</p>
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Painel Administrativo</h2>
+            <p class="text-gray-500">Gerencie a base de dados do MedQuest</p>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border dark:border-slate-800">
+                <p class="text-gray-400 text-xs font-bold uppercase">Total Usuários</p>
+                <p class="text-3xl font-bold dark:text-white">1.240</p>
             </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border dark:border-slate-800">
+                <p class="text-gray-400 text-xs font-bold uppercase">Questões Ativas</p>
+                <p class="text-3xl font-bold dark:text-white">15.000</p>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border dark:border-slate-800">
+                <p class="text-gray-400 text-xs font-bold uppercase">Uptime Sistema</p>
+                <p class="text-3xl font-bold text-green-500">99.9%</p>
+            </div>
+        </div>
     </main>
-</body>
+    </body>
 </html>
