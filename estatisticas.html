@@ -3,144 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest - Estatísticas</title>
+    <title>Estatísticas - MedQuest</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .card-stats { @apply bg-white p-6 rounded-2xl border border-gray-100 shadow-sm; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
     <aside class="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full">
-        <div class="p-6">
-            <h1 class="font-bold text-blue-600 text-xl flex items-center gap-2">
-                <i class="fas fa-brain"></i> MedQuest
-            </h1>
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                <i class="fas fa-brain text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
+                <p class="text-xs text-gray-400">Provas e Questões</p>
+            </div>
         </div>
-        <nav class="flex-1 px-4 space-y-1">
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
-                <i class="fas fa-home"></i> Dashboard
+
+        <nav class="flex-1 px-4 space-y-1 mt-4">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-2">Navegação</p>
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
+                <i class="fas fa-home w-5"></i> Página Inicial
             </a>
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg">
-                <i class="fas fa-layer-group"></i> Temas
+            <a href="temas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
+                <i class="fas fa-layer-group w-5"></i> Temas
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all">
+                <i class="fas fa-stopwatch w-5"></i> Simulados
             </a>
             <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg">
-                <i class="fas fa-chart-line"></i> Estatísticas
+                <i class="fas fa-chart-bar w-5"></i> Estatísticas
             </a>
         </nav>
     </aside>
 
-    <main class="ml-64 flex-1 p-8">
-        <div class="max-w-6xl mx-auto">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Meu Desempenho</h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="card-stats">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Resolvidas</p>
-                    <h3 id="total-respondidas" class="text-2xl font-bold text-gray-800">0</h3>
-                </div>
-                <div class="card-stats border-l-4 border-l-green-500">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Acertos</p>
-                    <h3 id="total-acertos" class="text-2xl font-bold text-green-600">0</h3>
-                </div>
-                <div class="card-stats border-l-4 border-l-red-500">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Erros</p>
-                    <h3 id="total-erros" class="text-2xl font-bold text-red-600">0</h3>
-                </div>
-                <div class="card-stats">
-                    <p class="text-xs text-gray-400 font-bold uppercase">Aproveitamento</p>
-                    <h3 id="taxa-sucesso" class="text-2xl font-bold text-blue-600">0%</h3>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div class="card-stats">
-                    <h4 class="font-bold text-gray-700 mb-4">Distribuição por Tema</h4>
-                    <canvas id="chartTemas"></canvas>
-                </div>
-
-                <div class="card-stats">
-                    <h4 class="font-bold text-gray-700 mb-4">Frequência de Estudo</h4>
-                    <div class="grid grid-cols-7 gap-2 text-center text-[10px] text-gray-400" id="calendario-acesso">
-                        </div>
-                </div>
-            </div>
-
-            <div class="card-stats">
-                <h4 class="font-bold text-gray-700 mb-4">Assuntos a Melhorar (Menor aproveitamento)</h4>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead>
-                            <tr class="text-gray-400 border-b">
-                                <th class="pb-3">Subtema</th>
-                                <th class="pb-3 text-center">Acertos</th>
-                                <th class="pb-3 text-center">Aproveitamento</th>
-                                <th class="pb-3">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabela-melhorar" class="divide-y">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        // Simulação de Dados (Aqui você faria o fetch no Supabase futuramente)
-        const dadosEstudo = [
-            { subtema: 'Bradiarritmias', acertos: 15, total: 20 },
-            { subtema: 'IAM com Supra', acertos: 5, total: 15 },
-            { subtema: 'Puericultura', acertos: 10, total: 12 },
-            { subtema: 'HAS', acertos: 8, total: 25 }
-        ];
-
-        // 1. Preencher Gráfico de Temas
-        const ctx = document.getElementById('chartTemas').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Cardiologia', 'Pediatria', 'Ginecologia'],
-                datasets: [{
-                    data:,
-                    backgroundColor: ['#ef4444', '#22c55e', '#ec4899']
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } } }
-        });
-
-        // 2. Gerar Calendário de Acesso (Últimos 30 dias)
-        const cal = document.getElementById('calendario-acesso');
-        for(let i=1; i<=31; i++) {
-            const nivelAtividade = Math.random() > 0.5 ? 'bg-blue-500' : 'bg-gray-100';
-            cal.innerHTML += `<div class="w-full aspect-square ${nivelAtividade} rounded-sm" title="Dia ${i}"></div>`;
-        }
-
-        // 3. Logica de Assuntos a Melhorar
-        const tabela = document.getElementById('tabela-melhorar');
-        dadosEstudo.sort((a,b) => (a.acertos/a.total) - (b.acertos/b.total));
-
-        dadosEstudo.forEach(item => {
-            const perc = Math.round((item.acertos / item.total) * 100);
-            const statusColor = perc < 50 ? 'text-red-500 bg-red-50' : 'text-yellow-600 bg-yellow-50';
-            
-            tabela.innerHTML += `
-                <tr>
-                    <td class="py-4 font-medium text-gray-700">${item.subtema}</td>
-                    <td class="py-4 text-center">${item.acertos}/${item.total}</td>
-                    <td class="py-4 text-center font-bold">${perc}%</td>
-                    <td class="py-4">
-                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${statusColor}">
-                            ${perc < 50 ? 'Revisar Urgente' : 'Praticar Mais'}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        });
-    </script>
+    <main class="flex-1 p-8 ml-64">
+        <header class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800">Suas Estatísticas</h2>
+            <p class="text-gray-500">Acompanhe seu desempenho detalhado</p>
+        </header>
+        </main>
 </body>
 </html>
