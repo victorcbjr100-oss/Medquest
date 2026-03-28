@@ -47,32 +47,32 @@ document.addEventListener("DOMContentLoaded", function() {
         </nav>
 
         <div class="p-4 border-t border-gray-50">
-            <div class="flex items-center gap-3 p-2 rounded-2xl bg-gray-50/50 border border-transparent hover:border-gray-100 transition-all cursor-pointer">
-                <div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm">V</div>
+            <div onclick="window.location.href='perfil.html'" class="flex items-center gap-3 p-2 rounded-2xl bg-gray-50/50 border border-transparent hover:border-blue-100 hover:bg-blue-50 transition-all cursor-pointer group">
+                <div id="sidebar-avatar" class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm overflow-hidden">
+                    V
+                </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-xs font-black text-gray-800 truncate" id="sidebar-user-name">Dr. Victor</p>
-                    <p class="text-[9px] text-blue-500 font-bold uppercase">Plano Premium</p>
+                    <p class="text-[9px] text-blue-500 font-bold uppercase" id="sidebar-user-tag">Plano Premium</p>
                 </div>
+                <i class="fas fa-cog text-gray-300 group-hover:text-blue-500 text-xs transition-colors"></i>
             </div>
         </div>
     </aside>`;
 
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // Lógica de Link Ativo
-    const currentPage = window.location.pathname.split("/").pop() || "index.html";
-    document.querySelectorAll(".nav-link").forEach(link => {
-        if (link.getAttribute("href") === currentPage) {
-            link.classList.add("bg-blue-50", "text-blue-600");
-            link.classList.remove("text-gray-500");
-            link.style.borderLeft = "3px solid #2563eb";
+    // Lógica de Sincronização em Tempo Real
+    function atualizarUI() {
+        const dados = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
+        if (dados.nome) document.getElementById('sidebar-user-name').innerText = dados.nome;
+        if (dados.categoria) document.getElementById('sidebar-user-tag').innerText = dados.categoria;
+        if (dados.foto) {
+            document.getElementById('sidebar-avatar').innerHTML = `<img src="${dados.foto}" class="w-full h-full object-cover">`;
+        } else if (dados.nome) {
+            document.getElementById('sidebar-avatar').innerText = dados.nome.charAt(0).toUpperCase();
         }
-    });
-
-    // Sincronização de Nome
-    const dados = JSON.parse(localStorage.getItem('medquest_perfil'));
-    if (dados && dados.nome) {
-        const nomeSidebar = document.getElementById('sidebar-user-name');
-        if (nomeSidebar) nomeSidebar.innerText = dados.nome;
     }
+
+    atualizarUI();
 });
