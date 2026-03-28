@@ -13,6 +13,10 @@
         body { font-family: 'Inter', sans-serif; }
         .card { background: white; border-radius: 1.5rem; border: 1px solid #f1f5f9; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         main { margin-left: 16rem; }
+
+        @media (max-width: 768px) {
+            main { margin-left: 0; }
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
@@ -23,11 +27,11 @@
                 <h2 class="text-2xl font-bold text-gray-800">Painel de Métricas</h2>
                 <p class="text-gray-500 text-sm">Acompanhe sua evolução e desempenho</p>
             </div>
-            <button onclick="resetarDados()" class="text-[10px] text-red-400 font-bold uppercase hover:text-red-600">Resetar Progresso</button>
+            <button onclick="resetarDados()" class="text-[10px] text-red-400 font-bold uppercase hover:text-red-600 transition-colors">Resetar Progresso</button>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div class="card flex justify-between items-center">
+            <div class="card flex justify-between items-center border-l-4 border-l-blue-500">
                 <div>
                     <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total de questões</p>
                     <p class="text-gray-500 text-[10px] mb-2">Questões respondidas na plataforma</p>
@@ -37,21 +41,21 @@
                     <i class="fas fa-check-circle text-blue-500 block text-xs mt-1"></i>
                 </div>
             </div>
-            <div class="card flex justify-between items-center">
+            <div class="card flex justify-between items-center border-l-4 border-l-emerald-500">
                 <div>
                     <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total de Simulados</p>
                     <p class="text-gray-500 text-[10px] mb-2">Simulados resolvidos</p>
                 </div>
                 <div class="text-right">
-                    <span class="text-4xl font-bold text-gray-800">5</span>
-                    <i class="fas fa-chart-bar text-green-500 block text-xs mt-1"></i>
+                    <span class="text-4xl font-bold text-gray-800">0</span>
+                    <i class="fas fa-chart-bar text-emerald-500 block text-xs mt-1"></i>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div class="card text-center">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase">Porcentagem de acertos</p>
+                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Porcentagem de acertos</p>
                 <div class="relative inline-block">
                     <canvas id="chartAcertos" width="150" height="150"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
@@ -65,22 +69,22 @@
             </div>
 
             <div class="card text-center">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase">Melhor desempenho</p>
+                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Melhor desempenho</p>
                 <div class="relative inline-block">
                     <canvas id="chartMelhorArea" width="150" height="150"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="melhor-porcentagem" class="text-2xl font-bold text-green-600">75%</span>
-                        <span id="melhor-nome" class="text-[8px] text-gray-400 font-bold uppercase">Ginecologia</span>
+                        <span id="melhor-porcentagem" class="text-2xl font-bold text-blue-600">--</span>
+                        <span id="melhor-nome" class="text-[8px] text-gray-400 font-bold uppercase">Ainda sem dados</span>
                     </div>
                 </div>
             </div>
 
             <div class="card">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase">Mapa de estudos</p>
+                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Mapa de estudos</p>
                 <div class="space-y-3">
                     <div class="flex justify-between text-[11px] border-b pb-1">
-                        <span class="text-gray-500">Assuntos respondidos</span>
-                        <span id="mapa-respondidos" class="font-bold text-blue-600">10</span>
+                        <span class="text-gray-500 font-medium">Temas explorados</span>
+                        <span id="mapa-respondidos" class="font-bold text-blue-600">--</span>
                     </div>
                 </div>
             </div>
@@ -89,80 +93,71 @@
         <div class="card mb-8">
             <div class="flex items-center gap-2 mb-6">
                 <i class="fas fa-bullseye text-orange-500"></i>
-                <p class="text-xs font-bold text-gray-700 uppercase">Áreas para Melhorar</p>
+                <p class="text-xs font-bold text-gray-700 uppercase tracking-tighter">Áreas para Melhorar</p>
             </div>
-            <div id="lista-melhorar" class="space-y-4"></div>
+            <div id="lista-melhorar" class="space-y-4">
+                 <p class="text-[10px] text-gray-400 italic">Responda mais questões para gerar recomendações.</p>
+            </div>
         </div>
     </main>
 
     <script>
-        let meuGrafico; // Variável global para o gráfico
+        let meuGrafico;
 
         window.onload = () => {
             carregarDadosReais();
+            // Dados estáticos de exemplo para layout (podem ser automatizados depois)
             renderizarListaMelhorar();
         };
 
         function carregarDadosReais() {
-            // Busca os dados salvos pela página de questões
+            // Busca estatísticas do LocalStorage (Sincronizado com questoes.html)
             const stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
             
-            // Calcula porcentagem
             const porcentagem = stats.total > 0 ? Math.round((stats.acertos / stats.total) * 100) : 0;
 
-            // Atualiza os textos na tela
             document.getElementById('total-questoes').innerText = stats.total;
             document.getElementById('porcentagem-texto').innerText = porcentagem + '%';
             document.getElementById('num-acertos').innerText = stats.acertos;
             document.getElementById('num-erros').innerText = stats.erros;
 
-            renderizarGraficos(stats.acertos, stats.erros);
+            renderizarGraficoAcertos(stats.acertos, stats.erros);
         }
 
-        function renderizarGraficos(acertos, erros) {
+        function renderizarGraficoAcertos(acertos, erros) {
             const ctx = document.getElementById('chartAcertos');
-            
-            // Se o gráfico já existir, destrói para criar um novo (evita bug visual)
             if (meuGrafico) meuGrafico.destroy();
+
+            // Se não houver dados, exibe um gráfico cinza neutro
+            const temDados = (acertos + erros) > 0;
+            const dataValues = temDados ? [acertos, erros] :;
+            const colors = temDados ? ['#10b981', '#ef4444'] : ['#f1f5f9', '#f1f5f9'];
 
             meuGrafico = new Chart(ctx, {
                 type: 'doughnut',
                 data: { 
-                    labels: ['Acertos', 'Erros'],
                     datasets: [{ 
-                        data: [acertos, erros === 0 && acertos === 0 ? 1 : erros], 
-                        backgroundColor: ['#10b981', '#ef4444'],
+                        data: dataValues, 
+                        backgroundColor: colors,
                         borderWidth: 0
                     }] 
                 },
                 options: { 
                     cutout: '85%', 
-                    plugins: { legend: { display: false } } 
+                    plugins: { legend: { display: false } },
+                    animation: { animateRotate: true }
                 }
             });
         }
 
         function renderizarListaMelhorar() {
-            const areas = [
-                { nome: 'Ortopedia', pct: 25, q: 4, cor: 'bg-red-500' },
-                { nome: 'Pediatria', pct: 35, q: 17, cor: 'bg-red-500' }
-            ];
+            // Placeholder para lógica futura baseada em temas específicos
             const container = document.getElementById('lista-melhorar');
-            container.innerHTML = '';
-            areas.forEach(area => {
-                container.innerHTML += `
-                    <div class="flex items-center gap-4">
-                        <span class="text-[10px] font-bold text-gray-600 w-24">${area.nome}</span>
-                        <div class="flex-1 bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                            <div class="${area.cor} h-full" style="width: ${area.pct}%"></div>
-                        </div>
-                        <span class="text-[10px] font-bold text-gray-800 w-8">${area.pct}%</span>
-                    </div>`;
-            });
+            // Aqui você poderá mapear os erros por tema no futuro
         }
 
         function resetarDados() {
-            if(confirm("Deseja zerar suas estatísticas?")) {
+            if(confirm("Dr. Victor, deseja realmente zerar todo o seu progresso? Esta ação não pode ser desfeita.")) {
                 localStorage.removeItem('medquest_stats');
                 location.reload();
             }
