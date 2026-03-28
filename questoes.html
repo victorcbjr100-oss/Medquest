@@ -1,166 +1,83 @@
-<script>
-    // Configurações - MedQuest
-    const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>MedQuest Pro - Questões</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 p-6">
 
-    var questoesFiltradas = [];
-    var indiceAtual = 0;
-    var respondida = false;
-    var opcaoSelecionada = null;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const temaURL = urlParams.get('tema');
-
-    async function inicializar() {
-        try {
-            console.log("Iniciando busca no banco...");
-            
-            // Busca simplificada para teste de conexão
-            const { data, error } = await _supabase.from('questoes').select('*');
-
-            if (error) {
-                console.error("Erro de conexão com Supabase:", error);
-                document.getElementById('titulo-tema').innerText = "Erro de Conexão";
-                return;
-            }
-
-            console.log("Sucesso! Dados brutos recebidos:", data);
-
-            if (!data || data.length === 0) {
-                console.warn("O banco retornou uma lista vazia. Verifique as Políticas RLS no Supabase.");
-                mostrarVazio();
-                return;
-            }
-
-            // Filtro com tratamento de erro para nomes de colunas
-            if (temaURL) {
-                questoesFiltradas = data.filter(q => {
-                    const temaBanco = (q.tema || "").toString().toLowerCase().trim();
-                    const subtemaBanco = (q.subtema || "").toString().toLowerCase().trim();
-                    const busca = temaURL.toLowerCase().trim();
-                    return temaBanco === busca || subtemaBanco === busca;
-                });
-            } else {
-                questoesFiltradas = data;
-            }
-
-            if (questoesFiltradas.length === 0) {
-                console.log("Nenhuma questão passou pelo filtro de tema:", temaURL);
-                mostrarVazio();
-            } else {
-                document.getElementById('titulo-tema').innerText = temaURL || "Geral";
-                renderizarQuestao();
-            }
-
-        } catch (err) {
-            console.error("Falha técnica no script:", err);
-            document.getElementById('titulo-tema').innerText = "Erro Crítico";
-        }
-    }
-
-    function mostrarVazio() {
-        document.getElementById('questao-card').classList.add('hidden');
-        document.getElementById('empty-state').classList.remove('hidden');
-        document.getElementById('tema-vazio').innerText = temaURL || "Geral";
-        document.getElementById('titulo-tema').innerText = "Vazio";
-    }
-
-    function renderizarQuestao() {
-        const q = questoesFiltradas[indiceAtual];
-        const container = document.getElementById('conteudo-questao');
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <div id="debug" class="text-[10px] text-red-400 font-mono mb-4">Status: Aguardando script...</div>
         
-        respondida = false;
-        opcaoSelecionada = null;
-        document.getElementById('feedback-container').classList.add('hidden');
-        document.getElementById('btn-acao').innerText = "Responder";
-        document.getElementById('contador-questoes').innerText = "Questão " + (indiceAtual + 1) + " de " + questoesFiltradas.length;
+        <h1 id="tema-titulo" class="text-2xl font-black text-gray-800 mb-6">Carregando...</h1>
+        
+        <div id="area-questao" class="min-h-[200px]">
+            <p class="text-gray-400 italic">Buscando questões no Supabase...</p>
+        </div>
 
-        // Mapeamento flexível de colunas (caso o nome no banco mude)
-        const enunciado = q.enunciado || q.pergunta || "Questão sem enunciado";
-        const opA = q.opcao_a || q.a;
-        const opB = q.opcao_b || q.b;
-        const opC = q.opcao_c || q.c;
-        const opD = q.opcao_d || q.d;
+        <div class="mt-8 flex gap-4">
+            <button onclick="verificar()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold">Responder</button>
+        </div>
+    </div>
 
-        let html = `
-            <div class="flex items-center gap-3 mb-6">
-                <span class="px-3 py-1 bg-blue-50 text-[10px] font-black text-blue-600 rounded-lg uppercase tracking-widest">${q.origem || 'MEDQUEST'}</span>
-            </div>
-            <h3 class="text-xl md:text-2xl font-bold text-gray-800 mb-10 leading-snug">${enunciado}</h3>
-            <div class="space-y-4">
-        `;
+    <script>
+        // Usei var para evitar erros de escopo em navegadores antigos
+        var S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
+        var S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+        
+        function reportar(msg) { document.getElementById('debug').innerText = "Status: " + msg; }
 
-        const opcoes = [opA, opB, opC, opD];
-        opcoes.forEach((opt, i) => {
-            if (opt) {
-                html += `
-                    <div onclick="selecionar(${i})" class="alternativa p-5 border-2 border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white cursor-pointer transition-all hover:border-gray-200">
-                        <span class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-xs font-black text-gray-400">${String.fromCharCode(65 + i)}</span>
-                        <div class="flex-1 text-sm md:text-base">${opt}</div>
-                    </div>
-                `;
+        async function iniciar() {
+            reportar("Iniciando conexão...");
+            try {
+                var supabaseClient = supabase.createClient(S_URL, S_KEY);
+                var resultado = await supabaseClient.from('questoes').select('*');
+                
+                if (resultado.error) {
+                    reportar("Erro Supabase: " + resultado.error.message);
+                    return;
+                }
+
+                reportar("Dados recebidos: " + resultado.data.length + " itens.");
+                
+                // Pegar tema da URL
+                var params = new URLSearchParams(window.location.search);
+                var temaAlvo = params.get('tema');
+                document.getElementById('tema-titulo').innerText = temaAlvo || "Geral";
+
+                var questoes = resultado.data;
+                if (temaAlvo) {
+                    questoes = resultado.data.filter(function(q) {
+                        return (q.tema || "").toLowerCase().trim() === temaAlvo.toLowerCase().trim();
+                    });
+                }
+
+                if (questoes.length === 0) {
+                    document.getElementById('area-questao').innerHTML = "<b class='text-red-500'>Nenhuma questão para o tema: " + temaAlvo + "</b>";
+                    reportar("Filtro zerado.");
+                } else {
+                    renderizar(questoes);
+                }
+
+            } catch (err) {
+                reportar("Erro crítico: " + err.message);
             }
-        });
-
-        html += `</div>`;
-        container.innerHTML = html;
-    }
-
-    window.selecionar = (i) => {
-        if (respondida) return;
-        document.querySelectorAll('.alternativa').forEach(a => a.classList.remove('selecionada'));
-        document.querySelectorAll('.alternativa')[i].classList.add('selecionada');
-        opcaoSelecionada = i;
-    };
-
-    window.verificarAcao = () => {
-        if (opcaoSelecionada === null) return alert("Selecione uma alternativa.");
-        if (!respondida) confirmar();
-        else proximaQuestao();
-    };
-
-    function confirmar() {
-        respondida = true;
-        const q = questoesFiltradas[indiceAtual];
-        const alts = document.querySelectorAll('.alternativa');
-        
-        // Mapeamento da resposta correta (aceita número ou letra)
-        let corretaIdx = q.correta;
-        if (isNaN(corretaIdx)) {
-            const letras = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
-            corretaIdx = letras[corretaIdx.toLowerCase()];
-        }
-        
-        alts[corretaIdx].classList.add('correta');
-
-        if (opcaoSelecionada === corretaIdx) {
-            document.getElementById('feedback-status').innerHTML = '<div class="p-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold text-sm">✅ Resposta Correta!</div>';
-        } else {
-            alts[opcaoSelecionada].classList.add('errada');
-            document.getElementById('feedback-status').innerHTML = '<div class="p-4 bg-red-50 text-red-700 rounded-2xl font-bold text-sm">❌ Resposta Incorreta</div>';
         }
 
-        document.getElementById('comentario-texto').innerText = q.comentario || "Nenhum comentário disponível.";
-        document.getElementById('feedback-container').classList.remove('hidden');
-        document.getElementById('btn-acao').innerText = "Próxima Questão";
-    }
-
-    window.proximaQuestao = () => {
-        if (indiceAtual < questoesFiltradas.length - 1) {
-            indiceAtual++;
-            renderizarQuestao();
-        } else {
-            window.location.href = 'index.html';
+        function renderizar(q) {
+            var html = '<p class="text-lg font-bold text-gray-700 mb-6">' + q.enunciado + '</p><div class="space-y-3">';
+            var opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
+            opcoes.forEach(function(opt, i) {
+                if(opt) {
+                    html += '<div class="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 cursor-pointer">' + opt + '</div>';
+                }
+            });
+            document.getElementById('area-questao').innerHTML = html + "</div>";
         }
-    };
 
-    window.questaoAnterior = () => {
-        if (indiceAtual > 0) {
-            indiceAtual--;
-            renderizarQuestao();
-        }
-    };
-
-    window.onload = inicializar;
-</script>
+        window.onload = iniciar;
+    </script>
+</body>
+</html>
