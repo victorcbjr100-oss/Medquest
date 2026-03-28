@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estatísticas - MedQuest</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -24,13 +23,8 @@
                 <h2 class="text-2xl font-bold text-gray-800">Painel de Métricas</h2>
                 <p class="text-gray-500 text-sm">Acompanhe sua evolução e desempenho</p>
             </div>
-            </header>
-
-        <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
-            <button class="px-4 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold">Geral</button>
-            <button class="px-4 py-1.5 bg-white border text-gray-500 rounded-full text-xs font-bold hover:bg-gray-50">Cardiologia</button>
-            <button class="px-4 py-1.5 bg-white border text-gray-500 rounded-full text-xs font-bold hover:bg-gray-50">Pediatria</button>
-        </div>
+            <button onclick="resetarDados()" class="text-[10px] text-red-400 font-bold uppercase hover:text-red-600">Resetar Progresso</button>
+        </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div class="card flex justify-between items-center">
@@ -39,7 +33,7 @@
                     <p class="text-gray-500 text-[10px] mb-2">Questões respondidas na plataforma</p>
                 </div>
                 <div class="text-right">
-                    <span id="total-questoes" class="text-4xl font-bold text-gray-800">68</span>
+                    <span id="total-questoes" class="text-4xl font-bold text-gray-800">0</span>
                     <i class="fas fa-check-circle text-blue-500 block text-xs mt-1"></i>
                 </div>
             </div>
@@ -61,8 +55,12 @@
                 <div class="relative inline-block">
                     <canvas id="chartAcertos" width="150" height="150"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="porcentagem-texto" class="text-2xl font-bold text-gray-800">41%</span>
+                        <span id="porcentagem-texto" class="text-2xl font-bold text-gray-800">0%</span>
                     </div>
+                </div>
+                <div class="flex justify-center gap-4 mt-4 text-[10px] font-bold uppercase">
+                    <span class="text-emerald-500">Acertos: <span id="num-acertos">0</span></span>
+                    <span class="text-red-500">Erros: <span id="num-erros">0</span></span>
                 </div>
             </div>
 
@@ -98,17 +96,49 @@
     </main>
 
     <script>
-        // Mantive sua lógica do Supabase e Chart.js aqui para garantir o funcionamento
+        let meuGrafico; // Variável global para o gráfico
+
         window.onload = () => {
-            renderizarGraficos();
+            carregarDadosReais();
             renderizarListaMelhorar();
         };
 
-        function renderizarGraficos() {
-            new Chart(document.getElementById('chartAcertos'), {
+        function carregarDadosReais() {
+            // Busca os dados salvos pela página de questões
+            const stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
+            
+            // Calcula porcentagem
+            const porcentagem = stats.total > 0 ? Math.round((stats.acertos / stats.total) * 100) : 0;
+
+            // Atualiza os textos na tela
+            document.getElementById('total-questoes').innerText = stats.total;
+            document.getElementById('porcentagem-texto').innerText = porcentagem + '%';
+            document.getElementById('num-acertos').innerText = stats.acertos;
+            document.getElementById('num-erros').innerText = stats.erros;
+
+            renderizarGraficos(stats.acertos, stats.erros);
+        }
+
+        function renderizarGraficos(acertos, erros) {
+            const ctx = document.getElementById('chartAcertos');
+            
+            // Se o gráfico já existir, destrói para criar um novo (evita bug visual)
+            if (meuGrafico) meuGrafico.destroy();
+
+            meuGrafico = new Chart(ctx, {
                 type: 'doughnut',
-                data: { datasets: [{ data:, backgroundColor: ['#3b82f6', '#f1f5f9'] }] },
-                options: { cutout: '85%', plugins: { legend: { display: false } } }
+                data: { 
+                    labels: ['Acertos', 'Erros'],
+                    datasets: [{ 
+                        data: [acertos, erros === 0 && acertos === 0 ? 1 : erros], 
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 0
+                    }] 
+                },
+                options: { 
+                    cutout: '85%', 
+                    plugins: { legend: { display: false } } 
+                }
             });
         }
 
@@ -118,6 +148,7 @@
                 { nome: 'Pediatria', pct: 35, q: 17, cor: 'bg-red-500' }
             ];
             const container = document.getElementById('lista-melhorar');
+            container.innerHTML = '';
             areas.forEach(area => {
                 container.innerHTML += `
                     <div class="flex items-center gap-4">
@@ -128,6 +159,13 @@
                         <span class="text-[10px] font-bold text-gray-800 w-8">${area.pct}%</span>
                     </div>`;
             });
+        }
+
+        function resetarDados() {
+            if(confirm("Deseja zerar suas estatísticas?")) {
+                localStorage.removeItem('medquest_stats');
+                location.reload();
+            }
         }
     </script>
 </body>
