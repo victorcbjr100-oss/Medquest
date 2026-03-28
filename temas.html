@@ -6,12 +6,17 @@
     <title>Temas - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="sidebar.js"></script> <style>
+    <script src="sidebar.js"></script> 
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .card-tema { transition: all 0.3s ease; cursor: pointer; }
         .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        main { margin-left: 16rem; } /* ESPAÇO DA SIDEBAR */
+        main { margin-left: 16rem; }
+
+        @media (max-width: 768px) {
+            main { margin-left: 0; }
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
@@ -85,8 +90,10 @@
             const container = document.getElementById('container-itens');
             container.innerHTML = '';
             especialidade.sub.forEach(assunto => {
+                // PADRONIZAÇÃO: O assunto é enviado em UPPERCASE para a URL
+                const assuntoPadronizado = assunto.toUpperCase().trim();
                 container.innerHTML += `
-                    <div onclick="window.location.href='questoes.html?tema=${encodeURIComponent(assunto)}'" class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div onclick="window.location.href='questoes.html?tema=${encodeURIComponent(assuntoPadronizado)}'" class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
                         <div class="w-12 h-12 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center mb-3"><i class="fas fa-file-medical text-lg"></i></div>
                         <h4 class="font-bold text-gray-800 text-xs">${assunto}</h4>
                         <p class="text-[9px] text-blue-600 mt-2 font-bold uppercase">Praticar</p>
