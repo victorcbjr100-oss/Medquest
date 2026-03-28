@@ -6,46 +6,20 @@
     <title>Temas - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="sidebar.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .card-tema { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.05); }
+        /* Espaço para a sidebar que será inserida pelo sidebar.js */
+        main { margin-left: 16rem; }
         .hidden { display: none; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-10">
-        <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-100">
-                <i class="fas fa-brain text-xl"></i>
-            </div>
-            <div>
-                <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Provas e Questões</p>
-            </div>
-        </div>
-        <nav class="flex-1 px-4 mt-4 space-y-1">
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-home w-5"></i> Página Inicial
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
-                <i class="fas fa-layer-group w-5"></i> Temas
-            </a>
-            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-chart-bar w-5"></i> Estatísticas
-            </a>
-        </nav>
-        <div class="p-4 border-t border-gray-50">
-            <div class="flex items-center gap-3 px-2 py-2">
-                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">V</div>
-                <p class="text-xs font-bold text-gray-800">Victor Hugo</p>
-            </div>
-        </div>
-    </aside>
-
-    <main class="ml-64 flex-1 p-8 md:p-12">
+    <main class="flex-1 p-8 md:p-12">
         <div class="max-w-6xl mx-auto">
             
             <header class="mb-10">
@@ -56,14 +30,13 @@
                 <p id="subtitulo-pagina" class="text-gray-500 mt-1 text-sm">Selecione uma grande área para começar sua revisão</p>
             </header>
 
-            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-500">
+            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 </div>
 
         </div>
     </main>
 
     <script>
-        // Estrutura de Dados Organizada
         const bancoDeDados = {
             'Clínica Médica': {
                 icon: 'fa-stethoscope', color: 'blue',
@@ -89,8 +62,9 @@
             }
         };
 
-        let estado = 'areas'; // areas -> especialidades -> subtemas
+        let estado = 'areas'; 
         let areaSelecionada = '';
+        let especialidadeSelecionada = '';
 
         function renderizar() {
             const grid = document.getElementById('grid-container');
@@ -107,11 +81,11 @@
 
                 Object.keys(bancoDeDados).forEach(area => {
                     const info = bancoDeDados[area];
-                    grid.innerHTML += criarCard(area, info.icon, info.color, 'Ver Especialidades', () => {
+                    grid.appendChild(criarCardElement(area, info.icon, info.color, 'Ver Especialidades', () => {
                         areaSelecionada = area;
                         estado = 'especialidades';
                         renderizar();
-                    });
+                    }));
                 });
             } 
             else if (estado === 'especialidades') {
@@ -121,37 +95,41 @@
 
                 const especialidades = bancoDeDados[areaSelecionada].especialidades;
                 Object.keys(especialidades).forEach(esp => {
-                    grid.innerHTML += criarCard(esp, 'fa-layer-group', 'blue', 'Ver Assuntos', () => {
+                    grid.appendChild(criarCardElement(esp, 'fa-layer-group', 'blue', 'Ver Assuntos', () => {
                         especialidadeSelecionada = esp;
                         estado = 'subtemas';
                         renderizar();
-                    });
+                    }));
                 });
             }
             else if (estado === 'subtemas') {
+                btnVoltar.classList.remove('hidden');
                 titulo.innerText = especialidadeSelecionada;
                 subtitulo.innerText = "Clique em um assunto para abrir as questões";
 
                 const subtemas = bancoDeDados[areaSelecionada].especialidades[especialidadeSelecionada];
                 subtemas.forEach(assunto => {
-                    // LINK PARA O SEU ARQUIVO QUESTOES.HTML
-                    grid.innerHTML += criarCard(assunto, 'fa-file-medical', 'slate', 'Praticar Questões', () => {
+                    grid.appendChild(criarCardElement(assunto, 'fa-file-medical', 'slate', 'Praticar Questões', () => {
+                        // Envia o tema para a página de questões
                         window.location.href = `questoes.html?tema=${encodeURIComponent(assunto)}`;
-                    });
+                    }));
                 });
             }
         }
 
-        function criarCard(nome, icon, cor, footer, acao) {
-            return `
-                <div onclick="(${acao})()" class="card-tema bg-white border border-gray-100 p-8 rounded-[32px] shadow-sm flex flex-col items-center text-center">
-                    <div class="w-16 h-16 bg-${cor}-50 text-${cor}-500 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110">
-                        <i class="fas ${icon} text-2xl"></i>
-                    </div>
-                    <h4 class="font-bold text-gray-800 text-sm mb-2">${nome}</h4>
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${footer}</span>
+        // Função corrigida para criar elementos de card com eventos de clique reais
+        function criarCardElement(nome, icon, cor, footer, acao) {
+            const div = document.createElement('div');
+            div.className = 'card-tema bg-white border border-gray-100 p-8 rounded-[32px] shadow-sm flex flex-col items-center text-center';
+            div.onclick = acao;
+            div.innerHTML = `
+                <div class="w-16 h-16 bg-${cor}-50 text-${cor}-500 rounded-2xl flex items-center justify-center mb-5">
+                    <i class="fas ${icon} text-2xl"></i>
                 </div>
+                <h4 class="font-bold text-gray-800 text-sm mb-2">${nome}</h4>
+                <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${footer}</span>
             `;
+            return div;
         }
 
         function voltar() {
@@ -160,8 +138,7 @@
             renderizar();
         }
 
-        // Inicializa a página
-        renderizar();
+        window.onload = renderizar;
     </script>
 </body>
 </html>
