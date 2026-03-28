@@ -1,247 +1,150 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - MedQuest Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="sidebar.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        main { margin-left: 16rem; }
-        .alternativa { transition: all 0.2s ease; cursor: pointer; border-width: 2px; }
-        .alternativa:hover { border-color: #3b82f6; background-color: #f0f7ff; }
-        .correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #065f46; }
-        .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b; }
-        .selecionada { border-color: #3b82f6; background-color: #f0f7ff; }
-        .hidden { display: none; }
-        
-        @media (max-width: 768px) {
-            main { margin-left: 0; }
-        }
-    </style>
-</head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<script>
+    const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+    
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    <main class="flex-1 p-8 md:p-12">
-        <div class="max-w-4xl mx-auto">
-            
-            <header class="mb-8 flex justify-between items-end">
-                <div>
-                    <a href="temas.html" class="text-blue-600 text-xs font-bold uppercase flex items-center gap-2 mb-4 hover:underline">
-                        <i class="fas fa-arrow-left"></i> Voltar aos Temas
-                    </a>
-                    <h2 id="titulo-tema" class="text-3xl font-bold text-gray-800 tracking-tight">Carregando...</h2>
-                    <p id="contador-questoes" class="text-sm text-gray-500 mt-2 font-medium">Questão 0 de 0</p>
-                </div>
-            </header>
+    let questoesFiltradas = [];
+    let indiceAtual = 0;
+    let respondida = false;
+    let opcaoSelecionada = null;
 
-            <div id="questao-card" class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-6">
-                <div id="conteudo-questao"></div>
+    const urlParams = new URLSearchParams(window.location.search);
+    const temaURL = urlParams.get('tema');
 
-                <div id="feedback-container" class="hidden mt-6 pt-6 border-t border-gray-50">
-                    <div id="feedback-status" class="p-4 rounded-xl text-sm font-bold mb-4"></div>
-                    <div class="bg-blue-50 p-6 rounded-2xl">
-                        <h4 class="text-blue-800 font-bold text-xs uppercase mb-2">
-                            <i class="fas fa-comment-medical mr-2"></i> Comentário do Especialista
-                        </h4>
-                        <p id="comentario-texto" class="text-blue-900 text-sm leading-relaxed italic"></p>
-                    </div>
-                </div>
-            </div>
+    async function inicializar() {
+        try {
+            let query = _supabase.from('questoes').select('*');
 
-            <div class="flex justify-between items-center">
-                <button onclick="questaoAnterior()" id="btn-prev" class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2 disabled:opacity-30" disabled>
-                    <i class="fas fa-chevron-left"></i> Anterior
-                </button>
-                
-                <div class="flex gap-3">
-                    <button onclick="verificarAcao()" id="btn-acao" class="px-10 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
-                        Responder
-                    </button>
-                    <button onclick="proximaQuestao()" id="btn-next" class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2">
-                        Próxima <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="empty-state" class="hidden text-center py-20">
-                <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
-                <p class="text-gray-500 font-medium">Nenhuma questão encontrada para este filtro.</p>
-                <a href="temas.html" class="text-blue-500 text-sm underline mt-2 block">Tentar outro tema</a>
-            </div>
-
-        </div>
-    </main>
-
-    <script>
-        const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let questoesFiltradas = [];
-        let indiceAtual = 0;
-        let respondidasLocal = {}; // Armazena estado das questões nesta sessão
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const temaURL = urlParams.get('tema');
-
-        async function inicializar() {
-            try {
-                let query = _supabase.from('questoes').select('*');
-
-                if (temaURL) {
-                    // FILTRO CORRIGIDO: Busca em ambas as colunas
-                    query = query.or(`tema.eq."${temaURL}",subtema.eq."${temaURL}"`);
-                }
-
-                const { data, error } = await query;
-                if (error) throw error;
-
-                questoesFiltradas = data;
-
-                if (!questoesFiltradas || questoesFiltradas.length === 0) {
-                    document.getElementById('questao-card').classList.add('hidden');
-                    document.getElementById('empty-state').classList.remove('hidden');
-                    document.getElementById('titulo-tema').innerText = "Vazio";
-                    return;
-                }
-                
-                document.getElementById('titulo-tema').innerText = temaURL || "Geral - ENAMED";
-                renderizarQuestao();
-
-            } catch (err) {
-                console.error("Erro Supabase:", err);
-                document.getElementById('titulo-tema').innerText = "Erro de Conexão";
+            if (temaURL) {
+                // CORREÇÃO: Filtra se o termo está na coluna 'tema' OU 'subtema'
+                query = query.or(`tema.eq."${temaURL}",subtema.eq."${temaURL}"`);
             }
-        }
 
-        function renderizarQuestao() {
-            const q = questoesFiltradas[indiceAtual];
-            const container = document.getElementById('conteudo-questao');
-            const feedbackContainer = document.getElementById('feedback-container');
-            const btnAcao = document.getElementById('btn-acao');
-            
-            // Atualiza botões de navegação
-            document.getElementById('btn-prev').disabled = indiceAtual === 0;
-            document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
+            const { data, error } = await query;
+            if (error) throw error;
 
-            const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
-            let html = `
-                <div class="flex justify-between items-center mb-4">
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">${q.origem || 'ID #' + q.id}</p>
-                    <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">${q.subtema || q.tema}</span>
-                </div>
-                <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
-                <div class="space-y-3" id="opcoes-container">
-            `;
+            questoesFiltradas = data;
 
-            opcoes.forEach((opt, i) => {
-                if (opt) {
-                    html += `
-                        <div onclick="selecionarOpcao(this, ${i})" 
-                             data-index="${i}"
-                             class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white">
-                            <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
-                                ${String.fromCharCode(65 + i)}
-                            </span>
-                            <div class="flex-1">${opt}</div>
-                        </div>
-                    `;
-                }
-            });
-
-            html += `</div>`;
-            container.innerHTML = html;
-
-            // Restaurar estado se já respondida
-            if (respondidasLocal[indiceAtual] !== undefined) {
-                aplicarFeedback(respondidasLocal[indiceAtual]);
-            } else {
-                feedbackContainer.classList.add('hidden');
-                btnAcao.innerText = "Responder";
-            }
-        }
-
-        function selecionarOpcao(elemento, index) {
-            if (respondidasLocal[indiceAtual] !== undefined) return;
-            
-            document.querySelectorAll('.alternativa').forEach(alt => alt.classList.remove('selecionada'));
-            elemento.classList.add('selecionada');
-            window.opcaoSelecionadaTemp = index;
-        }
-
-        function verificarAcao() {
-            if (respondidasLocal[indiceAtual] !== undefined) {
-                proximaQuestao();
+            if (!questoesFiltradas || questoesFiltradas.length === 0) {
+                document.getElementById('questao-card').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+                document.getElementById('titulo-tema').innerText = "Nenhuma questão";
                 return;
             }
-
-            if (window.opcaoSelecionadaTemp === undefined) return alert("Selecione uma alternativa.");
-            confirmarResposta(window.opcaoSelecionadaTemp);
-        }
-
-        function confirmarResposta(index) {
-            respondidasLocal[indiceAtual] = index;
-            window.opcaoSelecionadaTemp = undefined;
             
-            const q = questoesFiltradas[indiceAtual];
-            
-            // Estatísticas
-            let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
-            stats.total += 1;
-            index === q.correta ? stats.acertos += 1 : stats.erros += 1;
-            localStorage.setItem('medquest_stats', JSON.stringify(stats));
+            document.getElementById('titulo-tema').innerText = temaURL || "Geral - ENAMED";
+            renderizarQuestao();
 
-            aplicarFeedback(index);
+        } catch (err) {
+            console.error("Erro Supabase:", err);
+            document.getElementById('titulo-tema').innerText = "Erro de Conexão";
         }
+    }
 
-        function aplicarFeedback(escolhaUsuario) {
-            const q = questoesFiltradas[indiceAtual];
-            const alternativas = document.querySelectorAll('.alternativa');
-            const feedbackStatus = document.getElementById('feedback-status');
-            const feedbackContainer = document.getElementById('feedback-container');
-            const btnAcao = document.getElementById('btn-acao');
+    function renderizarQuestao() {
+        const q = questoesFiltradas[indiceAtual];
+        const container = document.getElementById('conteudo-questao');
+        
+        respondida = false;
+        opcaoSelecionada = null;
+        
+        document.getElementById('feedback-container').classList.add('hidden');
+        document.getElementById('btn-acao').innerText = "Responder";
+        document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
 
-            alternativas.forEach((alt, i) => {
-                alt.classList.remove('selecionada');
-                if (i === q.correta) alt.classList.add('correta');
-                if (i === escolhaUsuario && i !== q.correta) alt.classList.add('errada');
-            });
+        const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
 
-            if (escolhaUsuario === q.correta) {
-                feedbackStatus.innerHTML = "✅ RESPOSTA CORRETA!";
-                feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-emerald-50 text-emerald-600";
-            } else {
-                feedbackStatus.innerHTML = "❌ RESPOSTA INCORRETA";
-                feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-red-50 text-red-600";
+        let html = `
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">${q.origem || 'ID #' + q.id}</p>
+                <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">
+                    ${q.subtema ? q.subtema : q.tema}
+                </span>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
+            <div class="space-y-3">
+        `;
+
+        opcoes.forEach((opt, i) => {
+            if (opt) {
+                html += `
+                    <div onclick="selecionarOpcao(this, ${i})" 
+                         class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white">
+                        <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
+                            ${String.fromCharCode(65 + i)}
+                        </span>
+                        ${opt}
+                    </div>
+                `;
             }
+        });
 
-            document.getElementById('comentario-texto').innerText = q.comentario || "Comentário indisponível para esta questão.";
-            feedbackContainer.classList.remove('hidden');
-            btnAcao.innerText = "Próxima Questão";
+        html += `</div>`;
+        container.innerHTML = html;
+    }
+
+    function selecionarOpcao(elemento, index) {
+        if (respondida) return;
+        document.querySelectorAll('.alternativa').forEach(alt => {
+            alt.style.borderColor = '#f1f5f9';
+            alt.style.backgroundColor = 'white';
+        });
+        elemento.style.borderColor = '#3b82f6';
+        elemento.style.backgroundColor = '#f0f7ff';
+        opcaoSelecionada = index;
+    }
+
+    function verificarAcao() {
+        if (opcaoSelecionada === null) return alert("Selecione uma alternativa.");
+        if (!respondida) confirmarResposta();
+        else proximaQuestao();
+    }
+
+    function confirmarResposta() {
+        respondida = true;
+        const q = questoesFiltradas[indiceAtual];
+        const alternativas = document.querySelectorAll('.alternativa');
+        const feedbackStatus = document.getElementById('feedback-status');
+        
+        let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
+        stats.total += 1;
+
+        alternativas[q.correta].classList.add('correta');
+
+        if (opcaoSelecionada === q.correta) {
+            feedbackStatus.innerHTML = "✅ RESPOSTA CORRETA!";
+            feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-emerald-50 text-emerald-600";
+            stats.acertos += 1;
+        } else {
+            alternativas[opcaoSelecionada].classList.add('errada');
+            feedbackStatus.innerHTML = "❌ RESPOSTA INCORRETA";
+            feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-red-50 text-red-600";
+            stats.erros += 1;
         }
 
-        function proximaQuestao() {
-            if (indiceAtual < questoesFiltradas.length - 1) {
-                indiceAtual++;
-                renderizarQuestao();
-            } else {
-                alert("Você chegou ao fim das questões deste tema!");
-            }
-        }
+        localStorage.setItem('medquest_stats', JSON.stringify(stats));
+        // CORREÇÃO: Evita erro se o comentário for nulo
+        document.getElementById('comentario-texto').innerText = q.comentario || "Nenhum comentário disponível para esta questão.";
+        document.getElementById('feedback-container').classList.remove('hidden');
+        document.getElementById('btn-acao').innerText = "Próxima Questão";
+    }
 
-        function questaoAnterior() {
-            if (indiceAtual > 0) {
-                indiceAtual--;
-                renderizarQuestao();
-            }
+    function proximaQuestao() {
+        if (indiceAtual < questoesFiltradas.length - 1) {
+            indiceAtual++;
+            renderizarQuestao();
+        } else {
+            alert("Você concluiu as questões disponíveis!");
         }
+    }
 
-        window.onload = inicializar;
-    </script>
-</body>
-</html>
+    function questaoAnterior() {
+        if (indiceAtual > 0) {
+            indiceAtual--;
+            renderizarQuestao();
+        }
+    }
+
+    window.onload = inicializar;
+</script>
