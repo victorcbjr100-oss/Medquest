@@ -1,6 +1,5 @@
-// sidebar.js - VERSÃO INTEGRAL (NÃO REMOVER FUNÇÕES)
+// sidebar.js - VERSÃO INTEGRAL 3.0 (NÃO REMOVER FUNÇÕES)
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Limpeza de segurança para evitar duplicidade no render
     const existing = document.querySelector('aside');
     if (existing) existing.remove();
 
@@ -55,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function() {
         </nav>
 
         <div class="p-4 border-t border-gray-50">
-            <a href="perfil.html" id="sidebar-profile-link" class="flex items-center gap-3 p-3 rounded-2xl bg-[#f8fafc] border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all group shadow-sm no-underline">
+            <a href="perfil.html" id="sidebar-profile-link" class="flex items-center gap-3 p-3 rounded-2xl bg-[#f8fafc] border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all cursor-pointer group shadow-sm no-underline">
                 <div id="sidebar-avatar" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
                     V
                 </div>
@@ -68,27 +67,13 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </aside>`;
 
-    // Inserção no DOM
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // 2. Lógica de Sincronização de Dados e Estilo Ativo
+    // Sincronização de dados
     const dados = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
-    
     if (dados.nome) document.getElementById('sidebar-user-name').innerText = dados.nome;
     if (dados.categoria) document.getElementById('sidebar-user-tag').innerText = dados.categoria;
-    
-    const avatar = document.getElementById('sidebar-avatar');
     if (dados.foto) {
-        avatar.innerHTML = `<img src="${dados.foto}" class="w-full h-full object-cover">`;
-    } else if (dados.nome) {
-        avatar.innerText = dados.nome.charAt(0).toUpperCase();
+        document.getElementById('sidebar-avatar').innerHTML = `<img src="${dados.foto}" class="w-full h-full object-cover">`;
     }
-
-    // Marca o link da página atual como ativo
-    const currentPage = window.location.pathname.split("/").pop() || "index.html";
-    document.querySelectorAll(".nav-link").forEach(link => {
-        if (link.getAttribute("href") === currentPage) {
-            link.classList.add("bg-blue-50", "text-blue-600");
-        }
-    });
 });
