@@ -12,10 +12,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         main { margin-left: 16rem; }
-        .alternativa { transition: all 0.2s ease; cursor: pointer; }
+        .alternativa { transition: all 0.2s ease; cursor: pointer; border-width: 2px; }
         .alternativa:hover { border-color: #3b82f6; background-color: #f0f7ff; }
         .correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #065f46; }
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b; }
+        .selecionada { border-color: #3b82f6; background-color: #f0f7ff; }
         .hidden { display: none; }
         
         @media (max-width: 768px) {
@@ -53,7 +54,7 @@
             </div>
 
             <div class="flex justify-between items-center">
-                <button onclick="questaoAnterior()" id="btn-prev" class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2">
+                <button onclick="questaoAnterior()" id="btn-prev" class="px-6 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2 disabled:opacity-30" disabled>
                     <i class="fas fa-chevron-left"></i> Anterior
                 </button>
                 
@@ -69,7 +70,7 @@
 
             <div id="empty-state" class="hidden text-center py-20">
                 <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
-                <p class="text-gray-500 font-medium">Nenhuma questão encontrada para este tema.</p>
+                <p class="text-gray-500 font-medium">Nenhuma questão encontrada para este filtro.</p>
                 <a href="temas.html" class="text-blue-500 text-sm underline mt-2 block">Tentar outro tema</a>
             </div>
 
@@ -83,8 +84,7 @@
 
         let questoesFiltradas = [];
         let indiceAtual = 0;
-        let respondida = false;
-        let opcaoSelecionada = null;
+        let respondidasLocal = {}; // Armazena estado das questões nesta sessão
 
         const urlParams = new URLSearchParams(window.location.search);
         const temaURL = urlParams.get('tema');
@@ -94,7 +94,7 @@
                 let query = _supabase.from('questoes').select('*');
 
                 if (temaURL) {
-                    // CORREÇÃO: Busca o termo tanto na coluna 'tema' quanto na 'subtema'
+                    // FILTRO CORRIGIDO: Busca em ambas as colunas
                     query = query.or(`tema.eq."${temaURL}",subtema.eq."${temaURL}"`);
                 }
 
@@ -122,34 +122,33 @@
         function renderizarQuestao() {
             const q = questoesFiltradas[indiceAtual];
             const container = document.getElementById('conteudo-questao');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const btnAcao = document.getElementById('btn-acao');
             
-            respondida = false;
-            opcaoSelecionada = null;
-            
-            document.getElementById('feedback-container').classList.add('hidden');
-            document.getElementById('btn-acao').innerText = "Responder";
+            // Atualiza botões de navegação
+            document.getElementById('btn-prev').disabled = indiceAtual === 0;
             document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
 
             const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
-
             let html = `
                 <div class="flex justify-between items-center mb-4">
                     <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">${q.origem || 'ID #' + q.id}</p>
                     <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">${q.subtema || q.tema}</span>
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
-                <div class="space-y-3">
+                <div class="space-y-3" id="opcoes-container">
             `;
 
             opcoes.forEach((opt, i) => {
                 if (opt) {
                     html += `
                         <div onclick="selecionarOpcao(this, ${i})" 
+                             data-index="${i}"
                              class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white">
                             <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
                                 ${String.fromCharCode(65 + i)}
                             </span>
-                            ${opt}
+                            <div class="flex-1">${opt}</div>
                         </div>
                     `;
                 }
@@ -157,51 +156,73 @@
 
             html += `</div>`;
             container.innerHTML = html;
+
+            // Restaurar estado se já respondida
+            if (respondidasLocal[indiceAtual] !== undefined) {
+                aplicarFeedback(respondidasLocal[indiceAtual]);
+            } else {
+                feedbackContainer.classList.add('hidden');
+                btnAcao.innerText = "Responder";
+            }
         }
 
         function selecionarOpcao(elemento, index) {
-            if (respondida) return;
-            document.querySelectorAll('.alternativa').forEach(alt => {
-                alt.style.borderColor = '#f1f5f9';
-                alt.style.backgroundColor = 'white';
-            });
-            elemento.style.borderColor = '#3b82f6';
-            elemento.style.backgroundColor = '#f0f7ff';
-            opcaoSelecionada = index;
+            if (respondidasLocal[indiceAtual] !== undefined) return;
+            
+            document.querySelectorAll('.alternativa').forEach(alt => alt.classList.remove('selecionada'));
+            elemento.classList.add('selecionada');
+            window.opcaoSelecionadaTemp = index;
         }
 
         function verificarAcao() {
-            if (opcaoSelecionada === null) return alert("Selecione uma alternativa.");
-            if (!respondida) confirmarResposta();
-            else proximaQuestao();
+            if (respondidasLocal[indiceAtual] !== undefined) {
+                proximaQuestao();
+                return;
+            }
+
+            if (window.opcaoSelecionadaTemp === undefined) return alert("Selecione uma alternativa.");
+            confirmarResposta(window.opcaoSelecionadaTemp);
         }
 
-        function confirmarResposta() {
-            respondida = true;
+        function confirmarResposta(index) {
+            respondidasLocal[indiceAtual] = index;
+            window.opcaoSelecionadaTemp = undefined;
+            
+            const q = questoesFiltradas[indiceAtual];
+            
+            // Estatísticas
+            let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
+            stats.total += 1;
+            index === q.correta ? stats.acertos += 1 : stats.erros += 1;
+            localStorage.setItem('medquest_stats', JSON.stringify(stats));
+
+            aplicarFeedback(index);
+        }
+
+        function aplicarFeedback(escolhaUsuario) {
             const q = questoesFiltradas[indiceAtual];
             const alternativas = document.querySelectorAll('.alternativa');
             const feedbackStatus = document.getElementById('feedback-status');
-            
-            let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
-            stats.total += 1;
+            const feedbackContainer = document.getElementById('feedback-container');
+            const btnAcao = document.getElementById('btn-acao');
 
-            alternativas[q.correta].classList.add('correta');
+            alternativas.forEach((alt, i) => {
+                alt.classList.remove('selecionada');
+                if (i === q.correta) alt.classList.add('correta');
+                if (i === escolhaUsuario && i !== q.correta) alt.classList.add('errada');
+            });
 
-            if (opcaoSelecionada === q.correta) {
+            if (escolhaUsuario === q.correta) {
                 feedbackStatus.innerHTML = "✅ RESPOSTA CORRETA!";
                 feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-emerald-50 text-emerald-600";
-                stats.acertos += 1;
             } else {
-                alternativas[opcaoSelecionada].classList.add('errada');
                 feedbackStatus.innerHTML = "❌ RESPOSTA INCORRETA";
                 feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-red-50 text-red-600";
-                stats.erros += 1;
             }
 
-            localStorage.setItem('medquest_stats', JSON.stringify(stats));
-            document.getElementById('comentario-texto').innerText = q.comentario || "Sem comentário disponível.";
-            document.getElementById('feedback-container').classList.remove('hidden');
-            document.getElementById('btn-acao').innerText = "Próxima Questão";
+            document.getElementById('comentario-texto').innerText = q.comentario || "Comentário indisponível para esta questão.";
+            feedbackContainer.classList.remove('hidden');
+            btnAcao.innerText = "Próxima Questão";
         }
 
         function proximaQuestao() {
@@ -209,7 +230,7 @@
                 indiceAtual++;
                 renderizarQuestao();
             } else {
-                alert("Você concluiu as questões deste tema!");
+                alert("Você chegou ao fim das questões deste tema!");
             }
         }
 
