@@ -1,4 +1,4 @@
-// sidebar.js
+// sidebar.js - Versão 1.2 com Estatísticas
 document.addEventListener("DOMContentLoaded", function() {
     const existing = document.querySelector('aside');
     if (existing) existing.remove();
@@ -17,21 +17,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
         <nav class="flex-1 px-4 mt-4 space-y-1 overflow-y-auto">
             <p class="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 mb-2">Navegação</p>
+            
             <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-home w-5"></i> Página Inicial
             </a>
+            
             <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
+
             <a href="simulados.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-stopwatch w-5"></i> Simulados
             </a>
+
             <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-chart-line w-5"></i> Estatísticas
             </a>
+
             <a href="favoritas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-star w-5"></i> Favoritas
             </a>
+
             <a href="caderno.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-book-medical w-5"></i> Meu Caderno
             </a>
@@ -63,6 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
+    // Persistência de dados do Dr. Victor
     const dados = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
     if (dados.nome) document.getElementById('sidebar-user-name').innerText = dados.nome;
     if (dados.categoria) document.getElementById('sidebar-user-tag').innerText = dados.categoria;
