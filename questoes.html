@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest Pro</title>
+    <title>MedQuest Pro - Questões</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        .alternativa.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .alternativa.correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; }
+        .alternativa.errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+    </style>
 </head>
 <body class="bg-[#f8fafc] p-4">
 
@@ -14,96 +19,120 @@
             Status: Aguardando Sistema...
         </div>
         
-        <h1 id="exibir-tema" class="text-3xl font-black text-gray-800 mb-6">MedQuest</h1>
+        <h1 id="exibir-tema" class="text-3xl font-black text-gray-800 mb-6 uppercase">MedQuest</h1>
         
         <div id="bloco-questao" class="min-h-[200px]">
             <p class="text-gray-400 italic">Iniciando protocolos de conexão...</p>
         </div>
 
-        <div id="botoes" class="mt-8 hidden">
-            <button onclick="verificarResposta()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">
+        <div id="botoes" class="mt-8 hidden flex gap-3">
+            <button id="btn-voltar" onclick="window.location.href='temas.html'" class="px-6 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-all">
+                Sair
+            </button>
+            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">
                 Responder Questão
             </button>
         </div>
     </div>
 
     <script>
-        // Configurações de Acesso ao Banco
         const URL_DB = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
         const KEY_DB = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
         
+        let questaoAtual = null;
+        let opcaoSelecionada = null;
+        let respondida = false;
+
         function atualizarStatus(texto, erro = false) {
             const el = document.getElementById('monitor');
             el.innerText = "Status: " + texto;
-            if(erro) el.style.color = "red";
+            el.style.color = erro ? "red" : "#3b82f6";
         }
 
         async function conectarEBuscar() {
-            atualizarStatus("Conectando ao Supabase...");
-            
+            atualizarStatus("Conectando ao banco...");
             try {
-                // Verifica se a biblioteca carregou
-                if (typeof supabase === 'undefined') {
-                    throw new Error("Biblioteca de conexão não encontrada. Verifique sua internet.");
-                }
+                if (typeof supabase === 'undefined') throw new Error("Biblioteca não carregada.");
 
                 const cliente = supabase.createClient(URL_DB, KEY_DB);
                 const { data, error } = await cliente.from('questoes').select('*');
 
                 if (error) throw error;
 
-                // Identifica o tema solicitado na URL (ex: HAS)
                 const urlParams = new URLSearchParams(window.location.search);
-                const temaSolicitado = (urlParams.get('tema') || "").toLowerCase().trim();
-                document.getElementById('exibir-tema').innerText = urlParams.get('tema') || "Geral";
+                const temaSolicitado = (urlParams.get('tema') || "").toUpperCase().trim();
+                document.getElementById('exibir-tema').innerText = temaSolicitado || "GERAL";
 
-                // Filtro que aceita variações de nome
+                // FILTRO PADRONIZADO (Tudo em Maiúsculo)
                 const filtradas = data.filter(q => {
-                    const temaBanco = (q.tema || "").toLowerCase();
-                    const subtemaBanco = (q.subtema || "").toLowerCase();
-                    return temaBanco.includes(temaSolicitado) || subtemaBanco.includes(temaSolicitado);
+                    const temaBanco = (q.tema || "").toUpperCase().trim();
+                    const subtemaBanco = (q.subtema || "").toUpperCase().trim();
+                    return temaBanco === temaSolicitado || subtemaBanco === temaSolicitado;
                 });
 
                 if (filtradas.length > 0) {
-                    atualizarStatus(filtradas.length + " questões carregadas com sucesso.");
-                    montarQuestao(filtradas);
+                    atualizarStatus(filtradas.length + " questões encontradas.");
+                    questaoAtual = filtradas; // Pega a primeira questão do filtro
+                    montarQuestao(questaoAtual);
                     document.getElementById('botoes').classList.remove('hidden');
                 } else {
-                    atualizarStatus("Nenhuma questão encontrada para: " + temaSolicitado, true);
+                    atualizarStatus("Tema não encontrado: " + temaSolicitado, true);
                     document.getElementById('bloco-questao').innerHTML = `
-                        <div class="p-6 bg-red-50 rounded-2xl border border-red-100 text-red-600">
-                            Não existem questões cadastradas com o nome <b>${temaSolicitado}</b> no banco de dados.
+                        <div class="p-6 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-center">
+                            Questões para <b>${temaSolicitado}</b> não localizadas.<br>
+                            <a href="temas.html" class="text-sm underline mt-4 inline-block">Voltar aos Temas</a>
                         </div>`;
                 }
-
             } catch (err) {
-                atualizarStatus("Falha Crítica: " + err.message, true);
+                atualizarStatus("Erro: " + err.message, true);
             }
         }
 
         function montarQuestao(q) {
             let layout = `<p class="text-xl font-bold text-gray-700 mb-8 leading-relaxed">${q.enunciado}</p><div class="space-y-4">`;
-            
             const alternativas = [
-                { texto: q.opcao_a, letra: 'A' },
-                { texto: q.opcao_b, letra: 'B' },
-                { texto: q.opcao_c, letra: 'C' },
-                { texto: q.opcao_d, letra: 'D' }
+                { texto: q.opcao_a, letra: 'A', index: 0 },
+                { texto: q.opcao_b, letra: 'B', index: 1 },
+                { texto: q.opcao_c, letra: 'C', index: 2 },
+                { texto: q.opcao_d, letra: 'D', index: 3 }
             ];
 
             alternativas.forEach(alt => {
                 if(alt.texto) {
                     layout += `
-                        <div onclick="this.style.borderColor='#3b82f6'; this.style.backgroundColor='#eff6ff'" 
-                             class="p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all flex items-center gap-4">
-                            <span class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400">${alt.letra}</span>
+                        <div onclick="selecionarOpcao(this, ${alt.index})" 
+                             class="alternativa p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all flex items-center gap-4">
+                            <span class="letra-card w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400">${alt.letra}</span>
                             <div class="text-gray-600 font-medium">${alt.texto}</div>
                         </div>`;
                 }
             });
-
             document.getElementById('bloco-questao').innerHTML = layout + "</div>";
         }
+
+        window.selecionarOpcao = function(el, index) {
+            if(respondida) return;
+            document.querySelectorAll('.alternativa').forEach(d => d.classList.remove('selecionada'));
+            el.classList.add('selecionada');
+            opcaoSelecionada = index;
+        };
+
+        window.verificarResposta = function() {
+            if(opcaoSelecionada === null) return alert("Selecione uma alternativa!");
+            if(respondida) return window.location.reload(); // Se já respondeu, o botão vira "Próxima"
+
+            respondida = true;
+            const divs = document.querySelectorAll('.alternativa');
+            const corretaIndex = questaoAtual.correta; // Espera 0, 1, 2 ou 3 do banco
+
+            divs[corretaIndex].classList.add('correta');
+            if(opcaoSelecionada !== corretaIndex) {
+                divs[opcaoSelecionada].classList.add('errada');
+            }
+
+            document.getElementById('btn-acao').innerText = "Próxima Questão";
+            document.getElementById('btn-acao').classList.replace('bg-blue-600', 'bg-gray-800');
+        };
 
         window.onload = conectarEBuscar;
     </script>
