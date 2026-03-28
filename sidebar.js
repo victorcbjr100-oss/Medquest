@@ -1,129 +1,94 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest - Meu Perfil</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="sidebar.js"></script>
-    <style>
-        main { margin-left: 16rem; }
-        @media (max-width: 768px) { main { margin-left: 0; } }
-    </style>
-</head>
-<body class="bg-[#f8fafc]">
-    <main class="p-4 md:p-10">
-        <div class="max-w-xl mx-auto bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
-            <div class="bg-blue-600 p-8 text-white text-center">
-                <div class="relative inline-block">
-                    <div id="preview-avatar" class="w-24 h-24 bg-blue-500 rounded-3xl border-4 border-white/20 mx-auto flex items-center justify-center text-3xl font-bold overflow-hidden shadow-inner">
-                        V
-                    </div>
-                    <label class="absolute -bottom-2 -right-2 bg-white text-blue-600 w-10 h-10 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform border-2 border-blue-50">
-                        <i class="fas fa-camera text-sm"></i>
-                        <input type="file" id="input-foto" class="hidden" accept="image/*">
-                    </label>
+// sidebar.js
+(function() {
+    const renderSidebar = () => {
+        // Remove sidebar antiga se existir para evitar duplicidade
+        const oldSidebar = document.querySelector('aside');
+        if (oldSidebar) oldSidebar.remove();
+
+        const sidebarHTML = `
+        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z- font-sans left-0 top-0">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i class="fas fa-brain text-xl"></i>
                 </div>
-                <h2 class="mt-4 font-black text-xl">Configurações de Perfil</h2>
-                <p class="text-blue-100 text-xs font-bold uppercase tracking-widest opacity-80">Dr. Victor</p>
+                <div>
+                    <h1 class="font-bold text-gray-800 leading-tight tracking-tighter text-lg">MedQuest</h1>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Provas e Questões</p>
+                </div>
             </div>
 
-            <form id="form-perfil" class="p-8 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nome Completo</label>
-                        <input type="text" id="nome" required class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: Dr. Victor Hugo">
-                    </div>
+            <nav class="flex-1 px-4 mt-4 space-y-1 overflow-y-auto">
+                <p class="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 mb-2">Navegação</p>
+                <a href="index.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-home w-5"></i> Página Inicial
+                </a>
+                <a href="temas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-layer-group w-5"></i> Temas
+                </a>
+                <a href="simulados.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-stopwatch w-5"></i> Simulados
+                </a>
+                <a href="favoritas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-star w-5"></i> Favoritas
+                </a>
+                <a href="caderno.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-book-medical w-5"></i> Meu Caderno
+                </a>
 
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Data de Nascimento</label>
-                        <input type="date" id="nascimento" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ano de Formatura</label>
-                        <input type="number" id="formatura" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: 2025">
-                    </div>
-
-                    <div class="col-span-2">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Categoria Profissional</label>
-                        <select id="categoria" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none appearance-none">
-                            <option value="Aluno">Aluno</option>
-                            <option value="Residente">Residente</option>
-                            <option value="Especialista">Especialista</option>
-                        </select>
-                    </div>
+                <div class="pt-6">
+                    <p class="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 mb-2">Admin</p>
+                    <a href="gerenciar-usuarios.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                        <i class="fas fa-users w-5"></i> Usuários
+                    </a>
+                    <a href="gerenciar-questoes.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                        <i class="fas fa-tasks w-5"></i> Questões
+                    </a>
                 </div>
+            </nav>
 
-                <button type="submit" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all active:scale-95">
-                    Salvar Alterações
-                </button>
-                
-                <button type="button" onclick="window.history.back()" class="w-full text-gray-400 text-xs font-bold uppercase tracking-widest hover:text-gray-600 transition-colors">
-                    Cancelar e Voltar
-                </button>
-            </form>
-        </div>
-    </main>
+            <div class="p-4 border-t border-gray-50">
+                <div id="PERFIL_TRIGGER" 
+                     class="flex items-center gap-3 p-3 rounded-2xl bg-[#f8fafc] border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all cursor-pointer group shadow-sm">
+                    <div id="sidebar-avatar" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
+                        V
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[13px] font-black text-gray-800 truncate" id="sidebar-user-name">Dr. Victor</p>
+                        <p class="text-[10px] text-blue-500 font-black uppercase tracking-tight" id="sidebar-user-tag">Plano Premium</p>
+                    </div>
+                    <i class="fas fa-cog text-gray-300 group-hover:text-blue-500 text-[12px] transition-colors"></i>
+                </div>
+            </div>
+        </aside>`;
 
-    <script>
-        const form = document.getElementById('form-perfil');
-        const inputFoto = document.getElementById('input-foto');
-        const preview = document.getElementById('preview-avatar');
+        document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-        // 1. CARREGAR DADOS SALVOS
-        const carregarPerfil = () => {
-            const dadosSalvos = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
-            
-            if(dadosSalvos.nome) document.getElementById('nome').value = dadosSalvos.nome;
-            if(dadosSalvos.nascimento) document.getElementById('nascimento').value = dadosSalvos.nascimento;
-            if(dadosSalvos.formatura) document.getElementById('formatura').value = dadosSalvos.formatura;
-            if(dadosSalvos.categoria) document.getElementById('categoria').value = dadosSalvos.categoria;
-            
-            if(dadosSalvos.foto) {
-                preview.innerHTML = `<img src="${dadosSalvos.foto}" class="w-full h-full object-cover">`;
-            } else if (dadosSalvos.nome) {
-                preview.innerText = dadosSalvos.nome.charAt(0).toUpperCase();
-            }
-        };
-
-        // 2. LÓGICA DE FOTO (CORRIGIDA)
-        inputFoto.addEventListener('change', function(e) {
-            const file = e.target.files; // Correção: Pegar o primeiro arquivo do array
-            if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64 = reader.result;
-                    preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover">`;
-                };
-                reader.readAsDataURL(file);
+        // FORÇAR O CLIQUE VIA JAVASCRIPT PURO
+        document.addEventListener('click', function (e) {
+            // Verifica se o clique foi no botão ou em qualquer elemento dentro dele
+            if (e.target.closest('#PERFIL_TRIGGER')) {
+                console.log("Encaminhando para perfil...");
+                window.location.href = 'perfil.html';
             }
         });
 
-        // 3. SALVAR E SINCRONIZAR
-        form.onsubmit = (e) => {
-            e.preventDefault();
-            
-            const imgElement = preview.querySelector('img');
-            
-            const perfil = {
-                nome: document.getElementById('nome').value,
-                nascimento: document.getElementById('nascimento').value,
-                formatura: document.getElementById('formatura').value,
-                categoria: document.getElementById('categoria').value,
-                foto: imgElement ? imgElement.src : null
-            };
+        // ATUALIZAR DADOS DO DR. VICTOR
+        const storageData = localStorage.getItem('medquest_perfil');
+        if (storageData) {
+            const dados = JSON.parse(storageData);
+            if (dados.nome) document.getElementById('sidebar-user-name').innerText = dados.nome;
+            if (dados.categoria) document.getElementById('sidebar-user-tag').innerText = dados.categoria;
+            if (dados.foto) {
+                document.getElementById('sidebar-avatar').innerHTML = `<img src="${dados.foto}" class="w-full h-full object-cover">`;
+            } else if (dados.nome) {
+                document.getElementById('sidebar-avatar').innerText = dados.nome.charAt(0).toUpperCase();
+            }
+        }
+    };
 
-            localStorage.setItem('medquest_perfil', JSON.stringify(perfil));
-            
-            // Feedback visual e redirecionamento
-            alert("Perfil do Dr. Victor atualizado!");
-            window.location.href = 'index.html'; // Volta para a home após salvar
-        };
-
-        // Iniciar carregamento
-        carregarPerfil();
-    </script>
-</body>
-</html>
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderSidebar);
+    } else {
+        renderSidebar();
+    }
+})();
