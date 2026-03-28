@@ -3,165 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estatísticas - MedQuest</title>
+    <title>Estatísticas - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="sidebar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="sidebar.js"></script> 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .card { background: white; border-radius: 1.5rem; border: 1px solid #f1f5f9; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        main { margin-left: 16rem; }
-
-        @media (max-width: 768px) {
-            main { margin-left: 0; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; margin-left: 16rem; }
+        @media (max-width: 768px) { body { margin-left: 0; } }
     </style>
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<body class="bg-[#f8fafc]">
 
-    <main class="flex-1 p-8">
-        <header class="flex justify-between items-center mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800">Painel de Métricas</h2>
-                <p class="text-gray-500 text-sm">Acompanhe sua evolução e desempenho</p>
-            </div>
-            <button onclick="resetarDados()" class="text-[10px] text-red-400 font-bold uppercase hover:text-red-600 transition-colors">Resetar Progresso</button>
-        </header>
+    <main class="p-10 max-w-6xl mx-auto">
+        <div class="mb-10">
+            <h2 class="text-3xl font-bold text-gray-800">Seu Desempenho 📊</h2>
+            <p class="text-gray-500 mt-1">Análise detalhada por especialidade médica</p>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div class="card flex justify-between items-center border-l-4 border-l-blue-500">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total de questões</p>
-                    <p class="text-gray-500 text-[10px] mb-2">Questões respondidas na plataforma</p>
-                </div>
-                <div class="text-right">
-                    <span id="total-questoes" class="text-4xl font-bold text-gray-800">0</span>
-                    <i class="fas fa-check-circle text-blue-500 block text-xs mt-1"></i>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Respondidas</p><h3 id="stat-total" class="text-3xl font-bold text-gray-800">...</h3></div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-tasks"></i></div>
             </div>
-            <div class="card flex justify-between items-center border-l-4 border-l-emerald-500">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total de Simulados</p>
-                    <p class="text-gray-500 text-[10px] mb-2">Simulados resolvidos</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-4xl font-bold text-gray-800">0</span>
-                    <i class="fas fa-chart-bar text-emerald-500 block text-xs mt-1"></i>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Precisão Geral</p><h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">...</h3></div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-bullseye"></i></div>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos Totais</p><h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">...</h3></div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><i class="fas fa-fire"></i></div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="card text-center">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Porcentagem de acertos</p>
-                <div class="relative inline-block">
-                    <canvas id="chartAcertos" width="150" height="150"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="porcentagem-texto" class="text-2xl font-bold text-gray-800">0%</span>
-                    </div>
-                </div>
-                <div class="flex justify-center gap-4 mt-4 text-[10px] font-bold uppercase">
-                    <span class="text-emerald-500">Acertos: <span id="num-acertos">0</span></span>
-                    <span class="text-red-500">Erros: <span id="num-erros">0</span></span>
-                </div>
-            </div>
-
-            <div class="card text-center">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Melhor desempenho</p>
-                <div class="relative inline-block">
-                    <canvas id="chartMelhorArea" width="150" height="150"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="melhor-porcentagem" class="text-2xl font-bold text-blue-600">--</span>
-                        <span id="melhor-nome" class="text-[8px] text-gray-400 font-bold uppercase">Ainda sem dados</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Mapa de estudos</p>
-                <div class="space-y-3">
-                    <div class="flex justify-between text-[11px] border-b pb-1">
-                        <span class="text-gray-500 font-medium">Temas explorados</span>
-                        <span id="mapa-respondidos" class="font-bold text-blue-600">--</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-8">
-            <div class="flex items-center gap-2 mb-6">
-                <i class="fas fa-bullseye text-orange-500"></i>
-                <p class="text-xs font-bold text-gray-700 uppercase tracking-tighter">Áreas para Melhorar</p>
-            </div>
-            <div id="lista-melhorar" class="space-y-4">
-                 <p class="text-[10px] text-gray-400 italic">Responda mais questões para gerar recomendações.</p>
-            </div>
+        <h3 class="text-[10px] font-black text-gray-400 uppercase mb-6 tracking-widest">Desempenho por Tema</h3>
+        
+        <div id="lista-estatisticas-temas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p class="text-gray-400 italic text-sm">Carregando dados clínicos...</p>
         </div>
     </main>
 
+    <script src="medquest-core.js"></script>
     <script>
-        let meuGrafico;
-
         window.onload = () => {
-            carregarDadosReais();
-            // Dados estáticos de exemplo para layout (podem ser automatizados depois)
-            renderizarListaMelhorar();
+            sincronizarDashboard(); // Preenche os cards de cima
+            carregarEstatisticasDetalhadas(); // Preenche a lista por tema
         };
-
-        function carregarDadosReais() {
-            // Busca estatísticas do LocalStorage (Sincronizado com questoes.html)
-            const stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
-            
-            const porcentagem = stats.total > 0 ? Math.round((stats.acertos / stats.total) * 100) : 0;
-
-            document.getElementById('total-questoes').innerText = stats.total;
-            document.getElementById('porcentagem-texto').innerText = porcentagem + '%';
-            document.getElementById('num-acertos').innerText = stats.acertos;
-            document.getElementById('num-erros').innerText = stats.erros;
-
-            renderizarGraficoAcertos(stats.acertos, stats.erros);
-        }
-
-        function renderizarGraficoAcertos(acertos, erros) {
-            const ctx = document.getElementById('chartAcertos');
-            if (meuGrafico) meuGrafico.destroy();
-
-            // Se não houver dados, exibe um gráfico cinza neutro
-            const temDados = (acertos + erros) > 0;
-            const dataValues = temDados ? [acertos, erros] :;
-            const colors = temDados ? ['#10b981', '#ef4444'] : ['#f1f5f9', '#f1f5f9'];
-
-            meuGrafico = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    datasets: [{ 
-                        data: dataValues, 
-                        backgroundColor: colors,
-                        borderWidth: 0
-                    }] 
-                },
-                options: { 
-                    cutout: '85%', 
-                    plugins: { legend: { display: false } },
-                    animation: { animateRotate: true }
-                }
-            });
-        }
-
-        function renderizarListaMelhorar() {
-            // Placeholder para lógica futura baseada em temas específicos
-            const container = document.getElementById('lista-melhorar');
-            // Aqui você poderá mapear os erros por tema no futuro
-        }
-
-        function resetarDados() {
-            if(confirm("Dr. Victor, deseja realmente zerar todo o seu progresso? Esta ação não pode ser desfeita.")) {
-                localStorage.removeItem('medquest_stats');
-                location.reload();
-            }
-        }
     </script>
 </body>
 </html>
