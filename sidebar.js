@@ -27,12 +27,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 <i class="fas fa-stopwatch w-5"></i> Simulados
             </a>
 
-            <a href="estatisticas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
-                <i class="fas fa-chart-line w-5"></i> Estatísticas
-            </a>
-
             <a href="favoritas.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-star w-5"></i> Favoritas
+            </a>
+
+            <a href="caderno.html" class="nav-link flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-book-medical w-5"></i> Meu Caderno
             </a>
 
             <div class="pt-6">
@@ -57,35 +57,22 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </aside>`;
 
-    // Inserção no início do body
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // Lógica aprimorada de Link Ativo
-    const currentPath = window.location.pathname;
-    const currentPage = currentPath.split("/").pop() || "index.html";
-    
+    // Lógica de Link Ativo
+    const currentPage = window.location.pathname.split("/").pop() || "index.html";
     document.querySelectorAll(".nav-link").forEach(link => {
-        const linkHref = link.getAttribute("href");
-        if (currentPage.includes(linkHref)) {
-            link.classList.add("bg-blue-50", "text-blue-600", "shadow-sm");
+        if (link.getAttribute("href") === currentPage) {
+            link.classList.add("bg-blue-50", "text-blue-600");
             link.classList.remove("text-gray-500");
-            // Adiciona um pequeno indicador visual lateral se quiser
             link.style.borderLeft = "3px solid #2563eb";
-            link.style.paddingLeft = "calc(0.75rem - 3px)";
         }
     });
 
-    // Sincronização de Perfil
-    const storageData = localStorage.getItem('medquest_perfil');
-    if (storageData) {
-        try {
-            const dados = JSON.parse(storageData);
-            if (dados.nome) {
-                const nomeSidebar = document.getElementById('sidebar-user-name');
-                if (nomeSidebar) nomeSidebar.innerText = dados.nome;
-            }
-        } catch (e) {
-            console.error("Erro ao ler dados do perfil", e);
-        }
+    // Sincronização de Nome
+    const dados = JSON.parse(localStorage.getItem('medquest_perfil'));
+    if (dados && dados.nome) {
+        const nomeSidebar = document.getElementById('sidebar-user-name');
+        if (nomeSidebar) nomeSidebar.innerText = dados.nome;
     }
 });
