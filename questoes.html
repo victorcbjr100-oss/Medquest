@@ -1,153 +1,164 @@
-<script>
-    // 1. Configurações de Acesso
-    const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-    
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questões - MedQuest Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        .correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; }
+        .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
 
-    // 2. Variáveis de Controle
-    var questoesFiltradas = [];
-    var indiceAtual = 0;
-    var respondida = false;
-    var opcaoSelecionada = null;
+    <div class="max-w-4xl mx-auto p-4 pt-12">
+        <div class="mb-8">
+            <a href="index.html" class="text-blue-600 text-sm font-bold flex items-center gap-2 mb-4">
+                ← VOLTAR AO INÍCIO
+            </a>
+            <h1 id="titulo-tema" class="text-3xl font-black text-gray-900">Carregando...</h1>
+            <p id="contador-questoes" class="text-gray-500 font-medium"></p>
+        </div>
 
-    // 3. Captura do Tema da URL
-    var urlParams = new URLSearchParams(window.location.search);
-    var temaURL = urlParams.get('tema');
+        <div id="questao-card" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 mb-6">
+            <div id="conteudo-questao">
+                </div>
 
-    async function inicializar() {
-        try {
-            // Busca simplificada para evitar erros de conexão (Tela Branca)
-            var resultado = await _supabase.from('questoes').select('*');
+            <div id="feedback-container" class="mt-8 pt-8 border-t border-gray-100 hidden">
+                <div id="feedback-status"></div>
+                <div class="bg-gray-50 p-6 rounded-2xl">
+                    <p class="text-xs font-bold text-gray-400 uppercase mb-2">Comentário do Professor:</p>
+                    <p id="comentario-texto" class="text-gray-700 leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-4">
+            <button onclick="questaoAnterior()" class="flex-1 bg-white border border-gray-200 py-4 rounded-2xl font-bold text-gray-600 hover:bg-gray-50 transition-all">Anterior</button>
+            <button id="btn-acao" onclick="verificarAcao()" class="flex- bg-blue-600 py-4 rounded-2xl font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Responder</button>
+            <button onclick="proximaQuestao()" class="flex-1 bg-white border border-gray-200 py-4 rounded-2xl font-bold text-gray-600 hover:bg-gray-50 transition-all">Próxima</button>
+        </div>
+
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="text-6xl mb-4">📂</div>
+            <h2 class="text-2xl font-bold text-gray-800">Nenhuma questão encontrada</h2>
+            <p class="text-gray-500 mb-6">Não existem questões para este tema no momento.</p>
+            <a href="index.html" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">Voltar</a>
+        </div>
+    </div>
+
+    <script>
+        // Configurações
+        var SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+        var _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        var questoes = [];
+        var indice = 0;
+        var respondida = false;
+        var selecionada = null;
+
+        var params = new URLSearchParams(window.location.search);
+        var temaAlvo = params.get('tema');
+
+        async function carregar() {
+            try {
+                var res = await _supabase.from('questoes').select('*');
+                if (res.error) throw res.error;
+
+                // Filtro Robusto
+                if (temaAlvo) {
+                    questoes = res.data.filter(function(q) {
+                        var t = (q.tema || "").toLowerCase();
+                        var s = (q.subtema || "").toLowerCase();
+                        var alvo = temaAlvo.toLowerCase();
+                        return t === alvo || s === alvo;
+                    });
+                } else {
+                    questoes = res.data;
+                }
+
+                if (questoes.length === 0) {
+                    document.getElementById('questao-card').style.display = 'none';
+                    document.getElementById('empty-state').classList.remove('hidden');
+                    document.getElementById('titulo-tema').innerText = "Vazio";
+                    return;
+                }
+
+                document.getElementById('titulo-tema').innerText = temaAlvo || "Geral";
+                exibir();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('titulo-tema').innerText = "Erro de Conexão";
+            }
+        }
+
+        function exibir() {
+            var q = questoes[indice];
+            respondida = false;
+            selecionada = null;
             
-            if (resultado.error) throw resultado.error;
+            document.getElementById('feedback-container').classList.add('hidden');
+            document.getElementById('btn-acao').innerText = "Responder";
+            document.getElementById('contador-questoes').innerText = "Questão " + (indice + 1) + " de " + questoes.length;
 
-            var todosOsDados = resultado.data;
+            var opts = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
+            var html = '<div class="mb-6"><span class="text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-full">' + (q.origem || 'MEDQUEST') + '</span></div>';
+            html += '<h2 class="text-xl font-bold text-gray-800 mb-6">' + q.enunciado + '</h2><div class="space-y-3">';
+            
+            for(var i=0; i<opts.length; i++) {
+                if(opts[i]) {
+                    html += '<div onclick="clique(' + i + ')" class="opt-btn p-5 border-2 border-gray-100 rounded-2xl cursor-pointer font-medium text-gray-700 flex items-center gap-4 transition-all">';
+                    html += '<span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold">' + String.fromCharCode(65+i) + '</span>';
+                    html += '<span>' + opts[i] + '</span></div>';
+                }
+            }
+            html += '</div>';
+            document.getElementById('conteudo-questao').innerHTML = html;
+        }
 
-            // Filtro manual para garantir precisão
-            if (temaURL) {
-                questoesFiltradas = todosOsDados.filter(function(q) {
-                    var t = (q.tema || "").toLowerCase();
-                    var s = (q.subtema || "").toLowerCase();
-                    var busca = temaURL.toLowerCase();
-                    return t === busca || s === busca;
-                });
+        function clique(i) {
+            if (respondida) return;
+            var bts = document.querySelectorAll('.opt-btn');
+            bts.forEach(b => { b.style.borderColor = '#f3f4f6'; b.style.backgroundColor = 'white'; });
+            bts[i].style.borderColor = '#3b82f6';
+            selecionada = i;
+        }
+
+        function verificarAcao() {
+            if (selecionada === null) return alert("Selecione uma opção!");
+            if (!respondida) {
+                respondida = true;
+                var q = questoes[indice];
+                var bts = document.querySelectorAll('.opt-btn');
+                bts[q.correta].classList.add('correta');
+                
+                var status = document.getElementById('feedback-status');
+                if (selecionada === q.correta) {
+                    status.innerHTML = "<div class='p-4 bg-green-50 text-green-700 rounded-xl font-bold mb-4'>✅ CORRETO!</div>";
+                } else {
+                    bts[selecionada].classList.add('errada');
+                    status.innerHTML = "<div class='p-4 bg-red-50 text-red-700 rounded-xl font-bold mb-4'>❌ INCORRETO</div>";
+                }
+                document.getElementById('comentario-texto').innerText = q.comentario || "Sem comentário.";
+                document.getElementById('feedback-container').classList.remove('hidden');
+                document.getElementById('btn-acao').innerText = "Próxima Questão";
             } else {
-                questoesFiltradas = todosOsDados;
+                proximaQuestao();
             }
-
-            // Se não encontrar nada, mostra o estado vazio
-            if (!questoesFiltradas || questoesFiltradas.length === 0) {
-                document.getElementById('questao-card').classList.add('hidden');
-                document.getElementById('empty-state').classList.remove('hidden');
-                document.getElementById('titulo-tema').innerText = "Sem questões";
-                return;
-            }
-            
-            document.getElementById('titulo-tema').innerText = temaURL || "Geral - ENAMED";
-            renderizarQuestao();
-
-        } catch (err) {
-            console.error("Erro MedQuest:", err);
-            document.getElementById('titulo-tema').innerText = "Erro de Conexão";
-        }
-    }
-
-    function renderizarQuestao() {
-        var q = questoesFiltradas[indiceAtual];
-        var container = document.getElementById('conteudo-questao');
-        
-        respondida = false;
-        opcaoSelecionada = null;
-        
-        document.getElementById('feedback-container').classList.add('hidden');
-        document.getElementById('btn-acao').innerText = "Responder";
-        document.getElementById('contador-questoes').innerText = "Questão " + (indiceAtual + 1) + " de " + questoesFiltradas.length;
-
-        var html = '';
-        html += '<div class="flex justify-between items-center mb-4">';
-        html += '<p class="text-xs font-bold text-blue-600 uppercase tracking-widest">' + (q.origem || 'ID #' + q.id) + '</p>';
-        html += '<span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">' + (q.subtema || q.tema) + '</span>';
-        html += '</div>';
-        html += '<h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">' + q.enunciado + '</h3>';
-        html += '<div class="space-y-3">';
-
-        var opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
-        opcoes.forEach(function(opt, i) {
-            if (opt) {
-                html += '<div onclick="selecionarOpcao(this, ' + i + ')" class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white cursor-pointer">';
-                html += '<span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">' + String.fromCharCode(65 + i) + '</span>';
-                html += '<div class="flex-1">' + opt + '</div>';
-                html += '</div>';
-            }
-        });
-
-        html += '</div>';
-        container.innerHTML = html;
-    }
-
-    function selecionarOpcao(elemento, index) {
-        if (respondida) return;
-        var alts = document.querySelectorAll('.alternativa');
-        for (var i = 0; i < alts.length; i++) {
-            alts[i].style.borderColor = '#f1f5f9';
-            alts[i].style.backgroundColor = 'white';
-        }
-        elemento.style.borderColor = '#3b82f6';
-        elemento.style.backgroundColor = '#f0f7ff';
-        opcaoSelecionada = index;
-    }
-
-    function verificarAcao() {
-        if (opcaoSelecionada === null) return alert("Selecione uma alternativa.");
-        if (!respondida) confirmarResposta();
-        else proximaQuestao();
-    }
-
-    function confirmarResposta() {
-        respondida = true;
-        var q = questoesFiltradas[indiceAtual];
-        var alternativas = document.querySelectorAll('.alternativa');
-        var feedbackStatus = document.getElementById('feedback-status');
-        
-        // Atualiza estatísticas locais (Dashboard)
-        var stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
-        stats.total += 1;
-
-        alternativas[q.correta].classList.add('correta');
-
-        if (opcaoSelecionada === q.correta) {
-            feedbackStatus.innerHTML = "✅ RESPOSTA CORRETA!";
-            feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-emerald-50 text-emerald-600";
-            stats.acertos += 1;
-        } else {
-            alternativas[opcaoSelecionada].classList.add('errada');
-            feedbackStatus.innerHTML = "❌ RESPOSTA INCORRETA";
-            feedbackStatus.className = "p-4 rounded-xl text-sm font-bold mb-4 bg-red-50 text-red-600";
-            stats.erros += 1;
         }
 
-        localStorage.setItem('medquest_stats', JSON.stringify(stats));
-        document.getElementById('comentario-texto').innerText = q.comentario || "Nenhum comentário disponível.";
-        document.getElementById('feedback-container').classList.remove('hidden');
-        document.getElementById('btn-acao').innerText = "Próxima Questão";
-    }
-
-    function proximaQuestao() {
-        if (indiceAtual < questoesFiltradas.length - 1) {
-            indiceAtual++;
-            renderizarQuestao();
-        } else {
-            alert("Fim das questões deste tema!");
+        function proximaQuestao() {
+            if (indice < questoes.length - 1) { indice++; exibir(); }
         }
-    }
 
-    function questaoAnterior() {
-        if (indiceAtual > 0) {
-            indiceAtual--;
-            renderizarQuestao();
+        function questaoAnterior() {
+            if (indice > 0) { indice--; exibir(); }
         }
-    }
 
-    window.onload = inicializar;
-</script>
+        window.onload = carregar;
+    </script>
+</body>
+</html>
