@@ -6,6 +6,7 @@
     <title>Questões - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="sidebar.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -28,22 +29,19 @@
                     <a href="temas.html" class="text-blue-600 text-xs font-bold uppercase flex items-center gap-2 mb-4 hover:underline">
                         <i class="fas fa-arrow-left"></i> Voltar aos Temas
                     </a>
-                    <h2 id="titulo-tema" class="text-3xl font-bold text-gray-800 tracking-tight">Carregando...</h2>
+                    <h2 id="titulo-tema" class="text-3xl font-bold text-gray-800 tracking-tight">Carregando questões...</h2>
                     <p id="contador-questoes" class="text-sm text-gray-500 mt-2 font-medium">Questão 0 de 0</p>
                 </div>
             </header>
 
             <div id="questao-card" class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-6">
-                <div id="conteudo-questao">
-                    </div>
+                <div id="conteudo-questao"></div>
 
                 <div id="feedback-container" class="hidden mt-6 pt-6 border-t border-gray-50">
                     <div id="feedback-status" class="p-4 rounded-xl text-sm font-bold mb-4"></div>
                     <div class="bg-blue-50 p-6 rounded-2xl">
                         <h4 class="text-blue-800 font-bold text-xs uppercase mb-2"><i class="fas fa-comment-medical mr-2"></i> Comentário do Especialista</h4>
-                        <p id="comentario-texto" class="text-blue-900 text-sm leading-relaxed italic">
-                            O diagnóstico de HAS segue os critérios da SBC 2020...
-                        </p>
+                        <p id="comentario-texto" class="text-blue-900 text-sm leading-relaxed italic"></p>
                     </div>
                 </div>
             </div>
@@ -65,29 +63,16 @@
 
             <div id="empty-state" class="hidden text-center py-20">
                 <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
-                <p class="text-gray-500 font-medium">Nenhuma questão encontrada.</p>
+                <p class="text-gray-500 font-medium">Nenhuma questão encontrada para este tema.</p>
             </div>
-
         </div>
     </main>
 
     <script>
-        const bancoDeQuestoes = [
-            {
-                id: 1, tema: 'HAS',
-                enunciado: "Qual o valor definido pela SBC para diagnóstico de Hipertensão Arterial Sistêmica em medidas de consultório?",
-                opcoes: ["≥ 120/80 mmHg", "≥ 130/85 mmHg", "≥ 140/90 mmHg", "≥ 150/95 mmHg"],
-                correta: 2,
-                comentario: "Segundo as Diretrizes Brasileiras de Hipertensão Arterial (2020), o diagnóstico em consultório é feito com valores ≥ 140/90 mmHg."
-            },
-            {
-                id: 2, tema: 'HAS',
-                enunciado: "Qual a droga de primeira escolha para tratamento de HAS em pacientes diabéticos com microalbuminúria?",
-                opcoes: ["Anlodipino", "Enalapril (IECA)", "Clortalidona", "Atenolol"],
-                correta: 1,
-                comentario: "Os IECAs ou BRAs são preferenciais em diabéticos pela nefroproteção demonstrada em casos de albuminúria."
-            }
-        ];
+        // CONFIGURAÇÃO DO SUPABASE
+        const SUPABASE_URL = 'SUA_URL_DO_SUPABASE';
+        const SUPABASE_KEY = 'SUA_CHAVE_ANON_DO_SUPABASE';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let questoesFiltradas = [];
         let indiceAtual = 0;
@@ -95,19 +80,36 @@
         let opcaoSelecionada = null;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const tema = urlParams.get('tema');
+        const temaURL = urlParams.get('tema');
 
-        function inicializar() {
-            questoesFiltradas = tema ? bancoDeQuestoes.filter(q => q.tema === tema) : bancoDeQuestoes;
-            
-            if (questoesFiltradas.length === 0) {
-                document.getElementById('questao-card').classList.add('hidden');
-                document.getElementById('empty-state').classList.remove('hidden');
-                return;
+        async function inicializar() {
+            try {
+                let query = _supabase.from('questoes').select('*');
+
+                if (temaURL) {
+                    query = query.eq('tema', temaURL);
+                }
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                questoesFiltradas = data;
+
+                if (!questoesFiltradas || questoesFiltradas.length === 0) {
+                    document.getElementById('questao-card').classList.add('hidden');
+                    document.getElementById('empty-state').classList.remove('hidden');
+                    document.getElementById('titulo-tema').innerText = "Sem questões";
+                    return;
+                }
+                
+                document.getElementById('titulo-tema').innerText = temaURL || "Geral - ENAMED";
+                renderizarQuestao();
+
+            } catch (err) {
+                console.error("Erro Supabase:", err);
+                document.getElementById('titulo-tema').innerText = "Erro ao carregar";
             }
-            
-            document.getElementById('titulo-tema').innerText = tema || "Geral";
-            renderizarQuestao();
         }
 
         function renderizarQuestao() {
@@ -116,25 +118,32 @@
             respondida = false;
             opcaoSelecionada = null;
             
-            // Resetar UI
             document.getElementById('feedback-container').classList.add('hidden');
             document.getElementById('btn-acao').innerText = "Responder";
             document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
 
+            // Array de opções vindo das colunas do banco
+            const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
+
             let html = `
-                <p class="text-xs font-bold text-blue-600 uppercase mb-3 tracking-widest">ID #${q.id}</p>
+                <div class="flex justify-between items-center mb-4">
+                    <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">${q.origem || 'ID #' + q.id}</p>
+                    <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">${q.tema}</span>
+                </div>
                 <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
                 <div class="space-y-3">
             `;
 
-            q.opcoes.forEach((opt, i) => {
-                html += `
-                    <div onclick="selecionarOpcao(this, ${i})" 
-                         class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4">
-                        <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">${String.fromCharCode(65 + i)}</span>
-                        ${opt}
-                    </div>
-                `;
+            opcoes.forEach((opt, i) => {
+                if(opt) { // Garante que a opção existe
+                    html += `
+                        <div onclick="selecionarOpcao(this, ${i})" 
+                             class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4">
+                            <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">${String.fromCharCode(65 + i)}</span>
+                            ${opt}
+                        </div>
+                    `;
+                }
             });
 
             html += `</div>`;
@@ -143,12 +152,10 @@
 
         function selecionarOpcao(elemento, index) {
             if (respondida) return;
-            
             document.querySelectorAll('.alternativa').forEach(alt => {
                 alt.style.borderColor = '#f1f5f9';
                 alt.style.backgroundColor = 'white';
             });
-
             elemento.style.borderColor = '#3b82f6';
             elemento.style.backgroundColor = '#f0f7ff';
             opcaoSelecionada = index;
@@ -156,12 +163,8 @@
 
         function verificarAcao() {
             if (opcaoSelecionada === null) return alert("Selecione uma opção!");
-            
-            if (!respondida) {
-                confirmarResposta();
-            } else {
-                proximaQuestao();
-            }
+            if (!respondida) confirmarResposta();
+            else proximaQuestao();
         }
 
         function confirmarResposta() {
@@ -170,10 +173,10 @@
             const alternativas = document.querySelectorAll('.alternativa');
             const feedbackStatus = document.getElementById('feedback-status');
             
-            // Atualizar Estatísticas (LocalStorage)
             let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
             stats.total += 1;
 
+            // No banco, 'correta' deve ser 0 para A, 1 para B, etc.
             alternativas[q.correta].classList.add('correta');
 
             if (opcaoSelecionada === q.correta) {
@@ -188,8 +191,6 @@
             }
 
             localStorage.setItem('medquest_stats', JSON.stringify(stats));
-            
-            // Mostrar Comentário
             document.getElementById('comentario-texto').innerText = q.comentario;
             document.getElementById('feedback-container').classList.remove('hidden');
             document.getElementById('btn-acao').innerText = "Próxima Questão";
@@ -199,6 +200,8 @@
             if (indiceAtual < questoesFiltradas.length - 1) {
                 indiceAtual++;
                 renderizarQuestao();
+            } else {
+                alert("Fim das questões deste tema!");
             }
         }
 
