@@ -1,6 +1,5 @@
 // sidebar.js
 document.addEventListener("DOMContentLoaded", function() {
-    // Remove qualquer sidebar duplicada
     const existing = document.querySelector('aside');
     if (existing) existing.remove();
 
@@ -24,9 +23,28 @@ document.addEventListener("DOMContentLoaded", function() {
             <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-layer-group w-5"></i> Temas
             </a>
+            <a href="simulados.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-stopwatch w-5"></i> Simulados
+            </a>
+            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-chart-line w-5"></i> Estatísticas
+            </a>
+            <a href="favoritas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-star w-5"></i> Favoritas
+            </a>
             <a href="caderno.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
                 <i class="fas fa-book-medical w-5"></i> Meu Caderno
             </a>
+
+            <div class="pt-6">
+                <p class="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 mb-2">Admin</p>
+                <a href="gerenciar-usuarios.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-users w-5"></i> Usuários
+                </a>
+                <a href="gerenciar-questoes.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-tasks w-5"></i> Questões
+                </a>
+            </div>
         </nav>
 
         <div class="p-4 border-t border-gray-50">
@@ -45,7 +63,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    // Sincroniza dados do perfil
     const dados = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
     if (dados.nome) document.getElementById('sidebar-user-name').innerText = dados.nome;
     if (dados.categoria) document.getElementById('sidebar-user-tag').innerText = dados.categoria;
