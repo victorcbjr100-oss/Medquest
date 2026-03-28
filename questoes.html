@@ -30,8 +30,7 @@
                 <div id="status-progresso" class="text-sm text-gray-500 mt-2 font-medium"></div>
             </header>
 
-            <div id="questoes-container" class="space-y-8">
-                </div>
+            <div id="questoes-container" class="space-y-8"></div>
 
             <div id="empty-state" class="hidden text-center py-20">
                 <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
@@ -42,14 +41,13 @@
     </main>
 
     <script>
-        // 1. BANCO DE DADOS DE EXEMPLO (Adicione suas questões aqui)
         const bancoDeQuestoes = [
             {
                 id: 1,
                 tema: 'HAS',
                 enunciado: "Qual o valor definido pela SBC para diagnóstico de Hipertensão Arterial Sistêmica em medidas de consultório?",
                 opcoes: ["≥ 120/80 mmHg", "≥ 130/85 mmHg", "≥ 140/90 mmHg", "≥ 150/95 mmHg"],
-                correta: 2 // Índice da resposta certa (começa do 0)
+                correta: 2
             },
             {
                 id: 2,
@@ -67,7 +65,6 @@
             }
         ];
 
-        // 2. CAPTURAR TEMA DA URL
         const urlParams = new URLSearchParams(window.location.search);
         const temaSelecionado = urlParams.get('tema');
 
@@ -82,8 +79,6 @@
             }
 
             titulo.innerText = `Questões: ${temaSelecionado}`;
-            
-            // FILTRAR AS QUESTÕES PELO TEMA
             const filtradas = bancoDeQuestoes.filter(q => q.tema === temaSelecionado);
 
             if (filtradas.length === 0) {
@@ -127,25 +122,34 @@
 
         function verificarResposta(elemento, indexClicado, indexCorreto) {
             const container = elemento.parentElement;
-            // Bloqueia novos cliques nessa questão
             if (container.classList.contains('respondida')) return;
             container.classList.add('respondida');
 
             const alternativas = container.querySelectorAll('.alternativa');
             const feedbackDiv = container.nextElementSibling;
 
-            // Marca a correta sempre
+            // --- INÍCIO DA CONEXÃO COM ESTATÍSTICAS ---
+            let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
+            stats.total += 1;
+            // --- FIM DA CONEXÃO ---
+
             alternativas[indexCorreto].classList.add('correta');
 
             if (indexClicado === indexCorreto) {
                 elemento.classList.add('correta');
                 feedbackDiv.innerText = "✅ Resposta correta!";
                 feedbackDiv.classList.add('bg-emerald-50', 'text-emerald-600');
+                stats.acertos += 1; // Salva o acerto
             } else {
                 elemento.classList.add('errada');
                 feedbackDiv.innerText = "❌ Resposta incorreta.";
                 feedbackDiv.classList.add('bg-red-50', 'text-red-600');
+                stats.erros += 1; // Salva o erro
             }
+
+            // Atualiza o banco de dados local
+            localStorage.setItem('medquest_stats', JSON.stringify(stats));
+            
             feedbackDiv.classList.remove('hidden');
         }
 
