@@ -4,36 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="sidebar.js"></script>
     <style>
         .alternativa.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
         .alternativa.correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; }
         .alternativa.errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        main { margin-left: 16rem; }
+        @media (max-width: 768px) { main { margin-left: 0; } }
     </style>
 </head>
-<body class="bg-[#f8fafc] p-4">
+<body class="bg-[#f8fafc]">
 
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 mt-10">
-        <div id="monitor" class="text-[10px] font-mono text-blue-500 mb-4 uppercase tracking-widest">
-            Status: Aguardando Sistema...
-        </div>
-        
-        <h1 id="exibir-tema" class="text-3xl font-black text-gray-800 mb-6 uppercase">MedQuest</h1>
-        
-        <div id="bloco-questao" class="min-h-[200px]">
-            <p class="text-gray-400 italic">Iniciando protocolos de conexão...</p>
-        </div>
+    <main class="p-4 md:p-10">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 mt-10">
+            <div id="monitor" class="text-[10px] font-mono text-blue-500 mb-4 uppercase tracking-widest">
+                Status: Aguardando Sistema...
+            </div>
+            
+            <h1 id="exibir-tema" class="text-3xl font-black text-gray-800 mb-2 uppercase">MedQuest</h1>
+            <p id="exibir-subtema" class="text-gray-400 text-xs font-bold uppercase mb-6 tracking-tighter"></p>
+            
+            <div id="bloco-questao" class="min-h-[200px]">
+                <p class="text-gray-400 italic">Iniciando protocolos de conexão...</p>
+            </div>
 
-        <div id="botoes" class="mt-8 hidden flex gap-3">
-            <button id="btn-voltar" onclick="window.location.href='temas.html'" class="px-6 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-all">
-                Sair
-            </button>
-            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">
-                Responder Questão
-            </button>
+            <div id="botoes" class="mt-8 hidden flex gap-3">
+                <button onclick="window.location.href='temas.html'" class="px-6 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-all">
+                    Sair
+                </button>
+                <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">
+                    Responder Questão
+                </button>
+            </div>
         </div>
-    </div>
+    </main>
 
     <script>
         const URL_DB = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
@@ -52,82 +58,91 @@
         async function conectarEBuscar() {
             atualizarStatus("Conectando ao banco...");
             try {
-                if (typeof supabase === 'undefined') throw new Error("Biblioteca não carregada.");
-
-                const cliente = supabase.createClient(URL_DB, KEY_DB);
-                const { data, error } = await cliente.from('questoes').select('*');
+                const supabaseClient = supabase.createClient(URL_DB, KEY_DB);
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const temaAlvo = (urlParams.get('tema') || "").toUpperCase();
+                
+                // Busca questões filtrando pelo tema exato (HAS, PEDIATRIA, etc)
+                const { data, error } = await supabaseClient
+                    .from('questoes')
+                    .select('*')
+                    .eq('tema', temaAlvo);
 
                 if (error) throw error;
 
-                const urlParams = new URLSearchParams(window.location.search);
-                const temaSolicitado = (urlParams.get('tema') || "").toUpperCase().trim();
-                document.getElementById('exibir-tema').innerText = temaSolicitado || "GERAL";
-
-                // FILTRO PADRONIZADO (Tudo em Maiúsculo)
-                const filtradas = data.filter(q => {
-                    const temaBanco = (q.tema || "").toUpperCase().trim();
-                    const subtemaBanco = (q.subtema || "").toUpperCase().trim();
-                    return temaBanco === temaSolicitado || subtemaBanco === temaSolicitado;
-                });
-
-                if (filtradas.length > 0) {
-                    atualizarStatus(filtradas.length + " questões encontradas.");
-                    questaoAtual = filtradas; // Pega a primeira questão do filtro
+                if (data && data.length > 0) {
+                    // Sorteia uma questão do tema para não ser sempre a mesma
+                    questaoAtual = data[Math.floor(Math.random() * data.length)];
+                    
+                    document.getElementById('exibir-tema').innerText = questaoAtual.tema;
+                    document.getElementById('exibir-subtema').innerText = questaoAtual.subtema || "";
+                    
+                    atualizarStatus(data.length + " questões disponíveis para este tema.");
                     montarQuestao(questaoAtual);
                     document.getElementById('botoes').classList.remove('hidden');
                 } else {
-                    atualizarStatus("Tema não encontrado: " + temaSolicitado, true);
+                    atualizarStatus("Nenhuma questão para o tema: " + temaAlvo, true);
                     document.getElementById('bloco-questao').innerHTML = `
                         <div class="p-6 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-center">
-                            Questões para <b>${temaSolicitado}</b> não localizadas.<br>
-                            <a href="temas.html" class="text-sm underline mt-4 inline-block">Voltar aos Temas</a>
+                            Não existem questões cadastradas com o nome <b>${temaAlvo}</b> no banco de dados.
                         </div>`;
                 }
             } catch (err) {
-                atualizarStatus("Erro: " + err.message, true);
+                atualizarStatus("Erro de Conexão: " + err.message, true);
             }
         }
 
         function montarQuestao(q) {
             let layout = `<p class="text-xl font-bold text-gray-700 mb-8 leading-relaxed">${q.enunciado}</p><div class="space-y-4">`;
             const alternativas = [
-                { texto: q.opcao_a, letra: 'A', index: 0 },
-                { texto: q.opcao_b, letra: 'B', index: 1 },
-                { texto: q.opcao_c, letra: 'C', index: 2 },
-                { texto: q.opcao_d, letra: 'D', index: 3 }
+                { texto: q.opcao_a, letra: 'a' },
+                { texto: q.opcao_b, letra: 'b' },
+                { texto: q.opcao_c, letra: 'c' },
+                { texto: q.opcao_d, letra: 'd' }
             ];
 
-            alternativas.forEach(alt => {
-                if(alt.texto) {
-                    layout += `
-                        <div onclick="selecionarOpcao(this, ${alt.index})" 
-                             class="alternativa p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all flex items-center gap-4">
-                            <span class="letra-card w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400">${alt.letra}</span>
-                            <div class="text-gray-600 font-medium">${alt.texto}</div>
-                        </div>`;
-                }
+            alternativas.forEach((alt, index) => {
+                layout += `
+                    <div onclick="selecionarOpcao(this, '${alt.letra}')" 
+                         class="alternativa p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all flex items-center gap-4">
+                        <span class="letra-card w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400 uppercase">${alt.letra}</span>
+                        <div class="text-gray-600 font-medium">${alt.texto}</div>
+                    </div>`;
             });
             document.getElementById('bloco-questao').innerHTML = layout + "</div>";
         }
 
-        window.selecionarOpcao = function(el, index) {
+        window.selecionarOpcao = function(el, letra) {
             if(respondida) return;
             document.querySelectorAll('.alternativa').forEach(d => d.classList.remove('selecionada'));
             el.classList.add('selecionada');
-            opcaoSelecionada = index;
+            opcaoSelecionada = letra;
         };
 
         window.verificarResposta = function() {
-            if(opcaoSelecionada === null) return alert("Selecione uma alternativa!");
-            if(respondida) return window.location.reload(); // Se já respondeu, o botão vira "Próxima"
+            if(!opcaoSelecionada) return alert("Dr. Victor, selecione uma alternativa antes de responder!");
+            if(respondida) return window.location.reload();
 
             respondida = true;
             const divs = document.querySelectorAll('.alternativa');
-            const corretaIndex = questaoAtual.correta; // Espera 0, 1, 2 ou 3 do banco
+            const alternativasMap = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+            const corretaLetra = questaoAtual.correta.toLowerCase().trim();
 
-            divs[corretaIndex].classList.add('correta');
-            if(opcaoSelecionada !== corretaIndex) {
-                divs[opcaoSelecionada].classList.add('errada');
+            // Marca a correta
+            divs[alternativasMap[corretaLetra]].classList.add('correta');
+
+            // Se errou, marca a errada
+            if(opcaoSelecionada !== corretaLetra) {
+                divs[alternativasMap[opcaoSelecionada]].classList.add('errada');
+            }
+
+            // Exibe explicação se houver
+            if(questaoAtual.explicacao) {
+                const expDiv = document.createElement('div');
+                expDiv.className = "mt-6 p-4 bg-blue-50 rounded-xl text-blue-800 text-sm border-l-4 border-blue-500";
+                expDiv.innerHTML = `<strong>Explicação:</strong> ${questaoAtual.explicacao}`;
+                document.getElementById('bloco-questao').appendChild(expDiv);
             }
 
             document.getElementById('btn-acao').innerText = "Próxima Questão";
