@@ -1,43 +1,46 @@
 <script>
-    // CONFIGURAÇÃO DO SUPABASE - MedQuest Pro
+    // 1. Configurações de Acesso
     const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
     
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // VARIÁVEIS DE ESTADO
-    let questoesFiltradas = [];
-    let indiceAtual = 0;
-    let respondida = false;
-    let opcaoSelecionada = null;
+    // 2. Variáveis de Controle
+    var questoesFiltradas = [];
+    var indiceAtual = 0;
+    var respondida = false;
+    var opcaoSelecionada = null;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const temaURL = urlParams.get('tema');
+    // 3. Captura do Tema da URL
+    var urlParams = new URLSearchParams(window.location.search);
+    var temaURL = urlParams.get('tema');
 
     async function inicializar() {
         try {
-            // Busca simplificada para garantir estabilidade de conexão
-            let { data, error } = await _supabase
-                .from('questoes')
-                .select('*');
+            // Busca simplificada para evitar erros de conexão (Tela Branca)
+            var resultado = await _supabase.from('questoes').select('*');
+            
+            if (resultado.error) throw resultado.error;
 
-            if (error) throw error;
+            var todosOsDados = resultado.data;
 
-            // FILTRO LOCAL: Garante que "HAS" ou outros temas funcionem sem erro de sintaxe
+            // Filtro manual para garantir precisão
             if (temaURL) {
-                questoesFiltradas = data.filter(q => 
-                    (q.tema && q.tema.toLowerCase() === temaURL.toLowerCase()) || 
-                    (q.subtema && q.subtema.toLowerCase() === temaURL.toLowerCase())
-                );
+                questoesFiltradas = todosOsDados.filter(function(q) {
+                    var t = (q.tema || "").toLowerCase();
+                    var s = (q.subtema || "").toLowerCase();
+                    var busca = temaURL.toLowerCase();
+                    return t === busca || s === busca;
+                });
             } else {
-                questoesFiltradas = data;
+                questoesFiltradas = todosOsDados;
             }
 
-            // Tratamento de lista vazia
+            // Se não encontrar nada, mostra o estado vazio
             if (!questoesFiltradas || questoesFiltradas.length === 0) {
                 document.getElementById('questao-card').classList.add('hidden');
                 document.getElementById('empty-state').classList.remove('hidden');
-                document.getElementById('titulo-tema').innerText = "Vazio";
+                document.getElementById('titulo-tema').innerText = "Sem questões";
                 return;
             }
             
@@ -45,66 +48,51 @@
             renderizarQuestao();
 
         } catch (err) {
-            console.error("Erro crítico de conexão:", err);
+            console.error("Erro MedQuest:", err);
             document.getElementById('titulo-tema').innerText = "Erro de Conexão";
         }
     }
 
     function renderizarQuestao() {
-        const q = questoesFiltradas[indiceAtual];
-        const container = document.getElementById('conteudo-questao');
+        var q = questoesFiltradas[indiceAtual];
+        var container = document.getElementById('conteudo-questao');
         
-        // Reset de estado para nova navegação
         respondida = false;
         opcaoSelecionada = null;
         
         document.getElementById('feedback-container').classList.add('hidden');
         document.getElementById('btn-acao').innerText = "Responder";
-        document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
+        document.getElementById('contador-questoes').innerText = "Questão " + (indiceAtual + 1) + " de " + questoesFiltradas.length;
 
-        const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
+        var html = '';
+        html += '<div class="flex justify-between items-center mb-4">';
+        html += '<p class="text-xs font-bold text-blue-600 uppercase tracking-widest">' + (q.origem || 'ID #' + q.id) + '</p>';
+        html += '<span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">' + (q.subtema || q.tema) + '</span>';
+        html += '</div>';
+        html += '<h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">' + q.enunciado + '</h3>';
+        html += '<div class="space-y-3">';
 
-        let html = `
-            <div class="flex justify-between items-center mb-4">
-                <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                    ${q.origem || 'ID #' + q.id}
-                </p>
-                <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">
-                    ${q.subtema || q.tema}
-                </span>
-            </div>
-            <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
-            <div class="space-y-3">
-        `;
-
-        opcoes.forEach((opt, i) => {
+        var opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
+        opcoes.forEach(function(opt, i) {
             if (opt) {
-                html += `
-                    <div onclick="selecionarOpcao(this, ${i})" 
-                         class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white transition-all cursor-pointer">
-                        <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
-                            ${String.fromCharCode(65 + i)}
-                        </span>
-                        <div class="flex-1">${opt}</div>
-                    </div>
-                `;
+                html += '<div onclick="selecionarOpcao(this, ' + i + ')" class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white cursor-pointer">';
+                html += '<span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">' + String.fromCharCode(65 + i) + '</span>';
+                html += '<div class="flex-1">' + opt + '</div>';
+                html += '</div>';
             }
         });
 
-        html += `</div>`;
+        html += '</div>';
         container.innerHTML = html;
     }
 
     function selecionarOpcao(elemento, index) {
         if (respondida) return;
-        
-        // Remove estilos prévios
-        document.querySelectorAll('.alternativa').forEach(alt => {
-            alt.style.borderColor = '#f1f5f9';
-            alt.style.backgroundColor = 'white';
-        });
-
-        // Destaque da seleção
+        var alts = document.querySelectorAll('.alternativa');
+        for (var i = 0; i < alts.length; i++) {
+            alts[i].style.borderColor = '#f1f5f9';
+            alts[i].style.backgroundColor = 'white';
+        }
         elemento.style.borderColor = '#3b82f6';
         elemento.style.backgroundColor = '#f0f7ff';
         opcaoSelecionada = index;
@@ -118,12 +106,12 @@
 
     function confirmarResposta() {
         respondida = true;
-        const q = questoesFiltradas[indiceAtual];
-        const alternativas = document.querySelectorAll('.alternativa');
-        const feedbackStatus = document.getElementById('feedback-status');
+        var q = questoesFiltradas[indiceAtual];
+        var alternativas = document.querySelectorAll('.alternativa');
+        var feedbackStatus = document.getElementById('feedback-status');
         
-        // Atualiza estatísticas para o Dashboard
-        let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
+        // Atualiza estatísticas locais (Dashboard)
+        var stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
         stats.total += 1;
 
         alternativas[q.correta].classList.add('correta');
@@ -140,7 +128,6 @@
         }
 
         localStorage.setItem('medquest_stats', JSON.stringify(stats));
-        
         document.getElementById('comentario-texto').innerText = q.comentario || "Nenhum comentário disponível.";
         document.getElementById('feedback-container').classList.remove('hidden');
         document.getElementById('btn-acao').innerText = "Próxima Questão";
@@ -151,7 +138,7 @@
             indiceAtual++;
             renderizarQuestao();
         } else {
-            alert("Você concluiu as questões deste tema!");
+            alert("Fim das questões deste tema!");
         }
     }
 
