@@ -1,167 +1,72 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estatísticas - MedQuest</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="sidebar.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .card { background: white; border-radius: 1.5rem; border: 1px solid #f1f5f9; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        main { margin-left: 16rem; }
+// sidebar.js
+document.addEventListener("DOMContentLoaded", function() {
+    const existing = document.querySelector('aside');
+    if (existing) existing.remove();
 
-        @media (max-width: 768px) {
-            main { margin-left: 0; }
-        }
-    </style>
-</head>
-<body class="bg-[#f8fafc] flex min-h-screen">
-
-    <main class="flex-1 p-8">
-        <header class="flex justify-between items-center mb-8">
+    const sidebarHTML = `
+    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z- font-sans left-0 top-0">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <i class="fas fa-brain text-xl"></i>
+            </div>
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Painel de Métricas</h2>
-                <p class="text-gray-500 text-sm">Acompanhe sua evolução e desempenho</p>
-            </div>
-            <button onclick="resetarDados()" class="text-[10px] text-red-400 font-bold uppercase hover:text-red-600 transition-colors">Resetar Progresso</button>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div class="card flex justify-between items-center border-l-4 border-l-blue-500">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total de questões</p>
-                    <p class="text-gray-500 text-[10px] mb-2">Questões respondidas na plataforma</p>
-                </div>
-                <div class="text-right">
-                    <span id="total-questoes" class="text-4xl font-bold text-gray-800">0</span>
-                    <i class="fas fa-check-circle text-blue-500 block text-xs mt-1"></i>
-                </div>
-            </div>
-            <div class="card flex justify-between items-center border-l-4 border-l-emerald-500">
-                <div>
-                    <p class="text-xs text-gray-400 font-bold uppercase mb-1">Total de Simulados</p>
-                    <p class="text-gray-500 text-[10px] mb-2">Simulados resolvidos</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-4xl font-bold text-gray-800">0</span>
-                    <i class="fas fa-chart-bar text-emerald-500 block text-xs mt-1"></i>
-                </div>
+                <h1 class="font-bold text-gray-800 leading-tight tracking-tighter text-lg">MedQuest</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Provas e Questões</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div class="card text-center">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Porcentagem de acertos</p>
-                <div class="relative inline-block">
-                    <canvas id="chartAcertos" width="150" height="150"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="porcentagem-texto" class="text-2xl font-bold text-gray-800">0%</span>
-                    </div>
-                </div>
-                <div class="flex justify-center gap-4 mt-4 text-[10px] font-bold uppercase">
-                    <span class="text-emerald-500">Acertos: <span id="num-acertos">0</span></span>
-                    <span class="text-red-500">Erros: <span id="num-erros">0</span></span>
-                </div>
-            </div>
+        <nav class="flex-1 px-4 mt-4 space-y-1 overflow-y-auto">
+            <p class="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 mb-2">Navegação</p>
+            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-home w-5"></i> Página Inicial
+            </a>
+            <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-layer-group w-5"></i> Temas
+            </a>
+            <a href="simulados.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-stopwatch w-5"></i> Simulados
+            </a>
+            <a href="estatisticas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-chart-line w-5"></i> Estatísticas
+            </a>
+            <a href="favoritas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-star w-5"></i> Favoritas
+            </a>
+            <a href="caderno.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                <i class="fas fa-book-medical w-5"></i> Meu Caderno
+            </a>
 
-            <div class="card text-center">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Melhor desempenho</p>
-                <div class="relative inline-block">
-                    <canvas id="chartMelhorArea" width="150" height="150"></canvas>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span id="melhor-porcentagem" class="text-2xl font-bold text-blue-600">--</span>
-                        <span id="melhor-nome" class="text-[8px] text-gray-400 font-bold uppercase">Ainda sem dados</span>
-                    </div>
-                </div>
+            <div class="pt-6">
+                <p class="text-[10px] font-bold text-gray-300 uppercase tracking-widest px-3 mb-2">Admin</p>
+                <a href="gerenciar-usuarios.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-users w-5"></i> Usuários
+                </a>
+                <a href="gerenciar-questoes.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-gray-500 hover:bg-gray-50 rounded-xl transition-all">
+                    <i class="fas fa-tasks w-5"></i> Questões
+                </a>
             </div>
+        </nav>
 
-            <div class="card">
-                <p class="text-xs font-bold text-gray-700 mb-4 uppercase tracking-tighter">Mapa de estudos</p>
-                <div class="space-y-3">
-                    <div class="flex justify-between text-[11px] border-b pb-1">
-                        <span class="text-gray-500 font-medium">Temas explorados</span>
-                        <span id="mapa-respondidos" class="font-bold text-blue-600">--</span>
-                    </div>
+        <div class="p-4 border-t border-gray-50">
+            <a href="perfil.html" id="sidebar-profile-link" class="flex items-center gap-3 p-3 rounded-2xl bg-[#f8fafc] border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all cursor-pointer group shadow-sm no-underline">
+                <div id="sidebar-avatar" class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shadow-sm overflow-hidden flex-shrink-0">
+                    V
                 </div>
-            </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-black text-gray-800 truncate" id="sidebar-user-name">Dr. Victor</p>
+                    <p class="text-[10px] text-blue-500 font-black uppercase tracking-tight" id="sidebar-user-tag">Plano Premium</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300 group-hover:text-blue-500 text-[10px] transition-colors"></i>
+            </a>
         </div>
+    </aside>`;
 
-        <div class="card mb-8">
-            <div class="flex items-center gap-2 mb-6">
-                <i class="fas fa-bullseye text-orange-500"></i>
-                <p class="text-xs font-bold text-gray-700 uppercase tracking-tighter">Áreas para Melhorar</p>
-            </div>
-            <div id="lista-melhorar" class="space-y-4">
-                 <p class="text-[10px] text-gray-400 italic">Responda mais questões para gerar recomendações.</p>
-            </div>
-        </div>
-    </main>
+    document.body.insertAdjacentHTML('afterbegin', sidebarHTML);
 
-    <script>
-        let meuGrafico;
-
-        window.onload = () => {
-            carregarDadosReais();
-            // Dados estáticos de exemplo para layout (podem ser automatizados depois)
-            renderizarListaMelhorar();
-        };
-
-        function carregarDadosReais() {
-            // Busca estatísticas do LocalStorage (Sincronizado com questoes.html)
-            const stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
-            
-            const porcentagem = stats.total > 0 ? Math.round((stats.acertos / stats.total) * 100) : 0;
-
-            document.getElementById('total-questoes').innerText = stats.total;
-            document.getElementById('porcentagem-texto').innerText = porcentagem + '%';
-            document.getElementById('num-acertos').innerText = stats.acertos;
-            document.getElementById('num-erros').innerText = stats.erros;
-
-            renderizarGraficoAcertos(stats.acertos, stats.erros);
-        }
-
-        function renderizarGraficoAcertos(acertos, erros) {
-            const ctx = document.getElementById('chartAcertos');
-            if (meuGrafico) meuGrafico.destroy();
-
-            // Se não houver dados, exibe um gráfico cinza neutro
-            const temDados = (acertos + erros) > 0;
-            const dataValues = temDados ? [acertos, erros] :;
-            const colors = temDados ? ['#10b981', '#ef4444'] : ['#f1f5f9', '#f1f5f9'];
-
-            meuGrafico = new Chart(ctx, {
-                type: 'doughnut',
-                data: { 
-                    datasets: [{ 
-                        data: dataValues, 
-                        backgroundColor: colors,
-                        borderWidth: 0
-                    }] 
-                },
-                options: { 
-                    cutout: '85%', 
-                    plugins: { legend: { display: false } },
-                    animation: { animateRotate: true }
-                }
-            });
-        }
-
-        function renderizarListaMelhorar() {
-            // Placeholder para lógica futura baseada em temas específicos
-            const container = document.getElementById('lista-melhorar');
-            // Aqui você poderá mapear os erros por tema no futuro
-        }
-
-        function resetarDados() {
-            if(confirm("Dr. Victor, deseja realmente zerar todo o seu progresso? Esta ação não pode ser desfeita.")) {
-                localStorage.removeItem('medquest_stats');
-                location.reload();
-            }
-        }
-    </script>
-</body>
-</html>
+    const dados = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
+    if (dados.nome) document.getElementById('sidebar-user-name').innerText = dados.nome;
+    if (dados.categoria) document.getElementById('sidebar-user-tag').innerText = dados.categoria;
+    if (dados.foto) {
+        document.getElementById('sidebar-avatar').innerHTML = `<img src="${dados.foto}" class="w-full h-full object-cover">`;
+    }
+});
