@@ -2,81 +2,99 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>MedQuest Pro - Questões</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questões - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-slate-50 p-6">
 
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-        <div id="debug" class="text-[10px] text-red-400 font-mono mb-4">Status: Aguardando script...</div>
+        <div id="debug" class="text-[10px] text-blue-400 font-mono mb-4 uppercase tracking-tighter">Status: Inicializando...</div>
         
-        <h1 id="tema-titulo" class="text-2xl font-black text-gray-800 mb-6">Carregando...</h1>
+        <h1 id="tema-titulo" class="text-2xl font-black text-gray-800 mb-6">MedQuest Pro</h1>
         
         <div id="area-questao" class="min-h-[200px]">
-            <p class="text-gray-400 italic">Buscando questões no Supabase...</p>
+            <p class="text-gray-400 italic">Estabelecendo conexão segura...</p>
         </div>
 
-        <div class="mt-8 flex gap-4">
-            <button onclick="verificar()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold">Responder</button>
+        <div id="controles" class="mt-8 flex gap-4 hidden">
+            <button onclick="verificar()" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all">Responder</button>
         </div>
     </div>
 
     <script>
-        // Usei var para evitar erros de escopo em navegadores antigos
-        var S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-        var S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-        
-        function reportar(msg) { document.getElementById('debug').innerText = "Status: " + msg; }
+        // Função para atualizar o status no topo
+        function reportar(msg, erro = false) {
+            const el = document.getElementById('debug');
+            el.innerText = "Status: " + msg;
+            if(erro) el.className = "text-[10px] text-red-600 font-mono mb-4 uppercase font-bold";
+        }
 
         async function iniciar() {
-            reportar("Iniciando conexão...");
-            try {
-                var supabaseClient = supabase.createClient(S_URL, S_KEY);
-                var resultado = await supabaseClient.from('questoes').select('*');
-                
-                if (resultado.error) {
-                    reportar("Erro Supabase: " + resultado.error.message);
-                    return;
-                }
+            // 1. Verifica se a biblioteca Supabase carregou
+            if (typeof supabase === 'undefined') {
+                reportar("Erro: Biblioteca Supabase não carregou. Verifique sua conexão.", true);
+                document.getElementById('area-questao').innerHTML = "<p class='text-red-500'>Falha ao carregar dependências. Tente atualizar a página (F5).</p>";
+                return;
+            }
 
-                reportar("Dados recebidos: " + resultado.data.length + " itens.");
-                
-                // Pegar tema da URL
-                var params = new URLSearchParams(window.location.search);
-                var temaAlvo = params.get('tema');
+            reportar("Biblioteca OK. Conectando ao banco...");
+
+            const S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
+            const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+            
+            try {
+                const _supabase = supabase.createClient(S_URL, S_KEY);
+                const { data, error } = await _supabase.from('questoes').select('*');
+
+                if (error) throw error;
+
+                reportar("Conectado. " + (data ? data.length : 0) + " questões no banco.");
+
+                const params = new URLSearchParams(window.location.search);
+                const temaAlvo = params.get('tema');
                 document.getElementById('tema-titulo').innerText = temaAlvo || "Geral";
 
-                var questoes = resultado.data;
+                let filtradas = data || [];
                 if (temaAlvo) {
-                    questoes = resultado.data.filter(function(q) {
-                        return (q.tema || "").toLowerCase().trim() === temaAlvo.toLowerCase().trim();
-                    });
+                    filtradas = filtradas.filter(q => 
+                        (q.tema || "").toLowerCase().trim() === temaAlvo.toLowerCase().trim() ||
+                        (q.subtema || "").toLowerCase().trim() === temaAlvo.toLowerCase().trim()
+                    );
                 }
 
-                if (questoes.length === 0) {
-                    document.getElementById('area-questao').innerHTML = "<b class='text-red-500'>Nenhuma questão para o tema: " + temaAlvo + "</b>";
-                    reportar("Filtro zerado.");
+                if (filtradas.length === 0) {
+                    reportar("Busca concluída: Nenhuma questão encontrada.", true);
+                    document.getElementById('area-questao').innerHTML = `<p class='text-gray-500'>Nenhuma questão para <b>${temaAlvo}</b>.</p>`;
                 } else {
-                    renderizar(questoes);
+                    renderizar(filtradas);
+                    document.getElementById('controles').classList.remove('hidden');
                 }
 
             } catch (err) {
-                reportar("Erro crítico: " + err.message);
+                reportar("Erro na API: " + err.message, true);
             }
         }
 
         function renderizar(q) {
-            var html = '<p class="text-lg font-bold text-gray-700 mb-6">' + q.enunciado + '</p><div class="space-y-3">';
-            var opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
-            opcoes.forEach(function(opt, i) {
-                if(opt) {
-                    html += '<div class="p-4 border border-gray-200 rounded-xl hover:bg-blue-50 cursor-pointer">' + opt + '</div>';
+            let html = `<p class="text-lg font-bold text-gray-700 mb-6">${q.enunciado}</p><div class="space-y-3">`;
+            const opcoes = [
+                { txt: q.opcao_a, id: 0 },
+                { txt: q.opcao_b, id: 1 },
+                { txt: q.opcao_c, id: 2 },
+                { txt: q.opcao_d, id: 3 }
+            ];
+
+            opcoes.forEach(opt => {
+                if(opt.txt) {
+                    html += `<div class="p-4 border border-gray-100 rounded-xl hover:bg-blue-50 cursor-pointer transition-all">${opt.txt}</div>`;
                 }
             });
             document.getElementById('area-questao').innerHTML = html + "</div>";
         }
 
+        // Executa ao carregar a página
         window.onload = iniciar;
     </script>
 </body>
