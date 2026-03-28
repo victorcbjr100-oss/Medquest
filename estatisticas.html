@@ -7,49 +7,82 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="sidebar.js"></script> 
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; margin-left: 16rem; }
         @media (max-width: 768px) { body { margin-left: 0; } }
+        
+        /* Suavização da barra de progresso */
+        .progress-bar { transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 </head>
 <body class="bg-[#f8fafc]">
 
     <main class="p-10 max-w-6xl mx-auto">
         <div class="mb-10">
-            <h2 class="text-3xl font-bold text-gray-800">Seu Desempenho 📊</h2>
-            <p class="text-gray-500 mt-1">Análise detalhada por especialidade médica</p>
+            <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                Seu Desempenho <span class="text-2xl">📊</span>
+            </h2>
+            <p class="text-gray-500 mt-1 font-medium">Análise detalhada por especialidade médica</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Respondidas</p><h3 id="stat-total" class="text-3xl font-bold text-gray-800">...</h3></div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-tasks"></i></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Total Respondidas</p>
+                    <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-tasks text-xl"></i>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Precisão Geral</p><h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">...</h3></div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-bullseye"></i></div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Precisão Geral</p>
+                    <h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-bullseye text-xl"></i>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos Totais</p><h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">...</h3></div>
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><i class="fas fa-fire"></i></div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Acertos Totais</p>
+                    <h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-fire text-xl"></i>
+                </div>
             </div>
         </div>
 
-        <h3 class="text-[10px] font-black text-gray-400 uppercase mb-6 tracking-widest">Desempenho por Tema</h3>
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Desempenho por Especialidade</h3>
+            <span class="text-[10px] text-gray-400 font-bold bg-gray-100 px-3 py-1 rounded-full uppercase">Dados em Tempo Real</span>
+        </div>
         
         <div id="lista-estatisticas-temas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <p class="text-gray-400 italic text-sm">Carregando dados clínicos...</p>
+            <div class="col-span-full flex flex-col items-center py-20 text-gray-400">
+                <i class="fas fa-circle-notch animate-spin text-2xl mb-4"></i>
+                <p class="italic text-sm">Sincronizando com o banco de dados clínico...</p>
+            </div>
         </div>
     </main>
 
     <script src="medquest-core.js"></script>
     <script>
-        window.onload = () => {
-            sincronizarDashboard(); // Preenche os cards de cima
-            carregarEstatisticasDetalhadas(); // Preenche a lista por tema
-        };
+        // Inicialização ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
+            // sincronizarDashboard preenche os cards superiores
+            sincronizarDashboard(); 
+            // carregarEstatisticasDetalhadas renderiza os progressos por tema
+            carregarEstatisticasDetalhadas(); 
+        });
     </script>
 </body>
 </html>
