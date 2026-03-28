@@ -6,8 +6,8 @@
     <title>MedQuest Pro - Questões</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
-    <script src="sidebar.js?v=3.2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="sidebar.js?v=4.0"></script>
     
     <style>
         .alt-item.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
@@ -16,45 +16,46 @@
         body { margin-left: 260px; }
         @media (max-width: 768px) { body { margin-left: 0; } }
         
-        /* Aba de Resposta Estilo Antigo */
         .aba-comentario {
             display: none;
             background: #f1f5f9;
-            border-radius: 24px;
-            padding: 20px;
-            margin-top: 20px;
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: 15px;
             border-left: 4px solid #3b82f6;
+            font-size: 0.875rem;
         }
     </style>
 </head>
 <body class="bg-[#f8fafc] p-4">
 
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 mt-10">
-        <div id="monitor" class="text-[10px] font-mono text-blue-500 mb-4 uppercase tracking-widest">Status: Conectado</div>
-        <h1 id="exibir-tema" class="text-2xl font-black text-gray-800 mb-1 uppercase">MedQuest</h1>
+        <div id="monitor" class="text-[10px] font-mono text-blue-500 mb-4 uppercase tracking-widest">Conexão Ativa</div>
+        <h1 id="exibir-tema" class="text-2xl font-black text-gray-800 mb-1 uppercase">Carregando...</h1>
         <p id="exibir-subtema" class="text-xs font-bold text-gray-400 uppercase mb-6"></p>
         
-        <div id="bloco-questao">
-            <p class="text-gray-400 italic">Buscando questão...</p>
-        </div>
+        <div id="bloco-questao"></div>
 
-        <div id="aba-resposta" class="aba-comentario">
-            <h4 class="text-sm font-black text-gray-800 uppercase mb-2">Explicação Técnica:</h4>
-            <p id="texto-comentario" class="text-sm text-gray-600 leading-relaxed"></p>
+        <div id="aba-resposta" class="aba-comentario text-gray-600">
+            <h4 class="text-xs font-black text-gray-800 uppercase mb-1">Comentário do Professor:</h4>
+            <p id="texto-comentario"></p>
         </div>
 
         <div id="botoes" class="mt-8 hidden flex gap-3">
-            <button onclick="window.history.back()" class="px-5 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all">Anterior</button>
-            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-blue-700 transition-all uppercase">Responder</button>
+            <button onclick="window.history.back()" class="px-5 py-2.5 bg-gray-50 text-gray-400 rounded-xl font-bold text-xs hover:bg-gray-100 transition-all">Anterior</button>
+            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl font-bold text-xs shadow-md hover:bg-blue-700 transition-all uppercase">Responder</button>
         </div>
     </div>
 
     <div class="max-w-2xl mx-auto mt-6 bg-white p-6 rounded-[24px] border border-gray-100">
-        <h3 class="text-xs font-black text-gray-400 uppercase mb-4 tracking-tighter">Discussão da Questão</h3>
-        <div id="lista-comentarios" class="space-y-3 mb-4 max-h-40 overflow-y-auto pr-2 text-sm text-gray-600"></div>
+        <h3 class="text-[10px] font-black text-gray-400 uppercase mb-4 flex items-center gap-2">
+            <i class="fas fa-comments"></i> Discussão da Questão
+        </h3>
+        <div id="lista-comentarios" class="space-y-4 mb-4 max-h-60 overflow-y-auto pr-2"></div>
+        
         <div class="flex gap-2">
-            <input id="input-comentario" type="text" placeholder="Adicionar comentário..." class="flex-1 bg-gray-50 border-none rounded-xl px-4 py-2 text-sm focus:ring-1 focus:ring-blue-500">
-            <button onclick="enviarComentario()" class="bg-blue-50 text-blue-600 px-4 rounded-xl font-bold text-sm hover:bg-blue-600 hover:text-white transition-all">Postar</button>
+            <input id="input-comentario" type="text" placeholder="Escreva um comentário ou resposta..." class="flex-1 bg-gray-50 border-none rounded-xl px-4 py-2 text-sm focus:ring-1 focus:ring-blue-500 font-medium text-gray-700">
+            <button onclick="enviarComentario()" class="bg-blue-600 text-white px-4 rounded-xl font-bold text-xs hover:bg-blue-700 transition-all">Postar</button>
         </div>
     </div>
 
@@ -69,11 +70,10 @@
 
         async function carregarQuestao() {
             const params = new URLSearchParams(window.location.search);
-            const temaAlvo = (params.get('tema') || "HAS").toUpperCase();
-
-            const { data, error } = await supabaseClient.from('questoes').select('*').eq('tema', temaAlvo);
+            const tema = (params.get('tema') || "HAS").toUpperCase();
+            const { data } = await supabaseClient.from('questoes').select('*').eq('tema', tema);
             
-            if (data && data.length > 0) {
+            if (data?.length > 0) {
                 questaoAtual = data[Math.floor(Math.random() * data.length)];
                 document.getElementById('exibir-tema').innerText = questaoAtual.tema;
                 document.getElementById('exibir-subtema').innerText = questaoAtual.subtema || "";
@@ -84,73 +84,66 @@
         }
 
         function renderizar(q) {
-            let html = `<p class="text-lg font-bold text-gray-700 mb-6 leading-tight">${q.enunciado}</p><div class="space-y-3">`;
-            const alts = [{l:'a', t:q.opcao_a||q.alternativa_a}, {l:'b', t:q.opcao_b||q.alternativa_b}, {l:'c', t:q.opcao_c||q.alternativa_c}, {l:'d', t:q.opcao_d||q.alternativa_d}];
-            alts.forEach(a => {
-                if(a.t) {
-                    html += `<div onclick="selecionar(this, '${a.l}')" class="alt-item p-4 border-2 border-gray-100 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3 transition-all">
-                        <span class="w-7 h-7 bg-gray-100 rounded flex items-center justify-center text-[10px] font-black text-gray-400 uppercase">${a.l}</span>
-                        <div class="text-gray-600 font-medium text-sm">${a.t}</div>
-                    </div>`;
-                }
+            let html = `<p class="text-lg font-bold text-gray-700 mb-6">${q.enunciado}</p><div class="space-y-3">`;
+            ['a','b','c','d'].forEach(l => {
+                const txt = q[`opcao_${l}`] || q[`alternativa_${l}`];
+                if(txt) html += `<div onclick="selecionar(this, '${l}')" class="alt-item p-4 border-2 border-gray-50 rounded-xl cursor-pointer hover:bg-gray-50 flex items-center gap-3 transition-all"><span class="w-7 h-7 bg-gray-50 rounded flex items-center justify-center text-[10px] font-black text-gray-400 uppercase">${l}</span><div class="text-gray-600 font-medium text-sm">${txt}</div></div>`;
             });
             document.getElementById('bloco-questao').innerHTML = html + "</div>";
         }
 
-        window.selecionar = (el, letra) => {
-            if(respondida) return;
-            document.querySelectorAll('.alt-item').forEach(d => d.classList.remove('selecionada'));
-            el.classList.add('selecionada');
-            selecionada = letra;
-        };
+        window.selecionar = (el, l) => { if(!respondida) { document.querySelectorAll('.alt-item').forEach(d => d.classList.remove('selecionada')); el.classList.add('selecionada'); selecionada = l; }};
 
         window.verificarResposta = async () => {
-            if(!selecionada) return;
-            if(respondida) return window.location.reload();
-
+            if(!selecionada || respondida) return respondida ? window.location.reload() : null;
             respondida = true;
             const correta = (questaoAtual.correta || questaoAtual.resposta_correta).toLowerCase().trim();
             const acertou = selecionada === correta;
 
-            // --- FUNÇÃO DE ESTATÍSTICAS (NÃO REMOVER) ---
-            await supabaseClient.from('estatisticas').insert([
-                { tema: questaoAtual.tema, acertou: acertou, usuario: 'Dr. Victor' }
-            ]);
+            // SALVAR ESTATÍSTICA (NÃO REMOVER)
+            await supabaseClient.from('estatisticas').insert([{ tema: questaoAtual.tema, acertou: acertou, usuario: 'Dr. Victor' }]);
 
             const itens = document.querySelectorAll('.alt-item');
             const mapa = {a:0, b:1, c:2, d:3};
-
             itens[mapa[correta]].classList.add('correta');
             if(!acertou) itens[mapa[selecionada]].classList.add('errada');
 
-            // Mostrar Aba de Resposta Técnica
             if(questaoAtual.comentario_professor) {
                 document.getElementById('texto-comentario').innerText = questaoAtual.comentario_professor;
                 document.getElementById('aba-resposta').style.display = 'block';
             }
-
             document.getElementById('btn-acao').innerText = "Próxima";
             document.getElementById('btn-acao').classList.replace('bg-blue-600', 'bg-gray-800');
         };
 
+        // COMENTÁRIOS COM DATA E HORA
         async function carregarComentarios(id) {
-            const { data } = await supabaseClient.from('comentarios').select('*').eq('questao_id', id);
+            const { data } = await supabaseClient.from('comentarios').select('*').eq('questao_id', id).order('created_at', { ascending: false });
             const lista = document.getElementById('lista-comentarios');
             lista.innerHTML = '';
             data?.forEach(c => {
-                lista.innerHTML += `<div class="bg-gray-50 p-3 rounded-lg border border-gray-100 mb-2">
-                    <p class="text-[9px] font-black text-blue-500 uppercase mb-1">${c.usuario}</p>
-                    <p class="text-xs text-gray-600">${c.texto}</p>
-                </div>`;
+                const dataFormatada = new Date(c.created_at).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+                lista.innerHTML += `
+                    <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[9px] font-black text-blue-600 uppercase">Dr. Victor</span>
+                            <span class="text-[8px] font-bold text-gray-400">${dataFormatada}</span>
+                        </div>
+                        <p class="text-xs text-gray-600 font-medium">${c.texto}</p>
+                    </div>`;
             });
         }
 
         async function enviarComentario() {
             const txt = document.getElementById('input-comentario').value;
             if(!txt) return;
-            await supabaseClient.from('comentarios').insert([{ questao_id: questaoAtual.id, usuario: 'Dr. Victor', texto: txt }]);
-            document.getElementById('input-comentario').value = '';
-            carregarComentarios(questaoAtual.id);
+            const { error } = await supabaseClient.from('comentarios').insert([{ questao_id: questaoAtual.id, usuario: 'Dr. Victor', texto: txt }]);
+            if(!error) {
+                document.getElementById('input-comentario').value = '';
+                carregarComentarios(questaoAtual.id);
+            } else {
+                alert("Erro ao enviar: " + error.message);
+            }
         }
 
         window.onload = carregarQuestao;
