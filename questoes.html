@@ -18,7 +18,6 @@
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b; }
         .hidden { display: none; }
         
-        /* Ajuste para telas menores caso a sidebar suma */
         @media (max-width: 768px) {
             main { margin-left: 0; }
         }
@@ -34,14 +33,13 @@
                     <a href="temas.html" class="text-blue-600 text-xs font-bold uppercase flex items-center gap-2 mb-4 hover:underline">
                         <i class="fas fa-arrow-left"></i> Voltar aos Temas
                     </a>
-                    <h2 id="titulo-tema" class="text-3xl font-bold text-gray-800 tracking-tight">Carregando questões...</h2>
+                    <h2 id="titulo-tema" class="text-3xl font-bold text-gray-800 tracking-tight">Carregando...</h2>
                     <p id="contador-questoes" class="text-sm text-gray-500 mt-2 font-medium">Questão 0 de 0</p>
                 </div>
             </header>
 
             <div id="questao-card" class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-6">
-                <div id="conteudo-questao">
-                    </div>
+                <div id="conteudo-questao"></div>
 
                 <div id="feedback-container" class="hidden mt-6 pt-6 border-t border-gray-50">
                     <div id="feedback-status" class="p-4 rounded-xl text-sm font-bold mb-4"></div>
@@ -79,10 +77,8 @@
     </main>
 
     <script>
-        // CONFIGURAÇÃO REAL DO SUPABASE
         const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-        
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let questoesFiltradas = [];
@@ -95,16 +91,14 @@
 
         async function inicializar() {
             try {
-                // Busca as questões da tabela 'questoes'
                 let query = _supabase.from('questoes').select('*');
 
-                // Se houver tema na URL, filtra no servidor
                 if (temaURL) {
-                    query = query.eq('tema', temaURL);
+                    // CORREÇÃO: Busca o termo tanto na coluna 'tema' quanto na 'subtema'
+                    query = query.or(`tema.eq."${temaURL}",subtema.eq."${temaURL}"`);
                 }
 
                 const { data, error } = await query;
-
                 if (error) throw error;
 
                 questoesFiltradas = data;
@@ -120,9 +114,8 @@
                 renderizarQuestao();
 
             } catch (err) {
-                console.error("Erro de conexão Supabase:", err);
+                console.error("Erro Supabase:", err);
                 document.getElementById('titulo-tema').innerText = "Erro de Conexão";
-                alert("Verifique se a tabela 'questoes' existe no seu banco de dados.");
             }
         }
 
@@ -130,26 +123,19 @@
             const q = questoesFiltradas[indiceAtual];
             const container = document.getElementById('conteudo-questao');
             
-            // Reset de variáveis de estado
             respondida = false;
             opcaoSelecionada = null;
             
-            // Reset Visual
             document.getElementById('feedback-container').classList.add('hidden');
             document.getElementById('btn-acao').innerText = "Responder";
             document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
 
-            // Mapeamento das colunas do banco
             const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
 
             let html = `
                 <div class="flex justify-between items-center mb-4">
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">
-                        ${q.origem || 'ID #' + q.id}
-                    </p>
-                    <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">
-                        ${q.tema}
-                    </span>
+                    <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">${q.origem || 'ID #' + q.id}</p>
+                    <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">${q.subtema || q.tema}</span>
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
                 <div class="space-y-3">
@@ -175,27 +161,19 @@
 
         function selecionarOpcao(elemento, index) {
             if (respondida) return;
-            
-            // Limpa seleções anteriores
             document.querySelectorAll('.alternativa').forEach(alt => {
                 alt.style.borderColor = '#f1f5f9';
                 alt.style.backgroundColor = 'white';
             });
-
-            // Aplica visual de selecionado
             elemento.style.borderColor = '#3b82f6';
             elemento.style.backgroundColor = '#f0f7ff';
             opcaoSelecionada = index;
         }
 
         function verificarAcao() {
-            if (opcaoSelecionada === null) return alert("Por favor, selecione uma alternativa.");
-            
-            if (!respondida) {
-                confirmarResposta();
-            } else {
-                proximaQuestao();
-            }
+            if (opcaoSelecionada === null) return alert("Selecione uma alternativa.");
+            if (!respondida) confirmarResposta();
+            else proximaQuestao();
         }
 
         function confirmarResposta() {
@@ -204,11 +182,9 @@
             const alternativas = document.querySelectorAll('.alternativa');
             const feedbackStatus = document.getElementById('feedback-status');
             
-            // Atualizar Estatísticas Locais
             let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
             stats.total += 1;
 
-            // Destacar a correta (0=A, 1=B, etc)
             alternativas[q.correta].classList.add('correta');
 
             if (opcaoSelecionada === q.correta) {
@@ -223,9 +199,7 @@
             }
 
             localStorage.setItem('medquest_stats', JSON.stringify(stats));
-            
-            // Exibir comentário
-            document.getElementById('comentario-texto').innerText = q.comentario;
+            document.getElementById('comentario-texto').innerText = q.comentario || "Sem comentário disponível.";
             document.getElementById('feedback-container').classList.remove('hidden');
             document.getElementById('btn-acao').innerText = "Próxima Questão";
         }
@@ -235,7 +209,7 @@
                 indiceAtual++;
                 renderizarQuestao();
             } else {
-                alert("Parabéns! Você concluiu todas as questões disponíveis.");
+                alert("Você concluiu as questões deste tema!");
             }
         }
 
@@ -246,7 +220,6 @@
             }
         }
 
-        // Inicia a busca no banco ao carregar
         window.onload = inicializar;
     </script>
 </body>
