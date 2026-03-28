@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - MedQuest</title>
+    <title>Dashboard - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="sidebar.js"></script> 
@@ -11,13 +11,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         
-        /* Ajuste de margem para não conflitar com a sidebar fixa */
         main { 
-            margin-left: 16rem; /* Equivalente a w-64 */
+            margin-left: 16rem;
             width: calc(100% - 16rem);
         }
 
-        /* Ajuste para telas menores (opcional) */
         @media (max-width: 768px) {
             main { margin-left: 0; width: 100%; }
         }
@@ -25,7 +23,7 @@
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
-   <main class="ml-64 flex-1 p-10">
+   <main class="flex-1 p-10">
     <div class="max-w-6xl mx-auto">
         
         <div class="mb-10">
@@ -40,45 +38,47 @@
             
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total de Questões</p>
-                    <h3 id="total-questoes" class="text-3xl font-bold text-gray-800">100</h3>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Disponível</p>
+                    <h3 id="total-banco" class="text-3xl font-bold text-gray-800">100</h3>
                 </div>
                 <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-book-open text-xl"></i>
+                    <i class="fas fa-database text-xl"></i>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Respondidas</p>
-                    <h3 id="respondidas" class="text-3xl font-bold text-gray-800">68</h3>
+                    <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
                 </div>
                 <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-bullseye text-xl"></i>
+                    <i class="fas fa-check-double text-xl"></i>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Taxa de Acerto</p>
-                    <h3 id="taxa-acerto" class="text-3xl font-bold text-gray-800">41%</h3>
+                    <h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3>
                 </div>
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-chart-line text-xl"></i>
                 </div>
             </div>
 
             <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Favoritas</p>
-                    <h3 id="favoritas" class="text-3xl font-bold text-gray-800">5</h3>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Acertos Totais</p>
+                    <h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3>
                 </div>
-                <div class="w-12 h-12 bg-yellow-50 text-yellow-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-star text-xl"></i>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-trophy text-xl"></i>
                 </div>
             </div>
 
-        </div> <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        </div> 
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
             
             <div onclick="window.location.href='temas.html'" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl shadow-blue-100 relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer">
                 <div class="relative z-10 flex flex-col h-full">
@@ -113,17 +113,33 @@
                 <i class="fas fa-chart-pie absolute right-[-20px] bottom-[-20px] text-8xl text-white/10 group-hover:rotate-12 transition-transform"></i>
             </div>
 
-        </div> </div>
+        </div> 
+    </div>
 </main>
+
     <script>
-        window.addEventListener('DOMContentLoaded', () => {
-            const dados = JSON.parse(localStorage.getItem('medquest_perfil'));
-            if (dados && dados.nome) {
-                // Pegamos apenas o primeiro nome para a saudação
-                const primeiroNome = dados.nome.trim().split(' ');
+        function sincronizarDashboard() {
+            // 1. Atualizar Saudação
+            const dadosPerfil = JSON.parse(localStorage.getItem('medquest_perfil'));
+            if (dadosPerfil && dadosPerfil.nome) {
+                const primeiroNome = dadosPerfil.nome.trim().split(' ');
                 document.getElementById('welcome-name').innerText = primeiroNome;
             }
-        });
+
+            // 2. Sincronizar Estatísticas das Questões
+            const stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
+            
+            // Cálculo de precisão
+            const precisao = stats.total > 0 ? Math.round((stats.acertos / stats.total) * 100) : 0;
+            
+            // Injeção nos elementos HTML
+            document.getElementById('stat-total').innerText = stats.total;
+            document.getElementById('stat-acertos').innerText = stats.acertos;
+            document.getElementById('stat-precisao').innerText = precisao + '%';
+        }
+
+        // Executa ao carregar a página
+        window.addEventListener('DOMContentLoaded', sincronizarDashboard);
     </script>
 </body>
 </html>
