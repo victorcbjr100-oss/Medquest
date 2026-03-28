@@ -6,12 +6,15 @@
     <title>Meu Caderno - MedQuest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="sidebar.js"></script> 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        main { margin-left: 16rem; }
         
-        .flip-card { background-color: transparent; perspective: 1000px; height: 220px; }
+        /* Margem para não cobrir a sidebar fixa */
+        main { margin-left: 16rem; }
+
+        .flip-card { background-color: transparent; perspective: 1000px; height: 220px; position: relative; }
         .flip-card-inner {
             position: relative; width: 100%; height: 100%;
             text-align: center; transition: transform 0.6s;
@@ -26,8 +29,11 @@
         }
         .flip-card-back { transform: rotateY(180deg); background-color: #f0f7ff; }
         
-        /* Impede que o clique nos botões vire o card */
-        .card-controls { position: absolute; top: 10px; right: 10px; z-index: 50; display: flex; gap: 8px; }
+        /* Botões de controle sobre o card */
+        .card-actions {
+            position: absolute; top: 10px; right: 10px; z-index: 10;
+            display: flex; gap: 6px;
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
@@ -37,7 +43,7 @@
             
             <div class="mb-10">
                 <h2 class="text-3xl font-bold text-gray-800">Meu Caderno de Estudos 📝</h2>
-                <p class="text-gray-500 mt-1">Seus flashcards ficam salvos automaticamente neste navegador.</p>
+                <p class="text-gray-500 mt-1">Crie lotes de flashcards que ficam salvos automaticamente.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -46,115 +52,117 @@
                         <div class="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-xl flex items-center justify-center">
                             <i class="fas fa-sticky-note"></i>
                         </div>
-                        <h3 class="font-bold text-gray-800 text-xl">Anotações</h3>
+                        <h3 class="font-bold text-gray-800 text-xl">Anotações Gerais</h3>
                     </div>
-                    <textarea id="study-notes" class="w-full h-48 p-5 bg-yellow-50/50 border border-yellow-100 rounded-2xl text-gray-700 outline-none resize-none" placeholder="Suas notas aqui..."></textarea>
-                    <button onclick="saveNotes()" class="mt-4 w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition-all">Salvar Anotações</button>
+                    <textarea id="study-notes" class="w-full h-48 p-5 bg-yellow-50/50 border border-yellow-100 rounded-2xl text-gray-700 outline-none resize-none" placeholder="Escreva aqui..."></textarea>
+                    <button onclick="saveNotes()" class="mt-4 w-full bg-gray-800 text-white py-3 rounded-xl font-bold hover:bg-gray-700 transition-all">Salvar Notas</button>
                 </div>
 
                 <div class="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-bolt"></i>
+                            <i class="fas fa-plus"></i>
                         </div>
-                        <h3 id="form-title" class="font-bold text-gray-800 text-xl">Novo Flashcard</h3>
+                        <h3 id="form-title" class="font-bold text-gray-800 text-xl">Criar Flashcard</h3>
                     </div>
 
                     <input type="hidden" id="edit-id" value="">
+                    
                     <div class="space-y-4">
-                        <input type="text" id="fc-front" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none" placeholder="Pergunta (Frente)">
-                        <textarea id="fc-back" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none h-20" placeholder="Resposta (Verso)"></textarea>
+                        <input type="text" id="fc-front" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none" placeholder="Frente (Pergunta)">
+                        <textarea id="fc-back" class="w-full p-3 bg-gray-50 border border-gray-100 rounded-xl outline-none h-20" placeholder="Verso (Resposta)"></textarea>
+                        
                         <div class="flex gap-2">
-                            <button id="btn-save" onclick="handleSave()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700">Adicionar ao Lote</button>
-                            <button id="btn-cancel" onclick="resetForm()" class="hidden bg-gray-200 text-gray-600 px-4 py-3 rounded-xl font-bold">Cancelar</button>
+                            <button id="btn-submit" onclick="saveFlashcard()" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all">
+                                Adicionar ao Lote
+                            </button>
+                            <button id="btn-cancel" onclick="clearForm()" class="hidden bg-gray-200 text-gray-600 px-4 py-3 rounded-xl font-bold">
+                                Cancelar
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-12">
-                <h3 class="text-2xl font-bold text-gray-800 mb-6">Meus Flashcards (<span id="card-count">0</span>)</h3>
-                <div id="flashcards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">Meus Cartões</h3>
+                <div id="flashcards-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     </div>
             </div>
         </div>
     </main>
 
     <script>
-        // Inicialização: Tenta carregar os dados ou cria um array vazio
-        let flashcards = JSON.parse(localStorage.getItem('medquest_cards_v2')) || [];
+        // Carrega os dados do localStorage ou inicia vazio
+        let flashcards = JSON.parse(localStorage.getItem('medquest_batch_cards')) || [];
 
-        // Executa ao carregar a página
-        window.onload = () => {
-            renderFlashcards();
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCards();
             const savedNotes = localStorage.getItem('medquest_notes');
             if (savedNotes) document.getElementById('study-notes').value = savedNotes;
-        };
+        });
 
         function saveNotes() {
             localStorage.setItem('medquest_notes', document.getElementById('study-notes').value);
-            alert('Anotações salvas!');
+            alert('Anotações salvas com sucesso!');
         }
 
-        // Função principal para Salvar (Novo ou Edição)
-        function handleSave() {
+        function saveFlashcard() {
             const front = document.getElementById('fc-front').value;
             const back = document.getElementById('fc-back').value;
             const editId = document.getElementById('edit-id').value;
 
-            if (!front || !back) return alert('Preencha os dois campos!');
+            if (!front || !back) return alert('Por favor, preencha frente e verso.');
 
             if (editId) {
-                // Modo Edição
+                // Atualiza card existente
                 const index = flashcards.findIndex(c => c.id == editId);
                 flashcards[index].front = front;
                 flashcards[index].back = back;
             } else {
-                // Modo Novo
+                // Cria novo card
                 const newCard = { id: Date.now(), front, back };
                 flashcards.push(newCard);
             }
 
-            persistAndRender();
-            resetForm();
+            updateStorage();
+            clearForm();
         }
 
-        function persistAndRender() {
-            localStorage.setItem('medquest_cards_v2', JSON.stringify(flashcards));
-            renderFlashcards();
-        }
-
-        function renderFlashcards() {
-            const container = document.getElementById('flashcards-container');
-            document.getElementById('card-count').innerText = flashcards.length;
+        function renderCards() {
+            const container = document.getElementById('flashcards-list');
             container.innerHTML = '';
 
             flashcards.forEach(card => {
-                const div = document.createElement('div');
-                div.className = 'flip-card';
-                div.innerHTML = `
-                    <div class="card-controls">
-                        <button onclick="event.stopPropagation(); editCard(${card.id})" class="w-8 h-8 bg-white/80 hover:bg-white text-blue-600 rounded-full shadow-sm border border-blue-100"><i class="fas fa-pen text-xs"></i></button>
-                        <button onclick="event.stopPropagation(); deleteCard(${card.id})" class="w-8 h-8 bg-white/80 hover:bg-white text-red-500 rounded-full shadow-sm border border-red-100"><i class="fas fa-trash text-xs"></i></button>
+                const cardElement = document.createElement('div');
+                cardElement.className = 'flip-card';
+                cardElement.innerHTML = `
+                    <div class="card-actions">
+                        <button onclick="event.stopPropagation(); editCard(${card.id})" class="bg-white p-2 rounded-full shadow-md text-blue-500 hover:text-blue-700 border border-gray-100">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); deleteCard(${card.id})" class="bg-white p-2 rounded-full shadow-md text-red-500 hover:text-red-700 border border-gray-100">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                     <div class="flip-card-inner" onclick="this.parentElement.classList.toggle('flipped')">
-                        <div class="flip-card-front bg-white">
-                            <p class="font-bold text-gray-800 px-4 text-center">${card.front}</p>
-                            <span class="absolute bottom-4 text-[9px] text-gray-400 uppercase font-extrabold tracking-widest">Ver Resposta</span>
+                        <div class="flip-card-front bg-white shadow-sm">
+                            <p class="font-bold text-gray-800 text-center">${card.front}</p>
+                            <span class="absolute bottom-3 text-[9px] text-gray-400 font-bold uppercase">Clique para virar</span>
                         </div>
                         <div class="flip-card-back shadow-inner">
-                            <p class="text-sm text-blue-900 font-medium px-4 text-center">${card.back}</p>
+                            <p class="text-sm text-blue-800 font-medium text-center">${card.back}</p>
                         </div>
                     </div>
                 `;
-                container.appendChild(div);
+                container.appendChild(cardElement);
             });
         }
 
         function deleteCard(id) {
-            if (confirm("Deseja apagar este card permanentemente?")) {
-                flashcards = flashcards.filter(c => c.id !== id);
-                persistAndRender();
+            if (confirm("Deseja excluir este flashcard?")) {
+                flashcards = flashcards.filter(card => card.id !== id);
+                updateStorage();
             }
         }
 
@@ -163,21 +171,26 @@
             document.getElementById('fc-front').value = card.front;
             document.getElementById('fc-back').value = card.back;
             document.getElementById('edit-id').value = card.id;
-            
-            // UI Changes
+
             document.getElementById('form-title').innerText = "Editar Flashcard";
-            document.getElementById('btn-save').innerText = "Atualizar Card";
+            document.getElementById('btn-submit').innerText = "Salvar Alterações";
             document.getElementById('btn-cancel').classList.remove('hidden');
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function resetForm() {
+        function clearForm() {
             document.getElementById('fc-front').value = '';
             document.getElementById('fc-back').value = '';
             document.getElementById('edit-id').value = '';
-            document.getElementById('form-title').innerText = "Novo Flashcard";
-            document.getElementById('btn-save').innerText = "Adicionar ao Lote";
+            document.getElementById('form-title').innerText = "Criar Flashcard";
+            document.getElementById('btn-submit').innerText = "Adicionar ao Lote";
             document.getElementById('btn-cancel').classList.add('hidden');
+        }
+
+        function updateStorage() {
+            localStorage.setItem('medquest_batch_cards', JSON.stringify(flashcards));
+            renderCards();
         }
     </script>
 </body>
