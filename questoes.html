@@ -17,6 +17,11 @@
         .correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #065f46; }
         .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b; }
         .hidden { display: none; }
+        
+        /* Ajuste para telas menores caso a sidebar suma */
+        @media (max-width: 768px) {
+            main { margin-left: 0; }
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
@@ -35,12 +40,15 @@
             </header>
 
             <div id="questao-card" class="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm mb-6">
-                <div id="conteudo-questao"></div>
+                <div id="conteudo-questao">
+                    </div>
 
                 <div id="feedback-container" class="hidden mt-6 pt-6 border-t border-gray-50">
                     <div id="feedback-status" class="p-4 rounded-xl text-sm font-bold mb-4"></div>
                     <div class="bg-blue-50 p-6 rounded-2xl">
-                        <h4 class="text-blue-800 font-bold text-xs uppercase mb-2"><i class="fas fa-comment-medical mr-2"></i> Comentário do Especialista</h4>
+                        <h4 class="text-blue-800 font-bold text-xs uppercase mb-2">
+                            <i class="fas fa-comment-medical mr-2"></i> Comentário do Especialista
+                        </h4>
                         <p id="comentario-texto" class="text-blue-900 text-sm leading-relaxed italic"></p>
                     </div>
                 </div>
@@ -64,14 +72,17 @@
             <div id="empty-state" class="hidden text-center py-20">
                 <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
                 <p class="text-gray-500 font-medium">Nenhuma questão encontrada para este tema.</p>
+                <a href="temas.html" class="text-blue-500 text-sm underline mt-2 block">Tentar outro tema</a>
             </div>
+
         </div>
     </main>
 
     <script>
-        // CONFIGURAÇÃO DO SUPABASE
-        const SUPABASE_URL = 'SUA_URL_DO_SUPABASE';
-        const SUPABASE_KEY = 'SUA_CHAVE_ANON_DO_SUPABASE';
+        // CONFIGURAÇÃO REAL DO SUPABASE
+        const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+        
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let questoesFiltradas = [];
@@ -84,8 +95,10 @@
 
         async function inicializar() {
             try {
+                // Busca as questões da tabela 'questoes'
                 let query = _supabase.from('questoes').select('*');
 
+                // Se houver tema na URL, filtra no servidor
                 if (temaURL) {
                     query = query.eq('tema', temaURL);
                 }
@@ -99,7 +112,7 @@
                 if (!questoesFiltradas || questoesFiltradas.length === 0) {
                     document.getElementById('questao-card').classList.add('hidden');
                     document.getElementById('empty-state').classList.remove('hidden');
-                    document.getElementById('titulo-tema').innerText = "Sem questões";
+                    document.getElementById('titulo-tema').innerText = "Vazio";
                     return;
                 }
                 
@@ -107,39 +120,49 @@
                 renderizarQuestao();
 
             } catch (err) {
-                console.error("Erro Supabase:", err);
-                document.getElementById('titulo-tema').innerText = "Erro ao carregar";
+                console.error("Erro de conexão Supabase:", err);
+                document.getElementById('titulo-tema').innerText = "Erro de Conexão";
+                alert("Verifique se a tabela 'questoes' existe no seu banco de dados.");
             }
         }
 
         function renderizarQuestao() {
             const q = questoesFiltradas[indiceAtual];
             const container = document.getElementById('conteudo-questao');
+            
+            // Reset de variáveis de estado
             respondida = false;
             opcaoSelecionada = null;
             
+            // Reset Visual
             document.getElementById('feedback-container').classList.add('hidden');
             document.getElementById('btn-acao').innerText = "Responder";
             document.getElementById('contador-questoes').innerText = `Questão ${indiceAtual + 1} de ${questoesFiltradas.length}`;
 
-            // Array de opções vindo das colunas do banco
+            // Mapeamento das colunas do banco
             const opcoes = [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d];
 
             let html = `
                 <div class="flex justify-between items-center mb-4">
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">${q.origem || 'ID #' + q.id}</p>
-                    <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">${q.tema}</span>
+                    <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">
+                        ${q.origem || 'ID #' + q.id}
+                    </p>
+                    <span class="px-3 py-1 bg-blue-50 text-[10px] font-bold text-blue-600 rounded-full">
+                        ${q.tema}
+                    </span>
                 </div>
                 <h3 class="text-lg font-bold text-gray-800 mb-8 leading-relaxed">${q.enunciado}</h3>
                 <div class="space-y-3">
             `;
 
             opcoes.forEach((opt, i) => {
-                if(opt) { // Garante que a opção existe
+                if (opt) {
                     html += `
                         <div onclick="selecionarOpcao(this, ${i})" 
-                             class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4">
-                            <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">${String.fromCharCode(65 + i)}</span>
+                             class="alternativa p-5 border border-gray-100 rounded-2xl font-medium text-gray-700 flex items-center gap-4 bg-white">
+                            <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
+                                ${String.fromCharCode(65 + i)}
+                            </span>
                             ${opt}
                         </div>
                     `;
@@ -152,19 +175,27 @@
 
         function selecionarOpcao(elemento, index) {
             if (respondida) return;
+            
+            // Limpa seleções anteriores
             document.querySelectorAll('.alternativa').forEach(alt => {
                 alt.style.borderColor = '#f1f5f9';
                 alt.style.backgroundColor = 'white';
             });
+
+            // Aplica visual de selecionado
             elemento.style.borderColor = '#3b82f6';
             elemento.style.backgroundColor = '#f0f7ff';
             opcaoSelecionada = index;
         }
 
         function verificarAcao() {
-            if (opcaoSelecionada === null) return alert("Selecione uma opção!");
-            if (!respondida) confirmarResposta();
-            else proximaQuestao();
+            if (opcaoSelecionada === null) return alert("Por favor, selecione uma alternativa.");
+            
+            if (!respondida) {
+                confirmarResposta();
+            } else {
+                proximaQuestao();
+            }
         }
 
         function confirmarResposta() {
@@ -173,10 +204,11 @@
             const alternativas = document.querySelectorAll('.alternativa');
             const feedbackStatus = document.getElementById('feedback-status');
             
+            // Atualizar Estatísticas Locais
             let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
             stats.total += 1;
 
-            // No banco, 'correta' deve ser 0 para A, 1 para B, etc.
+            // Destacar a correta (0=A, 1=B, etc)
             alternativas[q.correta].classList.add('correta');
 
             if (opcaoSelecionada === q.correta) {
@@ -191,6 +223,8 @@
             }
 
             localStorage.setItem('medquest_stats', JSON.stringify(stats));
+            
+            // Exibir comentário
             document.getElementById('comentario-texto').innerText = q.comentario;
             document.getElementById('feedback-container').classList.remove('hidden');
             document.getElementById('btn-acao').innerText = "Próxima Questão";
@@ -201,7 +235,7 @@
                 indiceAtual++;
                 renderizarQuestao();
             } else {
-                alert("Fim das questões deste tema!");
+                alert("Parabéns! Você concluiu todas as questões disponíveis.");
             }
         }
 
@@ -212,6 +246,7 @@
             }
         }
 
+        // Inicia a busca no banco ao carregar
         window.onload = inicializar;
     </script>
 </body>
