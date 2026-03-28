@@ -6,7 +6,7 @@
     <title>Dashboard - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="sidebar.js"></script> 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -32,7 +32,7 @@
                 Olá, <span id="welcome-name">Victor</span>! 
                 <span class="text-3xl">👋</span>
             </h2>
-            <p class="text-gray-500 mt-1">Continue seus estudos médicos e acompanhe seu progresso</p>
+            <p class="text-gray-500 mt-1 font-medium">Continue seus estudos médicos e acompanhe seu progresso real</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -119,39 +119,42 @@
 </main>
 
     <script>
-        // Configurações do Supabase para contagem real
         const S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
 
         async function sincronizarDashboard() {
-            // 1. Atualizar Saudação via LocalStorage
-            const dadosPerfil = JSON.parse(localStorage.getItem('medquest_perfil'));
-            if (dadosPerfil && dadosPerfil.nome) {
-                const primeiroNome = dadosPerfil.nome.trim().split(' ');
-                document.getElementById('welcome-name').innerText = primeiroNome;
-            }
-
-            // 2. Estatísticas Locais
-            const stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
-            const precisao = stats.total > 0 ? Math.round((stats.acertos / stats.total) * 100) : 0;
-            
-            document.getElementById('stat-total').innerText = stats.total;
-            document.getElementById('stat-acertos').innerText = stats.acertos;
-            document.getElementById('stat-precisao').innerText = precisao + '%';
-
-            // 3. Buscar Total de Questões no Supabase (Real)
             try {
-                const _supabase = supabase.createClient(S_URL, S_KEY);
-                const { count, error } = await _supabase.from('questoes').select('*', { count: 'exact', head: true });
-                if (!error) {
-                    document.getElementById('total-banco').innerText = count;
+                // 1. Total de questões no banco (Contagem global)
+                const { count: totalBanco } = await _supabase
+                    .from('questoes')
+                    .select('*', { count: 'exact', head: true });
+                
+                document.getElementById('total-banco').innerText = totalBanco || 0;
+
+                // 2. Estatísticas Reais do Usuário (Tabela estatisticas)
+                const { data: statsData, error: statsError } = await _supabase
+                    .from('estatisticas')
+                    .select('*')
+                    .eq('usuario', 'Dr. Victor');
+
+                if (!statsError && statsData) {
+                    const totalRespondidas = statsData.length;
+                    const acertosTotais = statsData.filter(item => item.acertou === true).length;
+                    const precisaoReal = totalRespondidas > 0 ? Math.round((acertosTotais / totalRespondidas) * 100) : 0;
+
+                    // Atualiza o HTML com dados do Banco de Dados
+                    document.getElementById('stat-total').innerText = totalRespondidas;
+                    document.getElementById('stat-acertos').innerText = acertosTotais;
+                    document.getElementById('stat-precisao').innerText = precisaoReal + '%';
                 }
+
             } catch (e) {
-                console.error("Erro ao sincronizar banco:", e);
-                document.getElementById('total-banco').innerText = "100"; // fallback
+                console.error("Falha na sincronização:", e);
             }
         }
 
+        // Carrega os dados assim que a página estiver pronta
         window.addEventListener('DOMContentLoaded', sincronizarDashboard);
     </script>
 </body>
