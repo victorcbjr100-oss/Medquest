@@ -3,142 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temas - MedQuest Pro</title>
+    <title>Questões - MedQuest Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="sidebar.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        .card-tema { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.05); }
-        /* Espaço para a sidebar que será inserida pelo sidebar.js */
         main { margin-left: 16rem; }
-        .hidden { display: none; }
+        .alternativa { transition: all 0.2s ease; cursor: pointer; }
+        .alternativa:hover { border-color: #3b82f6; background-color: #f0f7ff; }
+        .correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #065f46; }
+        .errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
 
     <main class="flex-1 p-8 md:p-12">
-        <div class="max-w-6xl mx-auto">
+        <div class="max-w-4xl mx-auto">
             
-            <header class="mb-10">
-                <div id="btn-voltar" class="hidden items-center gap-2 text-[10px] font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline transition-all" onclick="voltar()">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </div>
-                <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800 tracking-tight">Estudar por Temas</h2>
-                <p id="subtitulo-pagina" class="text-gray-500 mt-1 text-sm">Selecione uma grande área para começar sua revisão</p>
+            <header class="mb-8">
+                <a href="temas.html" class="text-blue-600 text-xs font-bold uppercase flex items-center gap-2 mb-4 hover:underline">
+                    <i class="fas fa-arrow-left"></i> Voltar aos Temas
+                </a>
+                <h2 id="titulo-tema" class="text-3xl font-bold text-gray-800 tracking-tight">Carregando questões...</h2>
+                <div id="status-progresso" class="text-sm text-gray-500 mt-2 font-medium"></div>
             </header>
 
-            <div id="grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div id="questoes-container" class="space-y-8">
                 </div>
+
+            <div id="empty-state" class="hidden text-center py-20">
+                <i class="fas fa-folder-open text-gray-300 text-6xl mb-4"></i>
+                <p class="text-gray-500 font-medium">Nenhuma questão cadastrada para este tema ainda.</p>
+            </div>
 
         </div>
     </main>
 
     <script>
-        const bancoDeDados = {
-            'Clínica Médica': {
-                icon: 'fa-stethoscope', color: 'blue',
-                especialidades: {
-                    'Cardiologia': ['HAS', 'IAM', 'Bradiarritmias', 'Insuficiência Cardíaca', 'Valvopatias'],
-                    'Pneumologia': ['Asma', 'DPOC', 'TEP', 'Pneumonias'],
-                    'Nefrologia': ['IRA', 'DRC', 'Glomerulopatias']
-                }
+        // 1. BANCO DE DADOS DE EXEMPLO (Adicione suas questões aqui)
+        const bancoDeQuestoes = [
+            {
+                id: 1,
+                tema: 'HAS',
+                enunciado: "Qual o valor definido pela SBC para diagnóstico de Hipertensão Arterial Sistêmica em medidas de consultório?",
+                opcoes: ["≥ 120/80 mmHg", "≥ 130/85 mmHg", "≥ 140/90 mmHg", "≥ 150/95 mmHg"],
+                correta: 2 // Índice da resposta certa (começa do 0)
             },
-            'Pediatria': {
-                icon: 'fa-baby', color: 'emerald',
-                especialidades: {
-                    'Puericultura': ['Desenvolvimento PM', 'Crescimento', 'Vacinação'],
-                    'Neonatologia': ['Icterícia Neonatal', 'Reanimação Neonatal']
-                }
+            {
+                id: 2,
+                tema: 'HAS',
+                enunciado: "Qual a droga de primeira escolha para tratamento de HAS em pacientes diabéticos com microalbuminúria?",
+                opcoes: ["Anlodipino", "Enalapril (IECA)", "Clortalidona", "Atenolol"],
+                correta: 1
             },
-            'Ciclo Básico': {
-                icon: 'fa-microscope', color: 'purple',
-                especialidades: {
-                    'Anatomia': ['Sist. Cardiovascular', 'Sist. Nervoso', 'Sist. Digestório'],
-                    'Fisiologia': ['Fisiologia Renal', 'Fisiologia Endócrina']
-                }
+            {
+                id: 3,
+                tema: 'IAM',
+                enunciado: "No Infarto Agudo do Miocárdio com supra de ST, qual o tempo 'porta-balão' ideal?",
+                opcoes: ["60 minutos", "90 minutos", "120 minutos", "180 minutos"],
+                correta: 1
             }
-        };
+        ];
 
-        let estado = 'areas'; 
-        let areaSelecionada = '';
-        let especialidadeSelecionada = '';
+        // 2. CAPTURAR TEMA DA URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const temaSelecionado = urlParams.get('tema');
 
-        function renderizar() {
-            const grid = document.getElementById('grid-container');
-            const titulo = document.getElementById('titulo-pagina');
-            const subtitulo = document.getElementById('subtitulo-pagina');
-            const btnVoltar = document.getElementById('btn-voltar');
+        function carregarQuestoes() {
+            const container = document.getElementById('questoes-container');
+            const titulo = document.getElementById('titulo-tema');
             
-            grid.innerHTML = '';
-
-            if (estado === 'areas') {
-                btnVoltar.classList.add('hidden');
-                titulo.innerText = "Estudar por Temas";
-                subtitulo.innerText = "Selecione uma grande área para começar sua revisão";
-
-                Object.keys(bancoDeDados).forEach(area => {
-                    const info = bancoDeDados[area];
-                    grid.appendChild(criarCardElement(area, info.icon, info.color, 'Ver Especialidades', () => {
-                        areaSelecionada = area;
-                        estado = 'especialidades';
-                        renderizar();
-                    }));
-                });
-            } 
-            else if (estado === 'especialidades') {
-                btnVoltar.classList.remove('hidden');
-                titulo.innerText = areaSelecionada;
-                subtitulo.innerText = "Escolha a especialidade desejada";
-
-                const especialidades = bancoDeDados[areaSelecionada].especialidades;
-                Object.keys(especialidades).forEach(esp => {
-                    grid.appendChild(criarCardElement(esp, 'fa-layer-group', 'blue', 'Ver Assuntos', () => {
-                        especialidadeSelecionada = esp;
-                        estado = 'subtemas';
-                        renderizar();
-                    }));
-                });
+            if (!temaSelecionado) {
+                titulo.innerText = "Todas as Questões";
+                exibirQuestoes(bancoDeQuestoes);
+                return;
             }
-            else if (estado === 'subtemas') {
-                btnVoltar.classList.remove('hidden');
-                titulo.innerText = especialidadeSelecionada;
-                subtitulo.innerText = "Clique em um assunto para abrir as questões";
 
-                const subtemas = bancoDeDados[areaSelecionada].especialidades[especialidadeSelecionada];
-                subtemas.forEach(assunto => {
-                    grid.appendChild(criarCardElement(assunto, 'fa-file-medical', 'slate', 'Praticar Questões', () => {
-                        // Envia o tema para a página de questões
-                        window.location.href = `questoes.html?tema=${encodeURIComponent(assunto)}`;
-                    }));
-                });
+            titulo.innerText = `Questões: ${temaSelecionado}`;
+            
+            // FILTRAR AS QUESTÕES PELO TEMA
+            const filtradas = bancoDeQuestoes.filter(q => q.tema === temaSelecionado);
+
+            if (filtradas.length === 0) {
+                document.getElementById('empty-state').classList.remove('hidden');
+                return;
             }
+
+            exibirQuestoes(filtradas);
         }
 
-        // Função corrigida para criar elementos de card com eventos de clique reais
-        function criarCardElement(nome, icon, cor, footer, acao) {
-            const div = document.createElement('div');
-            div.className = 'card-tema bg-white border border-gray-100 p-8 rounded-[32px] shadow-sm flex flex-col items-center text-center';
-            div.onclick = acao;
-            div.innerHTML = `
-                <div class="w-16 h-16 bg-${cor}-50 text-${cor}-500 rounded-2xl flex items-center justify-center mb-5">
-                    <i class="fas ${icon} text-2xl"></i>
-                </div>
-                <h4 class="font-bold text-gray-800 text-sm mb-2">${nome}</h4>
-                <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">${footer}</span>
-            `;
-            return div;
+        function exibirQuestoes(lista) {
+            const container = document.getElementById('questoes-container');
+            document.getElementById('status-progresso').innerText = `${lista.length} questões encontradas`;
+
+            lista.forEach((q, index) => {
+                const questaoDiv = document.createElement('div');
+                questaoDiv.className = "bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm mb-6";
+                
+                let alternativasHTML = '';
+                q.opcoes.forEach((opt, i) => {
+                    alternativasHTML += `
+                        <div onclick="verificarResposta(this, ${i}, ${q.correta})" 
+                             class="alternativa p-4 border border-gray-100 rounded-xl mb-3 font-medium text-gray-700 flex items-center gap-4">
+                            <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">${String.fromCharCode(65 + i)}</span>
+                            ${opt}
+                        </div>
+                    `;
+                });
+
+                questaoDiv.innerHTML = `
+                    <p class="text-xs font-bold text-blue-600 uppercase mb-3 tracking-widest">Questão ${index + 1}</p>
+                    <h3 class="text-lg font-bold text-gray-800 mb-6 leading-relaxed">${q.enunciado}</h3>
+                    <div class="opcoes-container">
+                        ${alternativasHTML}
+                    </div>
+                    <div class="feedback hidden mt-4 p-4 rounded-xl text-sm font-bold"></div>
+                `;
+                container.appendChild(questaoDiv);
+            });
         }
 
-        function voltar() {
-            if (estado === 'subtemas') estado = 'especialidades';
-            else if (estado === 'especialidades') estado = 'areas';
-            renderizar();
+        function verificarResposta(elemento, indexClicado, indexCorreto) {
+            const container = elemento.parentElement;
+            // Bloqueia novos cliques nessa questão
+            if (container.classList.contains('respondida')) return;
+            container.classList.add('respondida');
+
+            const alternativas = container.querySelectorAll('.alternativa');
+            const feedbackDiv = container.nextElementSibling;
+
+            // Marca a correta sempre
+            alternativas[indexCorreto].classList.add('correta');
+
+            if (indexClicado === indexCorreto) {
+                elemento.classList.add('correta');
+                feedbackDiv.innerText = "✅ Resposta correta!";
+                feedbackDiv.classList.add('bg-emerald-50', 'text-emerald-600');
+            } else {
+                elemento.classList.add('errada');
+                feedbackDiv.innerText = "❌ Resposta incorreta.";
+                feedbackDiv.classList.add('bg-red-50', 'text-red-600');
+            }
+            feedbackDiv.classList.remove('hidden');
         }
 
-        window.onload = renderizar;
+        window.onload = carregarQuestoes;
     </script>
 </body>
 </html>
