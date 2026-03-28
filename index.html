@@ -126,13 +126,13 @@
         async function sincronizarDashboard() {
             try {
                 // 1. Total de questões no banco (Contagem global)
-                const { count: totalBanco } = await _supabase
+                const { count: totalBanco, error: errBanco } = await _supabase
                     .from('questoes')
                     .select('*', { count: 'exact', head: true });
                 
-                document.getElementById('total-banco').innerText = totalBanco || 0;
+                if (!errBanco) document.getElementById('total-banco').innerText = totalBanco || 0;
 
-                // 2. Estatísticas Reais do Usuário (Tabela estatisticas)
+                // 2. Estatísticas Reais da tabela 'estatisticas' no Supabase
                 const { data: statsData, error: statsError } = await _supabase
                     .from('estatisticas')
                     .select('*')
@@ -143,18 +143,18 @@
                     const acertosTotais = statsData.filter(item => item.acertou === true).length;
                     const precisaoReal = totalRespondidas > 0 ? Math.round((acertosTotais / totalRespondidas) * 100) : 0;
 
-                    // Atualiza o HTML com dados do Banco de Dados
+                    // Atualiza o HTML com dados persistentes do banco
                     document.getElementById('stat-total').innerText = totalRespondidas;
                     document.getElementById('stat-acertos').innerText = acertosTotais;
                     document.getElementById('stat-precisao').innerText = precisaoReal + '%';
                 }
 
             } catch (e) {
-                console.error("Falha na sincronização:", e);
+                console.error("Falha na sincronização do Dashboard:", e);
+                document.getElementById('total-banco').innerText = "Erro";
             }
         }
 
-        // Carrega os dados assim que a página estiver pronta
         window.addEventListener('DOMContentLoaded', sincronizarDashboard);
     </script>
 </body>
