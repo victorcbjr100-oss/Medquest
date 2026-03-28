@@ -10,152 +10,45 @@
     <script src="sidebar.js"></script> 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        
-        main { 
-            margin-left: 16rem;
-            width: calc(100% - 16rem);
-        }
-
-        @media (max-width: 768px) {
-            main { margin-left: 0; width: 100%; }
-        }
+        body { font-family: 'Inter', sans-serif; margin-left: 16rem; }
+        @media (max-width: 768px) { body { margin-left: 0; } }
     </style>
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
-
-   <main class="flex-1 p-10">
-    <div class="max-w-6xl mx-auto">
-        
+<body class="bg-[#f8fafc]">
+    <main class="p-10 max-w-6xl mx-auto">
         <div class="mb-10">
-            <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-2">
-                Olá, <span id="welcome-name">Victor</span>! 
-                <span class="text-3xl">👋</span>
-            </h2>
-            <p class="text-gray-500 mt-1 font-medium">Continue seus estudos médicos e acompanhe seu progresso real</p>
+            <h2 class="text-3xl font-bold text-gray-800">Olá, Victor! 👋</h2>
+            <p class="text-gray-500 mt-1">Acompanhe seu progresso real no MedQuest Pro</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Disponível</p>
-                    <h3 id="total-banco" class="text-3xl font-bold text-gray-800">...</h3>
-                </div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-database text-xl"></i>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Banco</p><h3 id="total-banco" class="text-3xl font-bold text-gray-800">...</h3></div>
+                <i class="fas fa-database text-blue-500 text-xl"></i>
             </div>
-
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Respondidas</p>
-                    <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
-                </div>
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-check-double text-xl"></i>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Respondidas</p><h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3></div>
+                <i class="fas fa-check-double text-emerald-500 text-xl"></i>
             </div>
-
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Taxa de Acerto</p>
-                    <h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3>
-                </div>
-                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-chart-line text-xl"></i>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Taxa de Acerto</p><h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3></div>
+                <i class="fas fa-chart-line text-blue-600 text-xl"></i>
             </div>
-
-            <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Acertos Totais</p>
-                    <h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3>
-                </div>
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-trophy text-xl"></i>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos</p><h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3></div>
+                <i class="fas fa-trophy text-emerald-500 text-xl"></i>
             </div>
+        </div>
 
-        </div> 
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            
-            <div onclick="window.location.href='temas.html'" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl shadow-blue-100 relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer">
-                <div class="relative z-10 flex flex-col h-full">
-                    <h4 class="text-xl font-bold mb-1">Estudar por Temas</h4>
-                    <p class="text-blue-100 text-xs mb-6">Pratique por especialidade</p>
-                    <div class="mt-auto inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition-all w-fit">
-                        Começar agora <i class="fas fa-chevron-right text-[8px]"></i>
-                    </div>
-                </div>
-                <i class="fas fa-book-open absolute right-[-20px] bottom-[-20px] text-8xl text-white/10 group-hover:rotate-12 transition-transform"></i>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div onclick="location.href='temas.html'" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl cursor-pointer hover:scale-[1.02] transition-transform">
+                <h4 class="text-xl font-bold">Estudar por Temas</h4>
+                <p class="text-blue-100 text-xs mt-1">Pratique por especialidade</p>
             </div>
+        </div>
+    </main>
 
-            <div class="bg-emerald-600 p-8 rounded-[24px] text-white shadow-xl shadow-emerald-100 relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer">
-                <div class="relative z-10 flex flex-col h-full">
-                    <h4 class="text-xl font-bold mb-1">Fazer Simulado</h4>
-                    <p class="text-emerald-100 text-xs mb-6">Teste cronometrado</p>
-                    <button class="mt-auto inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition-all">
-                        Iniciar simulado <i class="fas fa-chevron-right text-[8px]"></i>
-                    </button>
-                </div>
-                <i class="fas fa-stopwatch absolute right-[-20px] bottom-[-20px] text-8xl text-white/10 group-hover:rotate-12 transition-transform"></i>
-            </div>
-
-            <div onclick="window.location.href='estatisticas.html'" class="bg-purple-600 p-8 rounded-[24px] text-white shadow-xl shadow-purple-100 relative overflow-hidden group hover:scale-[1.02] transition-transform cursor-pointer">
-                <div class="relative z-10 flex flex-col h-full">
-                    <h4 class="text-xl font-bold mb-1">Ver Estatísticas</h4>
-                    <p class="text-purple-100 text-xs mb-6">Acompanhe seu progresso</p>
-                    <button class="mt-auto inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition-all">
-                        Ver relatórios <i class="fas fa-chevron-right text-[8px]"></i>
-                    </button>
-                </div>
-                <i class="fas fa-chart-pie absolute right-[-20px] bottom-[-20px] text-8xl text-white/10 group-hover:rotate-12 transition-transform"></i>
-            </div>
-
-        </div> 
-    </div>
-</main>
-
-    <script>
-        const S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-        const _supabase = supabase.createClient(S_URL, S_KEY);
-
-        async function sincronizarDashboard() {
-            try {
-                // 1. Total de questões no banco (Contagem global)
-                const { count: totalBanco, error: errBanco } = await _supabase
-                    .from('questoes')
-                    .select('*', { count: 'exact', head: true });
-                
-                if (!errBanco) document.getElementById('total-banco').innerText = totalBanco || 0;
-
-                // 2. Estatísticas Reais da tabela 'estatisticas' no Supabase
-                const { data: statsData, error: statsError } = await _supabase
-                    .from('estatisticas')
-                    .select('*')
-                    .eq('usuario', 'Dr. Victor');
-
-                if (!statsError && statsData) {
-                    const totalRespondidas = statsData.length;
-                    const acertosTotais = statsData.filter(item => item.acertou === true).length;
-                    const precisaoReal = totalRespondidas > 0 ? Math.round((acertosTotais / totalRespondidas) * 100) : 0;
-
-                    // Atualiza o HTML com dados persistentes do banco
-                    document.getElementById('stat-total').innerText = totalRespondidas;
-                    document.getElementById('stat-acertos').innerText = acertosTotais;
-                    document.getElementById('stat-precisao').innerText = precisaoReal + '%';
-                }
-
-            } catch (e) {
-                console.error("Falha na sincronização do Dashboard:", e);
-                document.getElementById('total-banco').innerText = "Erro";
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', sincronizarDashboard);
-    </script>
+    <script src="medquest-core.js"></script>
+    <script>window.onload = sincronizarDashboard;</script>
 </body>
 </html>
