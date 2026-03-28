@@ -6,10 +6,23 @@
     <title>MedQuest Pro - Questões</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="sidebar.js?v=3.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
+    
     <style>
-        .alternativa.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
-        .alternativa.correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; }
-        .alternativa.errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        /* Corrigido para as classes usadas no JS */
+        .alt-item.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
+        .alt-item.selecionada span { background-color: #3b82f6 !important; color: white !important; }
+        
+        .alt-item.correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; }
+        .alt-item.correta span { background-color: #10b981 !important; color: white !important; }
+        
+        .alt-item.errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .alt-item.errada span { background-color: #ef4444 !important; color: white !important; }
+        
+        /* Margem para não ficar atrás da sidebar */
+        body { margin-left: 260px; }
+        @media (max-width: 768px) { body { margin-left: 0; } }
     </style>
 </head>
 <body class="bg-[#f8fafc] p-4">
@@ -24,8 +37,8 @@
         </div>
 
         <div id="botoes" class="mt-8 hidden flex gap-3">
-            <button onclick="window.location.href='temas.html'" class="px-6 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200">Sair</button>
-            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700">Responder Questão</button>
+            <button onclick="window.location.href='temas.html'" class="px-6 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-all">Sair</button>
+            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">Responder Questão</button>
         </div>
     </div>
 
@@ -49,7 +62,7 @@
                 if (data && data.length > 0) {
                     questaoAtual = data[Math.floor(Math.random() * data.length)];
                     document.getElementById('exibir-tema').innerText = questaoAtual.tema;
-                    document.getElementById('exibir-subtema').innerText = questaoAtual.subtema || "";
+                    document.getElementById('exibir-subtema').innerText = questaoAtual.subtema || "Geral";
                     renderizar(questaoAtual);
                     document.getElementById('botoes').classList.remove('hidden');
                     document.getElementById('monitor').innerText = "Status: Questão carregada.";
@@ -63,39 +76,58 @@
         }
 
         function renderizar(q) {
-            let html = `<p class="text-xl font-bold text-gray-700 mb-8">${q.enunciado}</p><div class="space-y-4">`;
+            // Verifica se as colunas são 'opcao_x' ou 'alternativa_x' baseado no seu banco
             const alts = [
-                {l: 'a', t: q.opcao_a}, {l: 'b', t: q.opcao_b}, 
-                {l: 'c', t: q.opcao_c}, {l: 'd', t: q.opcao_d}
+                {l: 'a', t: q.opcao_a || q.alternativa_a}, 
+                {l: 'b', t: q.opcao_b || q.alternativa_b}, 
+                {l: 'c', t: q.opcao_c || q.alternativa_c}, 
+                {l: 'd', t: q.opcao_d || q.alternativa_d}
             ];
+
+            let html = `<p class="text-xl font-bold text-gray-700 mb-8">${q.enunciado}</p><div id="container-alts" class="space-y-4">`;
+            
             alts.forEach(a => {
-                html += `
-                    <div onclick="selecionar(this, '${a.l}')" class="alt-item p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 flex items-center gap-4">
-                        <span class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400 uppercase">${a.l}</span>
-                        <div class="text-gray-600 font-medium">${a.t}</div>
-                    </div>`;
+                if(a.t) {
+                    html += `
+                        <div onclick="selecionar(this, '${a.l}')" class="alt-item p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 flex items-center gap-4 transition-all group">
+                            <span class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400 uppercase transition-all group-hover:bg-blue-100">${a.l}</span>
+                            <div class="text-gray-600 font-medium">${a.t}</div>
+                        </div>`;
+                }
             });
             document.getElementById('bloco-questao').innerHTML = html + "</div>";
         }
 
         window.selecionar = (el, letra) => {
             if(respondida) return;
+            // Remove seleção de todos e aplica no clicado
             document.querySelectorAll('.alt-item').forEach(d => d.classList.remove('selecionada'));
             el.classList.add('selecionada');
             selecionada = letra;
+            console.log("Selecionada:", letra);
         };
 
         window.verificarResposta = () => {
-            if(!selecionada) return alert("Selecione uma opção!");
+            if(!selecionada) return alert("Selecione uma opção antes de responder!");
             if(respondida) return window.location.reload();
 
             respondida = true;
             const itens = document.querySelectorAll('.alt-item');
-            const mapa = {a:0, b:1, c:2, d:3};
-            const correta = questaoAtual.correta.toLowerCase().trim();
+            
+            // Mapeamento dinâmico para encontrar o índice correto (0, 1, 2, 3)
+            const indexMap = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
+            const correta = (questaoAtual.correta || questaoAtual.resposta_correta).toLowerCase().trim();
 
-            itens[mapa[correta]].classList.add('correta');
-            if(selecionada !== correta) itens[mapa[selecionada]].classList.add('errada');
+            // Aplica as cores de feedback
+            itens.forEach((item, index) => {
+                const letraItem = Object.keys(indexMap)[index];
+                if(letraItem === correta) {
+                    item.classList.add('correta');
+                } else if(letraItem === selecionada) {
+                    item.classList.add('errada');
+                }
+                item.classList.remove('selecionada');
+            });
 
             document.getElementById('btn-acao').innerText = "Próxima Questão";
             document.getElementById('btn-acao').classList.replace('bg-blue-600', 'bg-gray-800');
