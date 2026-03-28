@@ -11,8 +11,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .card-tema { transition: all 0.3s ease; cursor: pointer; }
-        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; }
-        main { margin-left: 16rem; } /* Garante espaço para a sidebar */
+        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        main { margin-left: 16rem; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex min-h-screen">
@@ -25,7 +25,7 @@
                     <i class="fas fa-arrow-left"></i> Voltar aos Grandes Temas
                 </div>
                 <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800">Estudar por Temas</h2>
-                <p id="subtitulo-pagina" class="text-gray-500 mt-1">Escolha uma especialidade para ver os subtemas disponíveis</p>
+                <p id="subtitulo-pagina" class="text-gray-500 mt-1">Escolha uma grande área para começar sua revisão</p>
             </header>
 
             <div id="secao-principal">
@@ -46,18 +46,18 @@
                         <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Ver Especialidades</p>
                     </div>
 
-                    <div class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div onclick="abrirEspecialidades('Ciclo Básico')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
                         <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-4">
                             <i class="fas fa-microscope text-2xl"></i>
                         </div>
                         <h4 class="font-bold text-gray-800 text-lg">Ciclo Básico</h4>
-                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Anatomia, Fisiologia...</p>
+                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Ver Especialidades</p>
                     </div>
                 </div>
             </div>
 
-            <div id="grade-subtemas" class="hidden">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6" id="container-subtemas"></div>
+            <div id="grade-dinamica" class="hidden">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6" id="container-itens"></div>
             </div>
         </div>
     </main>
@@ -72,16 +72,23 @@
             'Pediatria': [
                 { nome: 'Puericultura', icon: 'fa-child', cor: 'emerald', sub: ['Crescimento', 'Desenvolvimento', 'Vacinação'] },
                 { nome: 'Neonatologia', icon: 'fa-baby-carriage', cor: 'pink', sub: ['Icterícia', 'Reanimação'] }
+            ],
+            'Ciclo Básico': [
+                { nome: 'Anatomia', icon: 'fa-skeleton', cor: 'purple', sub: ['Sist. Cardiovascular', 'Sist. Nervoso', 'Sist. Digestório'] },
+                { nome: 'Fisiologia', icon: 'fa-wave-square', cor: 'indigo', sub: ['Fisiologia Renal', 'Fisiologia Endócrina'] }
             ]
         };
 
         function abrirEspecialidades(area) {
             document.getElementById('secao-principal').classList.add('hidden');
-            document.getElementById('grade-subtemas').classList.remove('hidden');
+            document.getElementById('grade-dinamica').classList.remove('hidden');
             document.getElementById('btn-voltar').classList.remove('hidden');
             document.getElementById('titulo-pagina').innerText = area;
-            const container = document.getElementById('container-subtemas');
+            document.getElementById('subtitulo-pagina').innerText = "Escolha a especialidade desejada";
+
+            const container = document.getElementById('container-itens');
             container.innerHTML = '';
+            
             dadosSubtemas[area].forEach(esp => {
                 container.innerHTML += `
                     <div onclick="abrirAssuntos('${area}', '${esp.nome}')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
@@ -89,7 +96,7 @@
                             <i class="fas ${esp.icon} text-xl"></i>
                         </div>
                         <h4 class="font-bold text-gray-800 text-sm">${esp.nome}</h4>
-                        <p class="text-[10px] text-gray-400 mt-2 uppercase font-bold tracking-widest">Ver Assuntos</p>
+                        <p class="text-[10px] text-blue-600 mt-2 uppercase font-bold tracking-widest">Ver Assuntos</p>
                     </div>
                 `;
             });
@@ -98,26 +105,36 @@
         function abrirAssuntos(area, espNome) {
             const especialidade = dadosSubtemas[area].find(e => e.nome === espNome);
             document.getElementById('titulo-pagina').innerText = espNome;
-            const container = document.getElementById('container-subtemas');
+            document.getElementById('subtitulo-pagina').innerText = "Clique em um assunto para abrir as questões";
+            
+            const container = document.getElementById('container-itens');
             container.innerHTML = '';
+
             especialidade.sub.forEach(assunto => {
+                // AQUI ESTAVA O ERRO: Adicionado o onclick para levar à página de questões
                 container.innerHTML += `
-                    <div class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div onclick="irParaQuestoes('${assunto}')" class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
                         <div class="w-12 h-12 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center mb-3">
                             <i class="fas fa-file-medical text-lg"></i>
                         </div>
                         <h4 class="font-bold text-gray-800 text-xs">${assunto}</h4>
-                        <p class="text-[9px] text-blue-600 mt-2 font-bold uppercase">Praticar Questões</p>
+                        <p class="text-[9px] text-blue-600 mt-2 font-bold uppercase tracking-tighter">Praticar Questões</p>
                     </div>
                 `;
             });
         }
 
+        function irParaQuestoes(tema) {
+            // Redireciona para a página de questões passando o tema via URL
+            window.location.href = `questoes.html?tema=${encodeURIComponent(tema)}`;
+        }
+
         function resetarNavegacao() {
             document.getElementById('secao-principal').classList.remove('hidden');
-            document.getElementById('grade-subtemas').classList.add('hidden');
+            document.getElementById('grade-dinamica').classList.add('hidden');
             document.getElementById('btn-voltar').classList.add('hidden');
             document.getElementById('titulo-pagina').innerText = "Estudar por Temas";
+            document.getElementById('subtitulo-pagina').innerText = "Escolha uma grande área para começar sua revisão";
         }
     </script>
 </body>
