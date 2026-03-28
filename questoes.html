@@ -3,95 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest Pro - Questões</title>
+    <title>MedQuest Pro - Questões Premium</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="sidebar.js?v=3.0"></script>
+    <script src="sidebar.js?v=3.1"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/dist/css/all.min.css">
     
     <style>
-        /* Corrigido para as classes usadas no JS */
-        .alt-item.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; }
-        .alt-item.selecionada span { background-color: #3b82f6 !important; color: white !important; }
-        
+        .alt-item.selecionada { border-color: #3b82f6 !important; background-color: #eff6ff !important; transform: translateX(8px); }
         .alt-item.correta { border-color: #10b981 !important; background-color: #ecfdf5 !important; }
-        .alt-item.correta span { background-color: #10b981 !important; color: white !important; }
-        
         .alt-item.errada { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
-        .alt-item.errada span { background-color: #ef4444 !important; color: white !important; }
         
-        /* Margem para não ficar atrás da sidebar */
-        body { margin-left: 260px; }
+        body { margin-left: 260px; transition: all 0.3s; }
         @media (max-width: 768px) { body { margin-left: 0; } }
+
+        /* Scrollbar Premium */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-[#f8fafc] p-4">
+<body class="bg-[#f8fafc] p-6">
 
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 mt-10">
-        <div id="monitor" class="text-[10px] font-mono text-blue-500 mb-4 uppercase tracking-widest">Status: Conectando...</div>
-        <h1 id="exibir-tema" class="text-3xl font-black text-gray-800 mb-2 uppercase">MedQuest</h1>
-        <p id="exibir-subtema" class="text-xs font-bold text-gray-400 uppercase mb-6"></p>
-        
-        <div id="bloco-questao" class="min-h-[200px]">
-            <p class="text-gray-400 italic">Carregando dados do servidor...</p>
+    <div class="max-w-3xl mx-auto">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <div id="monitor" class="text-[10px] font-black text-blue-500 mb-2 uppercase tracking-[0.2em]">Sincronizado com Supabase</div>
+                <h1 id="exibir-tema" class="text-4xl font-black text-gray-800 uppercase tracking-tighter">Carregando...</h1>
+                <p id="exibir-subtema" class="text-sm font-bold text-blue-400 uppercase tracking-widest mt-1"></p>
+            </div>
+            <div class="text-right">
+                <span class="bg-white px-4 py-2 rounded-full border border-gray-100 text-xs font-bold text-gray-400 shadow-sm">ID: <span id="questao-id">--</span></span>
+            </div>
         </div>
 
-        <div id="botoes" class="mt-8 hidden flex gap-3">
-            <button onclick="window.location.href='temas.html'" class="px-6 py-5 bg-gray-100 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 transition-all">Sair</button>
-            <button id="btn-acao" onclick="verificarResposta()" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">Responder Questão</button>
+        <div class="bg-white p-10 rounded-[40px] shadow-sm border border-gray-100 mb-6">
+            <div id="bloco-questao">
+                <div class="animate-pulse space-y-4">
+                    <div class="h-4 bg-gray-100 rounded w-3/4"></div>
+                    <div class="h-20 bg-gray-50 rounded-2xl"></div>
+                </div>
+            </div>
+
+            <div id="botoes" class="mt-10 hidden grid grid-cols-12 gap-4">
+                <button onclick="window.history.back()" class="col-span-3 py-4 bg-gray-50 text-gray-400 rounded-2xl font-bold hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-arrow-left text-xs"></i> Anterior
+                </button>
+                <button id="btn-acao" onclick="verificarResposta()" class="col-span-9 bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all uppercase tracking-wider">
+                    Responder Questão
+                </button>
+            </div>
+        </div>
+
+        <div id="aba-resposta" class="hidden bg-emerald-50 border-2 border-emerald-100 p-8 rounded-[32px] mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 bg-emerald-500 text-white rounded-lg flex items-center justify-center shadow-md">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h3 class="font-black text-emerald-800 uppercase text-sm tracking-widest">Comentário Técnico</h3>
+            </div>
+            <p id="texto-comentario" class="text-emerald-900 leading-relaxed font-medium"></p>
+        </div>
+
+        <div class="bg-white p-8 rounded-[32px] border border-gray-100">
+            <h3 class="font-black text-gray-800 uppercase text-sm tracking-widest mb-6 flex items-center gap-2">
+                <i class="fas fa-comments text-blue-500"></i> Fórum de Discussão
+            </h3>
+            
+            <div id="lista-comentarios" class="space-y-4 mb-6 max-h-60 overflow-y-auto pr-2">
+                </div>
+
+            <div class="flex gap-2">
+                <input id="input-comentario" type="text" placeholder="Escreva sua dúvida ou mnemônico..." class="flex-1 bg-gray-50 border-none rounded-2xl px-6 py-4 text-sm font-medium focus:ring-2 focus:ring-blue-500 transition-all">
+                <button onclick="enviarComentario()" class="bg-blue-50 text-blue-600 px-6 rounded-2xl font-bold hover:bg-blue-600 hover:text-white transition-all">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
     </div>
 
     <script>
         const URL_DB = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
         const KEY_DB = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+        const supabaseClient = supabase.createClient(URL_DB, KEY_DB);
         
         let questaoAtual = null;
         let respondida = false;
         let selecionada = null;
 
         async function carregarQuestao() {
-            try {
-                const supabaseClient = supabase.createClient(URL_DB, KEY_DB);
-                const params = new URLSearchParams(window.location.search);
-                const temaAlvo = (params.get('tema') || "HAS").toUpperCase();
+            const params = new URLSearchParams(window.location.search);
+            const tema = (params.get('tema') || "HAS").toUpperCase();
 
-                const { data, error } = await supabaseClient.from('questoes').select('*').eq('tema', temaAlvo);
-                if (error) throw error;
-
-                if (data && data.length > 0) {
-                    questaoAtual = data[Math.floor(Math.random() * data.length)];
-                    document.getElementById('exibir-tema').innerText = questaoAtual.tema;
-                    document.getElementById('exibir-subtema').innerText = questaoAtual.subtema || "Geral";
-                    renderizar(questaoAtual);
-                    document.getElementById('botoes').classList.remove('hidden');
-                    document.getElementById('monitor').innerText = "Status: Questão carregada.";
-                } else {
-                    document.getElementById('bloco-questao').innerHTML = `<p class="text-red-500">Nenhuma questão encontrada para ${temaAlvo}.</p>`;
-                }
-            } catch (err) {
-                document.getElementById('monitor').innerText = "Status: Erro de conexão.";
-                console.error(err);
+            const { data, error } = await supabaseClient.from('questoes').select('*').eq('tema', tema);
+            
+            if (data && data.length > 0) {
+                questaoAtual = data[Math.floor(Math.random() * data.length)];
+                document.getElementById('exibir-tema').innerText = questaoAtual.tema;
+                document.getElementById('exibir-subtema').innerText = questaoAtual.subtema || "Clínica Médica";
+                document.getElementById('questao-id').innerText = questaoAtual.id;
+                renderizar(questaoAtual);
+                carregarComentarios(questaoAtual.id);
+                document.getElementById('botoes').classList.remove('hidden');
             }
         }
 
         function renderizar(q) {
-            // Verifica se as colunas são 'opcao_x' ou 'alternativa_x' baseado no seu banco
+            let html = `<p class="text-2xl font-bold text-gray-800 mb-10 leading-snug">${q.enunciado}</p><div class="space-y-4">`;
             const alts = [
-                {l: 'a', t: q.opcao_a || q.alternativa_a}, 
-                {l: 'b', t: q.opcao_b || q.alternativa_b}, 
-                {l: 'c', t: q.opcao_c || q.alternativa_c}, 
-                {l: 'd', t: q.opcao_d || q.alternativa_d}
+                {l: 'a', t: q.opcao_a || q.alternativa_a}, {l: 'b', t: q.opcao_b || q.alternativa_b}, 
+                {l: 'c', t: q.opcao_c || q.alternativa_c}, {l: 'd', t: q.opcao_d || q.alternativa_d}
             ];
-
-            let html = `<p class="text-xl font-bold text-gray-700 mb-8">${q.enunciado}</p><div id="container-alts" class="space-y-4">`;
             
             alts.forEach(a => {
                 if(a.t) {
                     html += `
-                        <div onclick="selecionar(this, '${a.l}')" class="alt-item p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 flex items-center gap-4 transition-all group">
-                            <span class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-black text-gray-400 uppercase transition-all group-hover:bg-blue-100">${a.l}</span>
-                            <div class="text-gray-600 font-medium">${a.t}</div>
+                        <div onclick="selecionar(this, '${a.l}')" class="alt-item p-6 border-2 border-gray-50 rounded-[24px] cursor-pointer hover:bg-gray-50 flex items-center gap-5 transition-all group">
+                            <span class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-sm font-black text-gray-400 uppercase transition-all group-hover:bg-white">${a.l}</span>
+                            <div class="text-gray-700 font-semibold text-lg">${a.t}</div>
                         </div>`;
                 }
             });
@@ -100,38 +128,64 @@
 
         window.selecionar = (el, letra) => {
             if(respondida) return;
-            // Remove seleção de todos e aplica no clicado
             document.querySelectorAll('.alt-item').forEach(d => d.classList.remove('selecionada'));
             el.classList.add('selecionada');
             selecionada = letra;
-            console.log("Selecionada:", letra);
         };
 
         window.verificarResposta = () => {
-            if(!selecionada) return alert("Selecione uma opção antes de responder!");
+            if(!selecionada) return;
             if(respondida) return window.location.reload();
 
             respondida = true;
-            const itens = document.querySelectorAll('.alt-item');
-            
-            // Mapeamento dinâmico para encontrar o índice correto (0, 1, 2, 3)
-            const indexMap = { 'a': 0, 'b': 1, 'c': 2, 'd': 3 };
             const correta = (questaoAtual.correta || questaoAtual.resposta_correta).toLowerCase().trim();
+            const itens = document.querySelectorAll('.alt-item');
+            const mapa = {a:0, b:1, c:2, d:3};
 
-            // Aplica as cores de feedback
-            itens.forEach((item, index) => {
-                const letraItem = Object.keys(indexMap)[index];
-                if(letraItem === correta) {
-                    item.classList.add('correta');
-                } else if(letraItem === selecionada) {
-                    item.classList.add('errada');
-                }
-                item.classList.remove('selecionada');
-            });
+            itens[mapa[correta]].classList.add('correta');
+            if(selecionada !== correta) itens[mapa[selecionada]].classList.add('errada');
+
+            // Mostrar Comentário do Professor
+            if(questaoAtual.comentario_professor) {
+                document.getElementById('texto-comentario').innerText = questaoAtual.comentario_professor;
+                document.getElementById('aba-resposta').classList.remove('hidden');
+            }
 
             document.getElementById('btn-acao').innerText = "Próxima Questão";
-            document.getElementById('btn-acao').classList.replace('bg-blue-600', 'bg-gray-800');
+            document.getElementById('btn-acao').classList.replace('bg-blue-600', 'bg-gray-900');
         };
+
+        // LÓGICA DE COMENTÁRIOS DO SUPABASE
+        async function carregarComentarios(id) {
+            const { data } = await supabaseClient.from('comentarios').select('*').eq('questao_id', id).order('created_at', { ascending: true });
+            const lista = document.getElementById('lista-comentarios');
+            lista.innerHTML = data && data.length > 0 ? '' : '<p class="text-xs text-gray-400 italic">Nenhum comentário ainda.</p>';
+            
+            data?.forEach(c => {
+                lista.innerHTML += `
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-[10px] font-black text-blue-600 uppercase">${c.usuario}</span>
+                            <span class="text-[9px] text-gray-400">${new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 font-medium">${c.texto}</p>
+                    </div>`;
+            });
+        }
+
+        async function enviarComentario() {
+            const texto = document.getElementById('input-comentario').value;
+            if(!texto) return;
+
+            const { error } = await supabaseClient.from('comentarios').insert([
+                { questao_id: questaoAtual.id, usuario: 'Dr. Victor', texto: texto }
+            ]);
+
+            if(!error) {
+                document.getElementById('input-comentario').value = '';
+                carregarComentarios(questaoAtual.id);
+            }
+        }
 
         window.onload = carregarQuestao;
     </script>
