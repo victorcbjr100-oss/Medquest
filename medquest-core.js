@@ -91,3 +91,46 @@ async function enviarComentarioMaster(questaoId) {
         carregarComentarios(questaoId);
     }
 }
+// --- LÓGICA DA PÁGINA DE ESTATÍSTICAS DETALHADAS ---
+async function carregarEstatisticasDetalhadas() {
+    try {
+        const { data: statsData, error } = await _supabase
+            .from('estatisticas')
+            .select('*')
+            .eq('usuario', 'Dr. Victor');
+
+        if (error || !statsData) return;
+
+        // Agrupar dados por tema
+        const resumoPorTema = {};
+        statsData.forEach(item => {
+            if (!resumoPorTema[item.tema]) {
+                resumoPorTema[item.tema] = { total: 0, acertos: 0 };
+            }
+            resumoPorTema[item.tema].total++;
+            if (item.acertou) resumoPorTema[item.tema].acertos++;
+        });
+
+        const container = document.getElementById('lista-estatisticas-temas');
+        if (!container) return;
+        container.innerHTML = '';
+
+        for (const tema in resumoPorTema) {
+            const { total, acertos } = resumoPorTema[tema];
+            const perc = Math.round((acertos / total) * 100);
+            
+            container.innerHTML += `
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold text-gray-700 uppercase text-xs">${tema}</h4>
+                        <span class="text-xs font-black ${perc >= 70 ? 'text-emerald-500' : 'text-blue-500'}">${perc}%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-blue-600 h-full transition-all duration-1000" style="width: ${perc}%"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase">${acertos} ACERTOS DE ${total} QUESTÕES</p>
+                </div>
+            `;
+        }
+    } catch (e) { console.error("Erro ao carregar detalhes:", e); }
+}
