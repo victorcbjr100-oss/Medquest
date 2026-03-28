@@ -3,165 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Perfil - MedQuest Pro</title>
+    <title>MedQuest - Meu Perfil</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="sidebar.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .input-med { @apply w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all text-sm text-gray-700; }
-        .label-med { @apply block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2; }
+        main { margin-left: 16rem; }
+        @media (max-width: 768px) { main { margin-left: 0; } }
     </style>
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
-
-    <aside class="w-64 bg-white border-r border-gray-100 flex flex-col fixed h-full z-10">
-        <div class="p-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                <i class="fas fa-brain text-xl"></i>
+<body class="bg-[#f8fafc]">
+    <main class="p-4 md:p-10">
+        <div class="max-w-xl mx-auto bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-blue-600 p-8 text-white text-center">
+                <div class="relative inline-block">
+                    <div id="preview-avatar" class="w-24 h-24 bg-blue-500 rounded-3xl border-4 border-white/20 mx-auto flex items-center justify-center text-3xl font-bold overflow-hidden">
+                        V
+                    </div>
+                    <label class="absolute -bottom-2 -right-2 bg-white text-blue-600 w-8 h-8 rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform">
+                        <i class="fas fa-camera text-xs"></i>
+                        <input type="file" id="input-foto" class="hidden" accept="image/*">
+                    </label>
+                </div>
+                <h2 class="mt-4 font-black text-xl">Configurações de Perfil</h2>
             </div>
-            <div>
-                <h1 class="font-bold text-gray-800 leading-tight">MedQuest</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Provas e Questões</p>
-            </div>
-        </div>
-        <nav class="flex-1 px-4 mt-4 space-y-1">
-            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
-                <i class="fas fa-home w-5"></i> Dashboard
-            </a>
-            <a href="temas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl">
-                <i class="fas fa-layer-group w-5"></i> Temas
-            </a>
-            <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl">
-                <i class="fas fa-user w-5"></i> Meu Perfil
-            </a>
-        </nav>
-    </aside>
 
-    <main class="ml-64 flex-1 p-10">
-        <div class="max-w-5xl mx-auto">
-            
-            <header class="mb-10">
-                <h2 class="text-3xl font-bold text-gray-800 tracking-tight">Meu Perfil</h2>
-                <p class="text-gray-500 mt-1">Gerencie suas informações pessoais e acadêmicas</p>
-            </header>
+            <form id="form-perfil" class="p-8 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nome Completo</label>
+                        <input type="text" id="nome" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: Dr. Victor Hugo">
+                    </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                <div class="lg:col-span-1 space-y-6">
-                    <div class="bg-white rounded-[32px] border border-gray-100 p-8 text-center shadow-sm">
-                        <h3 class="flex items-center justify-center gap-2 text-sm font-bold text-gray-700 mb-8 uppercase tracking-widest">
-                            <i class="fas fa-user-circle text-blue-500"></i> Informações Básicas
-                        </h3>
-                        
-                        <div class="relative w-32 h-32 mx-auto mb-6">
-                            <div id="perfil-inicial" class="w-full h-full bg-gray-100 rounded-full flex items-center justify-center text-4xl font-bold text-gray-400 border-4 border-white shadow-sm">
-                                V
-                            </div>
-                            <button class="absolute bottom-1 right-1 bg-blue-600 text-white w-8 h-8 rounded-full border-4 border-white flex items-center justify-center text-xs hover:bg-blue-700 transition-all">
-                                <i class="fas fa-camera"></i>
-                            </button>
-                        </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Data de Nascimento</label>
+                        <input type="date" id="nascimento" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
 
-                        <h4 id="display-nome" class="text-xl font-bold text-gray-800 mb-1">Victor Hugo</h4>
-                        <p id="display-email" class="text-xs text-gray-400 mb-4 font-medium">victorbjr100@gmail.com</p>
-                        <span id="display-nivel" class="inline-block px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full uppercase">Estudante de Medicina</span>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ano de Formatura</label>
+                        <input type="number" id="formatura" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: 2025">
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Categoria Profissional</label>
+                        <select id="categoria" class="w-full bg-gray-50 border-none rounded-xl p-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="Aluno">Aluno</option>
+                            <option value="Residente">Residente</option>
+                            <option value="Especialista">Especialista</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm">
-                        <h3 class="flex items-center gap-2 text-sm font-bold text-gray-700 mb-8 uppercase tracking-widest">
-                            <i class="fas fa-graduation-cap text-blue-500"></i> Dados Acadêmicos
-                        </h3>
-
-                        <form id="form-perfil" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="md:col-span-1">
-                                <label class="label-med">Idade</label>
-                                <input type="number" id="idade" class="input-med" placeholder="Ex: 29">
-                            </div>
-                            <div class="md:col-span-1">
-                                <label class="label-med">Nível de Formação</label>
-                                <select id="nivel" class="input-med">
-                                    <option value="Estudante de Medicina">Estudante de Medicina</option>
-                                    <option value="Médico Residente">Médico Residente</option>
-                                    <option value="Médico Formado">Médico Formado</option>
-                                </select>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="label-med">Universidade/Instituição</label>
-                                <input type="text" id="instituicao" class="input-med" placeholder="Ex: UNIPÊ">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="label-med">Ano de Formatura (ou previsão)</label>
-                                <input type="number" id="ano_formatura" class="input-med" placeholder="Ex: 2027">
-                            </div>
-
-                            <div class="md:col-span-2 mt-4">
-                                <button type="button" onclick="salvarPerfil()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                                    <i class="fas fa-save"></i> Salvar Perfil
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="bg-red-50/30 rounded-[32px] border border-red-100 p-8 shadow-sm">
-                        <h3 class="flex items-center gap-2 text-sm font-bold text-red-600 mb-4 uppercase tracking-widest">
-                            <i class="fas fa-exclamation-triangle"></i> Zona de Perigo
-                        </h3>
-                        <p class="text-[11px] text-gray-500 leading-relaxed mb-4">
-                            Uma vez excluída, sua conta não pode ser recuperada. Todos os seus dados, incluindo respostas, pontos e estatísticas serão permanentemente removidos.
-                        </p>
-                    </div>
-                </div>
-
-            </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all">
+                    Salvar Alterações
+                </button>
+            </form>
         </div>
     </main>
 
     <script>
-        // Carrega dados existentes ao abrir a página
-        window.onload = function() {
-            const dados = JSON.parse(localStorage.getItem('medquest_perfil')) || {
-                nome: "Victor Hugo",
-                email: "victorbjr100@gmail.com",
-                idade: 29,
-                nivel: "Estudante de Medicina",
-                instituicao: "UNIPÊ",
-                ano_formatura: 2027
+        const form = document.getElementById('form-perfil');
+        const inputFoto = document.getElementById('input-foto');
+        const preview = document.getElementById('preview-avatar');
+
+        // Carregar dados salvos
+        const dadosSalvos = JSON.parse(localStorage.getItem('medquest_perfil')) || {};
+        if(dadosSalvos.nome) document.getElementById('nome').value = dadosSalvos.nome;
+        if(dadosSalvos.nascimento) document.getElementById('nascimento').value = dadosSalvos.nascimento;
+        if(dadosSalvos.formatura) document.getElementById('formatura').value = dadosSalvos.formatura;
+        if(dadosSalvos.categoria) document.getElementById('categoria').value = dadosSalvos.categoria;
+        if(dadosSalvos.foto) preview.innerHTML = `<img src="${dadosSalvos.foto}" class="w-full h-full object-cover">`;
+
+        // Lógica de Foto (Base64)
+        inputFoto.addEventListener('change', function(e) {
+            const file = e.target.files;
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64 = reader.result;
+                preview.innerHTML = `<img src="${base64}" class="w-full h-full object-cover">`;
+                preview.dataset.foto = base64;
             };
+            reader.readAsDataURL(file);
+        });
 
-            // Preenche os campos do formulário
-            document.getElementById('idade').value = dados.idade;
-            document.getElementById('nivel').value = dados.nivel;
-            document.getElementById('instituicao').value = dados.instituicao;
-            document.getElementById('ano_formatura').value = dados.ano_formatura;
-
-            // Atualiza os displays visuais
-            document.getElementById('display-nome').innerText = dados.nome;
-            document.getElementById('display-email').innerText = dados.email;
-            document.getElementById('display-nivel').innerText = dados.nivel;
-            document.getElementById('perfil-inicial').innerText = dados.nome.charAt(0).toUpperCase();
+        // Salvar formulário
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const perfil = {
+                nome: document.getElementById('nome').value,
+                nascimento: document.getElementById('nascimento').value,
+                formatura: document.getElementById('formatura').value,
+                categoria: document.getElementById('categoria').value,
+                foto: preview.querySelector('img') ? preview.querySelector('img').src : null
+            };
+            localStorage.setItem('medquest_perfil', JSON.stringify(perfil));
+            alert("Perfil do Dr. Victor atualizado com sucesso!");
+            window.location.reload();
         };
-
-        function salvarPerfil() {
-            const novosDados = {
-                nome: document.getElementById('display-nome').innerText,
-                email: document.getElementById('display-email').innerText,
-                idade: document.getElementById('idade').value,
-                nivel: document.getElementById('nivel').value,
-                instituicao: document.getElementById('instituicao').value,
-                ano_formatura: document.getElementById('ano_formatura').value
-            };
-
-            localStorage.setItem('medquest_perfil', JSON.stringify(novosDados));
-            
-            // Feedback visual de sucesso
-            alert("Perfil atualizado com sucesso!");
-            
-            // Atualiza o nível no card lateral
-            document.getElementById('display-nivel').innerText = novosDados.nivel;
-        }
     </script>
 </body>
 </html>
