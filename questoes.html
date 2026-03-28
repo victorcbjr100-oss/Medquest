@@ -17,7 +17,7 @@
             let query = _supabase.from('questoes').select('*');
 
             if (temaURL) {
-                // CORREÇÃO: Filtra se o termo está na coluna 'tema' OU 'subtema'
+                // Mantém a busca flexível para Tema ou Subtema
                 query = query.or(`tema.eq."${temaURL}",subtema.eq."${temaURL}"`);
             }
 
@@ -46,6 +46,7 @@
         const q = questoesFiltradas[indiceAtual];
         const container = document.getElementById('conteudo-questao');
         
+        // Reset de estado para a nova questão
         respondida = false;
         opcaoSelecionada = null;
         
@@ -74,7 +75,7 @@
                         <span class="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-bold text-gray-400">
                             ${String.fromCharCode(65 + i)}
                         </span>
-                        ${opt}
+                        <div class="flex-1">${opt}</div>
                     </div>
                 `;
             }
@@ -86,10 +87,14 @@
 
     function selecionarOpcao(elemento, index) {
         if (respondida) return;
+        
+        // Remove estilos de todas as alternativas
         document.querySelectorAll('.alternativa').forEach(alt => {
             alt.style.borderColor = '#f1f5f9';
             alt.style.backgroundColor = 'white';
         });
+
+        // Aplica estilo à selecionada
         elemento.style.borderColor = '#3b82f6';
         elemento.style.backgroundColor = '#f0f7ff';
         opcaoSelecionada = index;
@@ -110,6 +115,7 @@
         let stats = JSON.parse(localStorage.getItem('medquest_stats')) || { total: 0, acertos: 0, erros: 0 };
         stats.total += 1;
 
+        // Destaca a correta
         alternativas[q.correta].classList.add('correta');
 
         if (opcaoSelecionada === q.correta) {
@@ -124,8 +130,11 @@
         }
 
         localStorage.setItem('medquest_stats', JSON.stringify(stats));
-        // CORREÇÃO: Evita erro se o comentário for nulo
-        document.getElementById('comentario-texto').innerText = q.comentario || "Nenhum comentário disponível para esta questão.";
+        
+        // Comentário com fallback
+        const comentario = q.comentario || "Nenhum comentário disponível para esta questão.";
+        document.getElementById('comentario-texto').innerText = comentario;
+        
         document.getElementById('feedback-container').classList.remove('hidden');
         document.getElementById('btn-acao').innerText = "Próxima Questão";
     }
@@ -135,7 +144,7 @@
             indiceAtual++;
             renderizarQuestao();
         } else {
-            alert("Você concluiu as questões disponíveis!");
+            alert("Parabéns! Você concluiu todas as questões deste tema.");
         }
     }
 
