@@ -42,9 +42,16 @@
     <main class="main-content p-10 max-w-6xl mx-auto">
         
         <!-- Header -->
-        <div class="mb-10">
-            <h2 id="saudacao" class="text-3xl font-bold text-gray-800">Olá! 👋</h2>
-            <p class="text-gray-500 mt-1">Acompanhe seu progresso real no MedQuest Pro</p>
+        <div class="mb-10 flex justify-between items-center">
+            <div>
+                <h2 id="saudacao" class="text-3xl font-bold text-gray-800">Olá! 👋</h2>
+                <p class="text-gray-500 mt-1">Acompanhe seu progresso real no MedQuest Pro</p>
+            </div>
+
+            <!-- Botão logout -->
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                Sair
+            </button>
         </div>
 
         <!-- Cards -->
@@ -94,27 +101,28 @@
 
     </main>
 
-    <!-- JS DO PROJETO -->
+    <!-- JS DO PROJETO (ORDEM IMPORTANTE) -->
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
+
+    <!-- DASHBOARD (VAMOS CRIAR NO PRÓXIMO PASSO) -->
     <script src="js/dashboard.js"></script>
 
-    <!-- Script da página -->
+    <!-- Script principal -->
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
 
-            // Proteção de rota (não logado → login)
-            const user = await getUser();
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
+            // 🔐 Protege a página
+            await protegerRota();
 
-            // Saudação personalizada
-            const nome = user.email?.split("@")[0] || "Usuário";
+            // 👤 Pega usuário
+            const user = await getUser();
+
+            // 👋 Saudação personalizada
+            const nome = user?.email?.split("@")[0] || "Usuário";
             document.getElementById("saudacao").textContent = `Olá, ${nome}! 👋`;
 
-            // Navegação
+            // 🔗 Navegação
             const btnTemas = document.getElementById("btn-temas");
             if (btnTemas) {
                 btnTemas.addEventListener("click", () => {
@@ -122,11 +130,11 @@
                 });
             }
 
-            // Dashboard
+            // 📊 Atualiza dashboard
             if (typeof sincronizarDashboard === "function") {
                 sincronizarDashboard();
             } else {
-                console.error("Função sincronizarDashboard não encontrada.");
+                console.warn("dashboard.js ainda não criado");
             }
 
         });
