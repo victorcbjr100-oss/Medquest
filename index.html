@@ -4,51 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MedQuest Pro</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="sidebar.js"></script> 
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+    <!-- Sidebar -->
+    <script src="sidebar.js" defer></script>
+
+    <!-- Fonte -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; margin-left: 16rem; }
-        @media (max-width: 768px) { body { margin-left: 0; } }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .main-content {
+            margin-left: 16rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
+
 <body class="bg-[#f8fafc]">
-    <main class="p-10 max-w-6xl mx-auto">
+
+    <main class="main-content p-10 max-w-6xl mx-auto">
+        
+        <!-- Header -->
         <div class="mb-10">
             <h2 class="text-3xl font-bold text-gray-800">Olá, Victor! 👋</h2>
             <p class="text-gray-500 mt-1">Acompanhe seu progresso real no MedQuest Pro</p>
         </div>
 
+        <!-- Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Banco</p><h3 id="total-banco" class="text-3xl font-bold text-gray-800">...</h3></div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Banco</p>
+                    <h3 id="total-banco" class="text-3xl font-bold text-gray-800">0</h3>
+                </div>
                 <i class="fas fa-database text-blue-500 text-xl"></i>
             </div>
+
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Respondidas</p><h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3></div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Respondidas</p>
+                    <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
+                </div>
                 <i class="fas fa-check-double text-emerald-500 text-xl"></i>
             </div>
+
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Taxa de Acerto</p><h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3></div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Taxa de Acerto</p>
+                    <h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3>
+                </div>
                 <i class="fas fa-chart-line text-blue-600 text-xl"></i>
             </div>
+
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                <div><p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos</p><h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3></div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos</p>
+                    <h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3>
+                </div>
                 <i class="fas fa-trophy text-emerald-500 text-xl"></i>
             </div>
+
         </div>
 
+        <!-- Ações -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div onclick="location.href='temas.html'" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl cursor-pointer hover:scale-[1.02] transition-transform">
+            <div id="btn-temas" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl cursor-pointer hover:scale-[1.02] transition-transform">
                 <h4 class="text-xl font-bold">Estudar por Temas</h4>
                 <p class="text-blue-100 text-xs mt-1">Pratique por especialidade</p>
             </div>
         </div>
+
     </main>
 
-    <script src="medquest-core.js"></script>
-    <script>window.onload = sincronizarDashboard;</script>
+    <!-- Core -->
+    <script src="medquest-core.js" defer></script>
+
+    <!-- Script principal -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // Navegação
+            const btnTemas = document.getElementById("btn-temas");
+            if (btnTemas) {
+                btnTemas.addEventListener("click", () => {
+                    window.location.href = "temas.html";
+                });
+            }
+
+            // Sincronização do dashboard
+            if (typeof sincronizarDashboard === "function") {
+                sincronizarDashboard();
+            } else {
+                console.error("Função sincronizarDashboard não encontrada.");
+            }
+
+        });
+    </script>
+
 </body>
 </html>
