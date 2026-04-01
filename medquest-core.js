@@ -1,15 +1,12 @@
-// --- CONFIGURAÇÕES GLOBAIS ---
-const S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-const S_KEY = 'SUA_ANON_KEY_AQUI';
-const _supabase = supabase.createClient(S_URL, S_KEY);
+// js/questoes.js
 
 let questaoAtual = null;
 let respondeu = false;
 
-// --- 1. MOTOR DE QUESTÕES ---
+// --- CARREGAR QUESTÃO ---
 async function carregarQuestao(id) {
     try {
-        const { data, error } = await _supabase
+        const { data, error } = await supabaseClient
             .from('questoes')
             .select('*')
             .eq('id', id)
@@ -25,6 +22,7 @@ async function carregarQuestao(id) {
 
         container.innerHTML = `
             <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-100">
+                
                 <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">
                     ${data.tema} • ${data.subtema}
                 </span>
@@ -37,7 +35,6 @@ async function carregarQuestao(id) {
                     ${['a', 'b', 'c', 'd'].map(letra => `
                         <button 
                             data-letra="${letra}"
-                            id="btn-${letra}"
                             class="btn-opcao w-full text-left p-4 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all flex items-center gap-4 group">
                             
                             <span class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold group-hover:bg-blue-600 group-hover:text-white transition-all uppercase">
@@ -50,18 +47,21 @@ async function carregarQuestao(id) {
                         </button>
                     `).join('')}
                 </div>
+
             </div>
         `;
 
-        // Adiciona eventos depois de renderizar
+        // Eventos
         document.querySelectorAll('.btn-opcao').forEach(btn => {
             btn.addEventListener('click', () => {
                 verificarResposta(btn.dataset.letra);
             });
         });
 
-        // Comentários
-        carregarComentarios(id);
+        // Comentários (opcional)
+        if (typeof carregarComentarios === "function") {
+            carregarComentarios(id);
+        }
 
     } catch (e) {
         console.error("Erro ao carregar questão:", e.message);
@@ -78,12 +78,12 @@ async function verificarResposta(escolha) {
     const correta = questaoAtual.resposta_correta.toLowerCase();
     const acertou = (escolha === correta);
 
-    // Desativa todos os botões
+    // Bloqueia botões
     document.querySelectorAll('.btn-opcao').forEach(btn => {
         btn.disabled = true;
     });
 
-    // Marca correta e errada
+    // Feedback visual
     document.querySelectorAll('.btn-opcao').forEach(btn => {
         const letra = btn.dataset.letra;
 
@@ -96,15 +96,27 @@ async function verificarResposta(escolha) {
         }
     });
 
-    // Salva estatística
+    // Salvar resposta
+    await salvarResposta(escolha, acertou);
+}
+
+// --- SALVAR RESPOSTA (AGORA CERTO) ---
+async function salvarResposta(escolha, acertou) {
     try {
-        await _supabase.from('estatisticas').insert([{
-            usuario: 'Dr. Victor',
-            tema: questaoAtual.tema,
-            subtema: questaoAtual.subtema,
+        const user = await getUser();
+        if (!user) {
+            alert("Usuário não logado");
+            return;
+        }
+
+        await supabaseClient.from('respostas_usuario').insert([{
+            user_id: user.id,
+            questao_id: questaoAtual.id,
+            resposta_marcada: escolha,
             acertou: acertou
         }]);
+
     } catch (e) {
-        console.error("Erro ao salvar estatística:", e.message);
+        console.error("Erro ao salvar resposta:", e.message);
     }
 }
