@@ -1,16 +1,20 @@
 // js/supabase.js
 
-// ⚠️ CONFIGURE AQUI
+// 🔌 CONFIGURAÇÃO DO SUPABASE
 const S_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-const S_KEY = 'SUA_ANON_KEY_AQUI'; // coloque sua anon key real
 
-// 🔌 Cria cliente global do Supabase
+const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+
+// 🚀 CLIENTE GLOBAL (usado no projeto inteiro)
 const supabaseClient = supabase.createClient(S_URL, S_KEY);
 
-// 🛡️ Função opcional para checar conexão
+// 🛡️ TESTE DE CONEXÃO (opcional, útil pra debug)
 async function testarConexao() {
     try {
-        const { data, error } = await supabaseClient.from('questoes').select('id').limit(1);
+        const { error } = await supabaseClient
+            .from('questoes')
+            .select('id')
+            .limit(1);
 
         if (error) throw error;
 
@@ -23,12 +27,16 @@ async function testarConexao() {
     }
 }
 
-// 👤 Função auxiliar para pegar usuário (fallback caso auth.js falhe)
+// 👤 PEGAR USUÁRIO (fallback seguro)
 async function getUserSafe() {
     try {
-        const { data } = await supabaseClient.auth.getUser();
+        const { data, error } = await supabaseClient.auth.getUser();
+
+        if (error) throw error;
+
         return data.user;
-    } catch {
+    } catch (e) {
+        console.error("Erro ao obter usuário:", e.message);
         return null;
     }
 }
