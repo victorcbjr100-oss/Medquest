@@ -49,7 +49,7 @@ body { margin-left: 16rem; }
 
 <div class="flex flex-col gap-2">
 <input id="novo-comentario" class="border p-3 rounded" placeholder="Escreva um comentário...">
-<button onclick="postarComentario()" class="bg-blue-600 text-white py-2 rounded">
+<button id="btn-comentar" class="bg-blue-600 text-white py-2 rounded">
 Postar comentário
 </button>
 </div>
@@ -59,7 +59,6 @@ Postar comentário
 </div>
 
 <script src="js/supabase.js"></script>
-<script src="js/auth.js"></script>
 
 <script>
 let questoes = [];
@@ -75,7 +74,14 @@ function getAlt(q, l) {
 
 // =============================
 async function carregar() {
-    const { data } = await supabaseClient.from("questoes").select("*");
+    const { data, error } = await supabaseClient.from("questoes").select("*");
+
+    if (error) {
+        console.error(error);
+        alert("Erro ao carregar questões");
+        return;
+    }
+
     questoes = data;
     mostrarQuestao();
 }
@@ -142,7 +148,6 @@ document.getElementById("btn").onclick = async () => {
     }
 
     document.getElementById("btn").textContent = "Próxima";
-
     document.getElementById("comentarios-box").classList.remove("hidden");
 
     carregarComentarios();
@@ -168,9 +173,6 @@ document.getElementById("prev").onclick = () => {
 // =============================
 async function carregarComentarios() {
 
-    const user = await getUser();
-
-    // PROFESSOR
     const prof = document.getElementById("comentario-professor");
 
     if (questao.comentario_professor) {
@@ -182,7 +184,6 @@ async function carregarComentarios() {
         prof.innerHTML = "";
     }
 
-    // BUSCA COMENTÁRIOS
     const { data } = await supabaseClient
         .from("comentarios")
         .select("*")
@@ -192,86 +193,51 @@ async function carregarComentarios() {
     const lista = document.getElementById("lista-comentarios");
     lista.innerHTML = "";
 
-    for (let c of data || []) {
-
-        // verifica se já curtiu
-        let jaCurtiu = false;
-
-        if (user) {
-            const { data: like } = await supabaseClient
-                .from("comentario_likes")
-                .select("*")
-                .eq("comentario_id", c.id)
-                .eq("user_id", user.id)
-                .maybeSingle();
-
-            jaCurtiu = !!like;
-        }
-
+    data?.forEach(c => {
         lista.innerHTML += `
         <div class="border p-3 rounded">
-
             <div class="text-xs text-gray-400 mb-1">
                 👤 ${c.user_id || "Anônimo"} • ${new Date(c.created_at).toLocaleString()}
             </div>
-
             <p>${c.texto}</p>
-
-            <button 
-                onclick="curtir('${c.id}')"
-                class="text-blue-600 text-xs mt-2"
-                ${jaCurtiu ? "disabled" : ""}>
-                👍 Curtir
-            </button>
-
         </div>`;
-    }
+    });
 }
 
 // =============================
-async function postarComentario() {
-
-    const input = document.getElementById("novo-comentario");
-    const texto = input.value;
-
-    if (!texto) return;
-
-    const user = await getUser();
-
-    await supabaseClient.from("comentarios").insert([{
-        questao_id: questao.id,
-        texto: texto,
-        user_id: user?.email || "Anônimo"
-    }]);
-
-    input.value = "";
-
-    carregarComentarios();
-}
-
+// BOTÃO COMENTAR (FIX REAL)
 // =============================
-// CURTIR (ANTI-SPAM)
-// =============================
-async function curtir(comentario_id) {
+document.getElementById("btn-comentar").addEventListener("click", async () => {
 
-    const user = await getUser();
-    if (!user) return alert("Faça login para curtir");
+    try {
+        const input = document.getElementById("novo-comentario");
+        const texto = input.value.trim();
 
-    const { error } = await supabaseClient
-        .from("comentario_likes")
-        .insert([{
-            comentario_id: comentario_id,
-            user_id: user.id
-        }]);
+        if (!texto) {
+            alert("Digite um comentário");
+            return;
+        }
 
-    if (error) {
-        alert("Você já curtiu esse comentário");
-        return;
+        const { error } = await supabaseClient
+            .from("comentarios")
+            .insert([{
+                questao_id: questao.id,
+                texto: texto,
+                user_id: "Usuário"
+            }]);
+
+        if (error) throw error;
+
+        input.value = "";
+
+        carregarComentarios();
+
+    } catch (e) {
+        console.error("Erro ao comentar:", e.message);
+        alert("Erro ao postar comentário");
     }
 
-    alert("Curtido 👍");
-    carregarComentarios();
-}
+});
 
 carregar();
 </script>
