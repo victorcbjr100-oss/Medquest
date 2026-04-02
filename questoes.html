@@ -12,16 +12,43 @@
     <style>
         body { margin-left: 16rem; transition: margin 0.3s; }
         @media (max-width: 768px) { body { margin-left: 0; } }
-        .alt { padding: 18px; border-radius: 16px; border: 2px solid #e5e7eb; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; background: white; font-size: 1.08rem; line-height: 1.4; }
-        .alt:hover:not(.ok):not(.err) { border-color: #2563eb; background: #f0f9ff; transform: translateY(-3px); }
+
+        .alt {
+            padding: 18px;
+            border-radius: 16px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            background: white;
+            font-size: 1.08rem;
+            line-height: 1.4;
+        }
+        .alt:hover:not(.ok):not(.err) {
+            border-color: #2563eb;
+            background: #f0f9ff;
+            transform: translateY(-3px);
+        }
         .sel { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25); }
         .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #052e16 !important; }
         .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
-        .letra-circulo { width: 42px; height: 42px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin-right: 18px; font-weight: 700; font-size: 1.25rem; flex-shrink: 0; transition: all 0.2s; }
+        .letra-circulo {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 18px;
+            font-weight: 700; font-size: 1.25rem;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
         .ok .letra-circulo { background: #10b981; color: white; }
         .err .letra-circulo { background: #ef4444; color: white; }
+
         .timer { font-weight: 700; font-size: 1.35rem; transition: color 0.4s; }
         .progress-bar { height: 8px; background: linear-gradient(to right, #2563eb, #10b981); transition: width 0.5s ease; }
+        
         .dificuldade-facil { color: #10b981; }
         .dificuldade-media { color: #eab308; }
         .dificuldade-dificil { color: #ef4444; }
@@ -67,9 +94,14 @@
         <h3 class="font-bold text-2xl text-gray-800">💬 Discussão Clínica</h3>
         <div id="lista-comentarios" class="space-y-5"></div>
         <div class="bg-white p-6 rounded-3xl border shadow-sm">
-            <textarea id="novo-comentario" rows="4" class="w-full border border-gray-200 focus:border-blue-500 rounded-2xl p-5 outline-none resize-y text-gray-700" placeholder="Escreva seu raciocínio, dúvida ou comentário clínico..."></textarea>
+            <textarea id="novo-comentario" rows="4" 
+                class="w-full border border-gray-200 focus:border-blue-500 rounded-2xl p-5 outline-none resize-y text-gray-700"
+                placeholder="Escreva seu raciocínio, dúvida ou comentário clínico..."></textarea>
             <div class="flex justify-end mt-4">
-                <button id="btn-comentar" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold transition">Postar Comentário</button>
+                <button id="btn-comentar" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold transition">
+                    Postar Comentário
+                </button>
             </div>
         </div>
     </div>
@@ -96,49 +128,69 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function carregar() {
+        console.log("🔄 Tentando carregar questões...");
         try {
-            const { data, error } = await supabaseClient.from("questoes").select("*").order("id", { ascending: true });
-            if (error) throw error;
+            const { data, error } = await supabaseClient
+                .from("questoes")
+                .select("*")
+                .order("id", { ascending: true });
+
+            if (error) {
+                console.error("❌ Erro Supabase:", error);
+                alert(`Erro ao carregar questões:\n${error.message}\n\nVerifique se a tabela 'questoes' existe e se tem política RLS para SELECT.`);
+                return;
+            }
+
             questoes = data || [];
+            console.log(`✅ ${questoes.length} questões carregadas com sucesso!`);
+
             document.getElementById("total").textContent = questoes.length;
-            if (questoes.length > 0) mostrarQuestao();
+
+            if (questoes.length > 0) {
+                mostrarQuestao();
+            } else {
+                document.getElementById("conteudo").innerHTML = `<p class="text-center py-20 text-gray-500">Nenhuma questão encontrada no banco.</p>`;
+            }
         } catch (e) {
-            console.error(e);
-            alert("Não foi possível carregar as questões.");
+            console.error("🚨 Erro inesperado:", e);
+            alert("Erro inesperado ao carregar questões. Abra o console (F12).");
         }
     }
 
-    function mostrarQuestao() {
-        if (!questoes[indexAtual]) return;
-        questao = questoes[indexAtual];
-        marcada = null;
-        respondeu = false;
+    function atualizarProgresso() {
+        const percent = questoes.length ? Math.round(((indexAtual + 1) / questoes.length) * 100) : 0;
+        document.getElementById("progress-bar").style.width = `${percent}%`;
+        document.getElementById("progresso").textContent = indexAtual + 1;
+    }
 
-        document.getElementById("btn").innerText = "Responder";
+    function iniciarTimer() {
+        clearInterval(timerInterval);
+        tempoRestante = 30;
+        const timerEl = document.getElementById("timer");
+        timerEl.textContent = "30s";
+        timerEl.classList.remove("text-orange-500", "text-red-600");
+
+        timerInterval = setInterval(() => {
+            tempoRestante--;
+            timerEl.textContent = `${tempoRestante}s`;
+            if (tempoRestante <= 10) timerEl.classList.add("text-red-600");
+            else if (tempoRestante <= 20) timerEl.classList.add("text-orange-500");
+
+            if (tempoRestante <= 0) {
+                clearInterval(timerInterval);
+                if (!respondeu) autoResponder();
+            }
+        }, 1000);
+    }
+
+    function autoResponder() {
+        respondeu = true;
+        document.getElementById("btn").innerText = "Tempo esgotado";
         document.getElementById("btn").disabled = false;
-        document.getElementById("tema").innerText = questao.tema || "Clínica Médica";
-        document.getElementById("explicacao-box").classList.add("hidden");
-        document.getElementById("comentarios-box").classList.add("hidden");
-
-        let html = `<p class="mb-10 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p><div class="space-y-5">`;
-        ["a", "b", "c", "d"].forEach(l => {
-            const texto = getAlt(questao, l);
-            if (texto) html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
-        });
-        html += `</div>`;
-        document.getElementById("conteudo").innerHTML = html;
-
-        document.querySelectorAll(".alt").forEach(el => {
-            el.addEventListener("click", () => {
-                if (respondeu) return;
-                document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
-                el.classList.add("sel");
-                marcada = el.dataset.l;
-            });
-        });
-
-        iniciarTimer();
-        atualizarProgresso();
+        aplicarFeedbackVisual();
+        respostasUsuario.push({ questao_id: questao.id, marcada: null, acertou: false });
+        mostrarExplicacao();
+        document.getElementById("comentarios-box").classList.remove("hidden");
     }
 
     function aplicarFeedbackVisual() {
@@ -158,9 +210,80 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ... (timer, resumo, teclas etc. mantidos iguais)
+    function mostrarQuestao() {
+        if (!questoes[indexAtual]) return;
+        questao = questoes[indexAtual];
+        marcada = null;
+        respondeu = false;
 
-    // Botão Postar Comentário - com debug melhor
+        document.getElementById("btn").innerText = "Responder";
+        document.getElementById("btn").disabled = false;
+        document.getElementById("tema").innerText = questao.tema || "Clínica Médica";
+        document.getElementById("explicacao-box").classList.add("hidden");
+        document.getElementById("comentarios-box").classList.add("hidden");
+
+        const diffEl = document.getElementById("dificuldade");
+        if (questao.dificuldade) {
+            const diffClass = questao.dificuldade.toLowerCase() === 'facil' ? 'dificuldade-facil' :
+                             questao.dificuldade.toLowerCase() === 'media' ? 'dificuldade-media' : 'dificuldade-dificil';
+            diffEl.innerHTML = `<span class="${diffClass}">${questao.dificuldade}</span>`;
+            diffEl.classList.remove("hidden");
+        } else diffEl.classList.add("hidden");
+
+        let html = `<p class="mb-10 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p><div class="space-y-5">`;
+        ["a", "b", "c", "d"].forEach(l => {
+            const texto = getAlt(questao, l);
+            if (texto) {
+                html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
+            }
+        });
+        html += `</div>`;
+        document.getElementById("conteudo").innerHTML = html;
+
+        document.querySelectorAll(".alt").forEach(el => {
+            el.addEventListener("click", () => {
+                if (respondeu) return;
+                document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
+                el.classList.add("sel");
+                marcada = el.dataset.l;
+            });
+        });
+
+        iniciarTimer();
+        atualizarProgresso();
+    }
+
+    // Botão Responder
+    document.getElementById("btn").addEventListener("click", async () => {
+        if (!respondeu && !marcada) return alert("Escolha uma alternativa.");
+        if (respondeu) {
+            if (indexAtual < questoes.length - 1) {
+                indexAtual++;
+                mostrarQuestao();
+            } else mostrarResumoFinal();
+            return;
+        }
+
+        respondeu = true;
+        clearInterval(timerInterval);
+        aplicarFeedbackVisual();
+
+        const respostaCorreta = String(questao.resposta_correta || "").toLowerCase().trim();
+        const acertou = marcada === respostaCorreta;
+
+        if (acertou) confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+
+        document.getElementById("btn").innerText = "Próxima Questão";
+        respostasUsuario.push({ questao_id: questao.id, marcada, acertou });
+
+        if (typeof registrarRevisao === "function") await registrarRevisao(questao.id, acertou);
+
+        mostrarExplicacao();
+        document.getElementById("comentarios-box").classList.remove("hidden");
+        await carregarComentarios();
+    });
+
+    // Botão Postar Comentário
     document.getElementById("btn-comentar").addEventListener("click", async () => {
         const btn = document.getElementById("btn-comentar");
         const texto = document.getElementById("novo-comentario").value.trim();
@@ -168,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!texto) return alert("Digite um comentário.");
         if (!questao?.id) return alert("Questão não identificada.");
 
-        const originalText = btn.textContent;
+        const original = btn.textContent;
         btn.disabled = true;
         btn.textContent = "Enviando...";
 
@@ -178,7 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const { error } = await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
-                texto: texto,
+                texto,
                 usuario_nome: nome
             }]);
 
@@ -186,15 +309,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("novo-comentario").value = "";
             await carregarComentarios();
-            alert("✅ Comentário publicado com sucesso!");
+            alert("✅ Comentário publicado!");
         } catch (e) {
-            console.error("Erro completo:", e);
-            alert("Erro ao publicar:\n" + (e.message || e));
+            console.error(e);
+            alert("Erro ao publicar comentário: " + (e.message || e));
         } finally {
             btn.disabled = false;
-            btn.textContent = originalText;
+            btn.textContent = original;
         }
     });
+
+    // Funções restantes simplificadas
+    function mostrarResumoFinal() {
+        const total = questoes.length;
+        const acertos = respostasUsuario.filter(r => r.acertou).length;
+        const percent = total ? Math.round((acertos / total) * 100) : 0;
+
+        document.getElementById("conteudo").innerHTML = `
+            <div class="text-center py-20">
+                <div class="text-8xl mb-8">🎉</div>
+                <h1 class="text-5xl font-bold text-gray-900 mb-3">Quiz Finalizado!</h1>
+                <p class="text-2xl text-gray-600 mb-12">Aproveitamento: ${percent}%</p>
+                <button onclick="location.reload()" class="bg-blue-600 text-white px-12 py-5 rounded-2xl font-bold">Reiniciar</button>
+            </div>`;
+    }
+
+    window.like = async (id) => {
+        try {
+            await supabaseClient.rpc("increment_like", { comment_id: id });
+            await carregarComentarios();
+        } catch (e) { console.error(e); }
+    };
 
     // Iniciar
     carregar();
