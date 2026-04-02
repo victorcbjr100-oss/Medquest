@@ -4,82 +4,177 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estatísticas - MedQuest Pro</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="sidebar.js"></script> 
-    
+
+    <!-- Sidebar -->
+    <script src="sidebar.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; margin-left: 16rem; }
+        body { margin-left: 16rem; font-family: sans-serif; }
         @media (max-width: 768px) { body { margin-left: 0; } }
-        .progress-bar { transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .progress-bar { transition: width 1s ease; }
     </style>
 </head>
+
 <body class="bg-[#f8fafc]">
 
-    <main class="p-10 max-w-6xl mx-auto">
-        <div class="mb-10">
-            <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                Seu Desempenho <span class="text-2xl">📊</span>
-            </h2>
-            <p class="text-gray-500 mt-1 font-medium">Análise detalhada por especialidade médica</p>
+<main class="p-10 max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <div class="mb-10">
+        <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            Seu Desempenho 📊
+        </h2>
+        <p class="text-gray-500 mt-1">Análise inteligente baseada nas suas respostas</p>
+    </div>
+
+    <!-- Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+
+        <div class="bg-white p-5 rounded-xl">
+            <p class="text-xs text-gray-400">Respondidas</p>
+            <h3 id="stat-total" class="text-2xl font-bold">0</h3>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-                <p class="text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Total Respondidas</p>
-                <h3 id="stat-total" class="text-2xl font-black text-gray-800">0</h3>
-            </div>
+        <div class="bg-white p-5 rounded-xl">
+            <p class="text-xs text-gray-400">Precisão</p>
+            <h3 id="stat-precisao" class="text-2xl font-bold text-blue-600">0%</h3>
+        </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-                <p class="text-[9px] font-bold text-gray-400 uppercase mb-1 tracking-wider">Precisão Geral</p>
-                <h3 id="stat-precisao" class="text-2xl font-black text-blue-600">0%</h3>
-            </div>
+        <div class="bg-white p-5 rounded-xl">
+            <p class="text-xs text-gray-400">Acertos</p>
+            <h3 id="stat-acertos" class="text-2xl font-bold text-green-600">0</h3>
+        </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-                <p class="text-[9px] font-bold text-emerald-500 uppercase mb-1 tracking-wider">Acertos Totais</p>
-                <h3 id="stat-acertos" class="text-2xl font-black text-emerald-600">0</h3>
-            </div>
+        <div class="bg-white p-5 rounded-xl">
+            <p class="text-xs text-gray-400">Erros</p>
+            <h3 id="stat-erros" class="text-2xl font-bold text-red-600">0</h3>
+        </div>
 
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
-                <p class="text-[9px] font-bold text-red-500 uppercase mb-1 tracking-wider">Questões Erradas</p>
-                <h3 id="stat-erros" class="text-2xl font-black text-red-600">0</h3>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="grid lg:grid-cols-3 gap-8">
+
+        <!-- Temas -->
+        <div class="lg:col-span-2">
+            <h3 class="text-xs text-gray-400 mb-4 uppercase">Desempenho por Tema</h3>
+
+            <div id="lista-temas" class="space-y-4"></div>
+        </div>
+
+        <!-- Pontos fracos -->
+        <div class="bg-red-50 p-6 rounded-2xl">
+            <h3 class="text-xs font-bold text-red-600 mb-4 uppercase">
+                Pontos Fracos
+            </h3>
+
+            <div id="pontos-fracos" class="space-y-3 text-sm text-red-600">
+                <p class="text-gray-400">Carregando...</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2">
-                <h3 class="text-[10px] font-black text-gray-400 uppercase mb-6 tracking-[0.2em]">Desempenho por Especialidade</h3>
-                <div id="lista-estatisticas-temas" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-full flex flex-col items-center py-20 text-gray-400">
-                        <i class="fas fa-circle-notch animate-spin text-2xl mb-4"></i>
-                        <p class="italic text-sm text-center font-medium">Sincronizando prontuário de dados...</p>
+    </div>
+
+</main>
+
+<!-- JS -->
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        await protegerRota();
+
+        const user = await getUser();
+        if (!user) return;
+
+        const { data, error } = await supabaseClient
+            .from('respostas_usuario')
+            .select('*, questoes(tema)')
+            .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) return;
+
+        // 📊 GERAL
+        const total = data.length;
+        const acertos = data.filter(r => r.acertou).length;
+        const erros = total - acertos;
+        const precisao = ((acertos / total) * 100).toFixed(1);
+
+        document.getElementById("stat-total").textContent = total;
+        document.getElementById("stat-acertos").textContent = acertos;
+        document.getElementById("stat-erros").textContent = erros;
+        document.getElementById("stat-precisao").textContent = `${precisao}%`;
+
+        // 📚 AGRUPAR POR TEMA
+        const temas = {};
+
+        data.forEach(r => {
+            const tema = r.questoes?.tema || "Geral";
+
+            if (!temas[tema]) {
+                temas[tema] = { total: 0, acertos: 0 };
+            }
+
+            temas[tema].total++;
+            if (r.acertou) temas[tema].acertos++;
+        });
+
+        const lista = document.getElementById("lista-temas");
+        const fracos = document.getElementById("pontos-fracos");
+
+        lista.innerHTML = "";
+        fracos.innerHTML = "";
+
+        Object.entries(temas).forEach(([tema, stats]) => {
+            const perc = ((stats.acertos / stats.total) * 100).toFixed(0);
+
+            // CARD TEMA
+            lista.innerHTML += `
+                <div class="bg-white p-4 rounded-xl border">
+                    <div class="flex justify-between mb-2">
+                        <span class="font-bold text-sm">${tema}</span>
+                        <span class="text-xs">${perc}%</span>
+                    </div>
+
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div class="progress-bar bg-blue-600 h-2 rounded-full"
+                             style="width: ${perc}%"></div>
                     </div>
                 </div>
-            </div>
+            `;
 
-            <div class="bg-red-50/50 p-6 rounded-[32px] border border-red-100 h-fit">
-                <h3 class="text-[10px] font-black text-red-600 uppercase mb-4 tracking-widest flex items-center gap-2">
-                    <i class="fas fa-exclamation-triangle"></i> Assuntos para Melhorar
-                </h3>
-                <p class="text-[10px] text-red-400 font-medium mb-6 leading-relaxed">Subtemas com taxa de erro superior a 25%. Priorize estes tópicos nos próximos simulados.</p>
-                <div id="grafico-melhoria" class="space-y-4">
+            // PONTOS FRACOS (<70%)
+            if (perc < 70) {
+                fracos.innerHTML += `
+                    <div class="bg-white p-3 rounded-lg border border-red-200">
+                        ${tema} — ${perc}%
                     </div>
-            </div>
-        </div>
-    </main>
-
-    <script src="medquest-core.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Chamamos APENAS esta função. Ela deve conter a lógica de preencher os cards e as barras.
-            if (typeof carregarEstatisticasDetalhadas === 'function') {
-                carregarEstatisticasDetalhadas();
-            } else {
-                console.error("Erro: Função carregarEstatisticasDetalhadas não encontrada no medquest-core.js");
+                `;
             }
         });
-    </script>
+
+        if (fracos.innerHTML === "") {
+            fracos.innerHTML = "<p class='text-green-600'>Nenhum ponto fraco 🎉</p>";
+        }
+
+    } catch (e) {
+        console.error("Erro estatísticas:", e.message);
+    }
+});
+</script>
+
 </body>
 </html>
