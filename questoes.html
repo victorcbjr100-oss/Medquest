@@ -52,11 +52,42 @@
         .dificuldade-facil { color: #10b981; }
         .dificuldade-media { color: #eab308; }
         .dificuldade-dificil { color: #ef4444; }
+
+        /* Estilo YouTube-like para respostas */
+        .reply-box {
+            margin-top: 12px;
+            padding: 14px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reply-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .comment-thread {
+            position: relative;
+        }
+        .comment-thread::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 50px;
+            bottom: 20px;
+            width: 2px;
+            background: #e2e8f0;
+        }
     </style>
 </head>
 <body class="bg-gray-50 p-6 font-sans">
 
 <div class="max-w-3xl mx-auto space-y-8">
+    <!-- Header -->
     <div class="bg-white rounded-3xl shadow border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
@@ -75,6 +106,7 @@
         </div>
     </div>
 
+    <!-- Questão -->
     <div class="bg-white p-9 rounded-3xl shadow border border-gray-100">
         <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12"></div>
         <div class="flex gap-4">
@@ -85,18 +117,22 @@
         </div>
     </div>
 
+    <!-- Explicação -->
     <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
         <h3 class="font-bold text-xl text-emerald-800 mb-4 flex items-center gap-2">📌 Explicação Clínica</h3>
         <div id="explicacao-texto" class="text-gray-700 leading-relaxed text-[1.05rem]"></div>
     </div>
 
+    <!-- Comentários -->
     <div id="comentarios-box" class="hidden space-y-6">
         <h3 class="font-bold text-2xl text-gray-800">💬 Discussão Clínica</h3>
-        <div id="lista-comentarios" class="space-y-5"></div>
+        <div id="lista-comentarios" class="space-y-6"></div>
+
+        <!-- Caixa principal para novo comentário -->
         <div class="bg-white p-6 rounded-3xl border shadow-sm">
             <textarea id="novo-comentario" rows="4" 
                 class="w-full border border-gray-200 focus:border-blue-500 rounded-2xl p-5 outline-none resize-y text-gray-700"
-                placeholder="Escreva seu raciocínio, dúvida ou comentário clínico..."></textarea>
+                placeholder="Escreva seu raciocínio ou comentário clínico..."></textarea>
             <div class="flex justify-end mt-4">
                 <button id="btn-comentar" 
                     class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold transition">
@@ -135,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("total").textContent = questoes.length;
             if (questoes.length > 0) mostrarQuestao();
         } catch (e) {
-            console.error("Erro ao carregar questões:", e);
+            console.error(e);
             alert("Não foi possível carregar as questões.");
         }
     }
@@ -182,14 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const mapa = { a: 0, b: 1, c: 2, d: 3 };
         const itens = document.querySelectorAll(".alt");
 
-        // Sempre marca a correta de verde
-        if (mapa[respostaCorreta] !== undefined) {
-            itens[mapa[respostaCorreta]]?.classList.add("ok");
-        }
-        // Marca a errada em vermelho, se o usuário errou
-        if (!acertou && marcada && mapa[marcada] !== undefined) {
-            itens[mapa[marcada]]?.classList.add("err");
-        }
+        if (mapa[respostaCorreta] !== undefined) itens[mapa[respostaCorreta]]?.classList.add("ok");
+        if (!acertou && marcada && mapa[marcada] !== undefined) itens[mapa[marcada]]?.classList.add("err");
     }
 
     function mostrarExplicacao() {
@@ -240,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         atualizarProgresso();
     }
 
-    // Botão Responder
+    // Botão Responder principal
     document.getElementById("btn").addEventListener("click", async () => {
         if (!respondeu && !marcada) return alert("Escolha uma alternativa antes de responder.");
         if (respondeu) {
@@ -270,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await carregarComentarios();
     });
 
-    // ==================== COMENTÁRIOS ====================
+    // ==================== COMENTÁRIOS (YouTube Style) ====================
     async function carregarComentarios() {
         if (!questao?.id) return;
         try {
@@ -292,22 +322,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
             data.filter(c => !c.parent_id).forEach(c => {
                 const respostas = data.filter(r => r.parent_id === c.id);
+
                 lista.innerHTML += `
-                    <div class="bg-white p-7 rounded-3xl border shadow-sm">
+                    <div class="bg-white p-7 rounded-3xl border shadow-sm comment-thread" id="comment-${c.id}">
                         <div class="flex justify-between items-start mb-4">
                             <div class="font-semibold text-blue-700">${c.usuario_nome || 'Colega'}</div>
                             <div class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString('pt-BR')}</div>
                         </div>
-                        <p class="text-gray-700">${c.texto}</p>
-                        <div class="flex gap-6 mt-4">
-                            <button onclick="like('${c.id}')" class="text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
-                            <button onclick="responderComentario('${c.id}')" class="text-sm text-gray-500 hover:text-blue-600 transition">Responder</button>
+                        <p class="text-gray-700 mb-5">${c.texto}</p>
+                        
+                        <div class="flex gap-6 text-sm">
+                            <button onclick="like('${c.id}')" class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
+                            <button onclick="toggleReplyBox('${c.id}')" class="text-blue-600 hover:text-blue-700 font-medium transition">Responder</button>
                         </div>
+
+                        <!-- Caixa de Resposta estilo YouTube -->
+                        <div id="reply-box-${c.id}" class="reply-box hidden mt-5">
+                            <textarea id="reply-text-${c.id}" rows="3" class="reply-textarea w-full border border-gray-300 focus:border-blue-500 rounded-xl p-4 outline-none text-gray-700" 
+                                placeholder="Escreva sua resposta..."></textarea>
+                            <div class="flex justify-end gap-3 mt-3">
+                                <button onclick="cancelReply('${c.id}')" 
+                                    class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancelar</button>
+                                <button onclick="enviarResposta('${c.id}')" 
+                                    class="bg-blue-600 text-white px-8 py-2 rounded-xl font-medium hover:bg-blue-700 transition">Responder</button>
+                            </div>
+                        </div>
+
+                        <!-- Respostas -->
                         ${respostas.length ? `
-                        <div class="mt-5 ml-6 border-l-2 border-gray-100 pl-5 space-y-4">
+                        <div class="mt-6 ml-10 space-y-5">
                             ${respostas.map(r => `
-                                <div class="text-sm">
-                                    <span class="font-medium text-gray-600">${r.usuario_nome || 'Colega'}:</span>
+                                <div class="bg-gray-50 p-5 rounded-2xl">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                        <span class="font-medium">${r.usuario_nome || 'Colega'}</span>
+                                        <span>${new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
+                                    </div>
                                     <p class="text-gray-700">${r.texto}</p>
                                 </div>
                             `).join('')}
@@ -318,6 +367,48 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Erro ao carregar comentários:", e);
         }
     }
+
+    // Toggle da caixa de resposta
+    window.toggleReplyBox = (commentId) => {
+        const box = document.getElementById(`reply-box-${commentId}`);
+        box.classList.toggle("hidden");
+    };
+
+    window.cancelReply = (commentId) => {
+        const box = document.getElementById(`reply-box-${commentId}`);
+        const textarea = document.getElementById(`reply-text-${commentId}`);
+        textarea.value = "";
+        box.classList.add("hidden");
+    };
+
+    // Enviar resposta
+    window.enviarResposta = async (parent_id) => {
+        const textarea = document.getElementById(`reply-text-${parent_id}`);
+        const texto = textarea.value.trim();
+
+        if (!texto || !questao?.id) return;
+
+        try {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const nome = user?.email ? user.email.split("@")[0] : "Colega";
+
+            const { error } = await supabaseClient.from("comentarios").insert([{
+                questao_id: questao.id,
+                texto: texto,
+                usuario_nome: nome,
+                parent_id: parent_id
+            }]);
+
+            if (error) throw error;
+
+            textarea.value = "";
+            document.getElementById(`reply-box-${parent_id}`).classList.add("hidden");
+            await carregarComentarios();
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao enviar resposta.");
+        }
+    };
 
     // Postar comentário principal
     document.getElementById("btn-comentar").addEventListener("click", async () => {
@@ -344,36 +435,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Responder a um comentário (resposta aninhada)
-    window.responderComentario = async (parent_id) => {
-        const texto = prompt("Digite sua resposta ao comentário:");
-        if (!texto || !questao?.id) return;
-
-        try {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const nome = user?.email ? user.email.split("@")[0] : "Colega";
-
-            const { error } = await supabaseClient.from("comentarios").insert([{
-                questao_id: questao.id,
-                texto: texto,
-                usuario_nome: nome,
-                parent_id: parent_id
-            }]);
-
-            if (error) throw error;
-            await carregarComentarios();
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao responder comentário.");
-        }
-    };
-
     window.like = async (id) => {
         try {
             await supabaseClient.rpc("increment_like", { comment_id: id });
             await carregarComentarios();
         } catch (e) {
-            console.error("Erro no like:", e);
+            console.error(e);
         }
     };
 
