@@ -1,65 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - MedQuest</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- SUPABASE -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Questões - MedQuest</title>
 
-    <!-- TAILWIND -->
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="sidebar.js"></script>
 
-    <!-- SIDEBAR -->
-    <script src="sidebar.js"></script>
+<style>
+body { margin-left: 16rem; }
+@media (max-width: 768px) { body { margin-left: 0; } }
 
-    <style>
-        body { margin-left: 16rem; }
-        @media (max-width: 768px) { body { margin-left: 0; } }
-
-        .alt { padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; }
-        .sel { background: #eff6ff; border-color: #3b82f6; }
-        .ok { background: #ecfdf5; border-color: #10b981; }
-        .err { background: #fef2f2; border-color: #ef4444; }
-    </style>
+.alt { padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; }
+.sel { background: #eff6ff; border-color: #3b82f6; }
+.ok { background: #ecfdf5; border-color: #10b981; }
+.err { background: #fef2f2; border-color: #ef4444; }
+</style>
 </head>
 
 <body class="bg-gray-50 p-6">
 
 <div class="max-w-2xl mx-auto">
 
-    <!-- QUESTÃO -->
-    <div class="bg-white p-6 rounded-xl">
+<div class="bg-white p-6 rounded-xl">
 
-        <h2 id="tema" class="font-bold mb-4">Carregando...</h2>
+<h2 id="tema" class="font-bold mb-4">Carregando...</h2>
 
-        <div id="conteudo"></div>
+<div id="conteudo"></div>
 
-        <!-- BOTÕES -->
-        <div class="flex gap-2 mt-6">
-            <button id="prev" class="flex-1 bg-gray-200 py-2 rounded">Anterior</button>
-            <button id="btn" class="flex-1 bg-blue-600 text-white py-2 rounded">Responder</button>
-            <button id="next" class="flex-1 bg-gray-800 text-white py-2 rounded">Próxima</button>
-        </div>
+<div class="flex gap-2 mt-6">
+<button id="prev" class="flex-1 bg-gray-200 py-2 rounded">Anterior</button>
+<button id="btn" class="flex-1 bg-blue-600 text-white py-2 rounded">Responder</button>
+<button id="next" class="flex-1 bg-gray-800 text-white py-2 rounded">Próxima</button>
+</div>
 
-    </div>
+</div>
 
-    <!-- COMENTÁRIOS -->
-    <div id="comentarios-box" class="hidden mt-6 bg-white p-6 rounded-xl">
-
-        <h3 class="font-bold mb-4">💬 Comentários</h3>
-
-        <div id="lista-comentarios" class="space-y-3"></div>
-
-        <div class="mt-4">
-            <input id="novo-comentario" class="w-full border p-2 rounded mb-2" placeholder="Escreva um comentário...">
-            <button onclick="postarComentario()" class="bg-blue-600 text-white px-4 py-2 rounded">
-                Comentar
-            </button>
-        </div>
-
-    </div>
+<div id="comentarios-box" class="hidden mt-6 bg-white p-6 rounded-xl">
+<h3 class="font-bold mb-4">💬 Comentários</h3>
+<div id="lista-comentarios" class="space-y-3"></div>
+</div>
 
 </div>
 
@@ -73,28 +56,29 @@ let questao = null;
 let marcada = null;
 let respondeu = false;
 
-// =====================
-// CARREGAR QUESTÕES
-// =====================
-async function carregar() {
-    try {
-        const { data } = await supabaseClient
-            .from("questoes")
-            .select("*");
-
-        questoes = data;
-        mostrarQuestao();
-
-    } catch (e) {
-        document.getElementById("conteudo").innerHTML =
-            "<p class='text-red-500'>Erro ao carregar</p>";
-    }
+// =============================
+// FUNÇÃO UNIVERSAL DE PEGAR TEXTO
+// =============================
+function getAlt(q, l) {
+    return q["op_" + l] ||
+           q["opcao_" + l] ||
+           q["alternativa_" + l] ||
+           q[l] ||
+           "Alternativa não encontrada";
 }
 
-// =====================
-// MOSTRAR QUESTÃO
-// =====================
+// =============================
+async function carregar() {
+    const { data } = await supabaseClient.from("questoes").select("*");
+
+    questoes = data;
+
+    mostrarQuestao();
+}
+
+// =============================
 function mostrarQuestao() {
+
     respondeu = false;
     marcada = null;
 
@@ -105,21 +89,24 @@ function mostrarQuestao() {
     let html = `<p class="mb-4">${questao.enunciado}</p>`;
 
     ["a","b","c","d"].forEach(l => {
-        const txt = questao["op_" + l];
 
-        html += `<div class="alt" onclick="selecionar(this,'${l}')">
-            <b>${l})</b> ${txt}
-        </div>`;
+        const txt = getAlt(questao, l);
+
+        html += `
+            <div class="alt" onclick="selecionar(this,'${l}')">
+                <b>${l})</b> ${txt}
+            </div>
+        `;
     });
 
     document.getElementById("conteudo").innerHTML = html;
 
     document.getElementById("comentarios-box").classList.add("hidden");
+
+    document.getElementById("btn").textContent = "Responder";
 }
 
-// =====================
-// SELECIONAR
-// =====================
+// =============================
 function selecionar(el, l) {
     if (respondeu) return;
 
@@ -129,12 +116,13 @@ function selecionar(el, l) {
     marcada = l;
 }
 
-// =====================
-// RESPONDER
-// =====================
-document.getElementById("btn").onclick = async () => {
+// =============================
+document.getElementById("btn").onclick = () => {
 
-    if (!marcada) return;
+    if (!marcada) {
+        alert("Selecione uma alternativa");
+        return;
+    }
 
     if (respondeu) {
         indexAtual++;
@@ -144,26 +132,23 @@ document.getElementById("btn").onclick = async () => {
 
     respondeu = true;
 
-    const correta = questao.resposta_correta.toLowerCase();
+    const correta = (questao.resposta_correta || "").toLowerCase();
+
     const mapa = {a:0,b:1,c:2,d:3};
     const itens = document.querySelectorAll(".alt");
 
-    itens[mapa[correta]].classList.add("ok");
+    if (itens[mapa[correta]]) itens[mapa[correta]].classList.add("ok");
 
-    if (marcada !== correta) {
+    if (marcada !== correta && itens[mapa[marcada]]) {
         itens[mapa[marcada]].classList.add("err");
     }
 
     document.getElementById("btn").textContent = "Próxima";
 
-    carregarComentarios();
-
     document.getElementById("comentarios-box").classList.remove("hidden");
 };
 
-// =====================
-// NAVEGAÇÃO
-// =====================
+// =============================
 document.getElementById("next").onclick = () => {
     if (indexAtual < questoes.length - 1) {
         indexAtual++;
@@ -177,46 +162,6 @@ document.getElementById("prev").onclick = () => {
         mostrarQuestao();
     }
 };
-
-// =====================
-// COMENTÁRIOS (SIMPLES)
-// =====================
-async function carregarComentarios() {
-    const { data } = await supabaseClient
-        .from("comentarios")
-        .select("*")
-        .eq("questao_id", questao.id);
-
-    const lista = document.getElementById("lista-comentarios");
-    lista.innerHTML = "";
-
-    data?.forEach(c => {
-        lista.innerHTML += `
-            <div class="border p-3 rounded">
-                <p>${c.texto}</p>
-                <button class="text-blue-600 text-xs mt-2">Responder</button>
-            </div>
-        `;
-    });
-}
-
-// =====================
-// POSTAR
-// =====================
-async function postarComentario() {
-    const texto = document.getElementById("novo-comentario").value;
-
-    if (!texto) return;
-
-    await supabaseClient.from("comentarios").insert([{
-        questao_id: questao.id,
-        texto: texto
-    }]);
-
-    document.getElementById("novo-comentario").value = "";
-
-    carregarComentarios();
-}
 
 carregar();
 </script>
