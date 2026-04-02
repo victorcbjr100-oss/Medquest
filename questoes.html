@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
+    
     <script type="module" src="js/supabase.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="sidebar.js"></script>
+    
+    <script src="sidebar.js" defer></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
     <style>
@@ -33,6 +37,7 @@
         .sel { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25); }
         .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #052e16 !important; }
         .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
+        
         .letra-circulo {
             width: 42px; height: 42px;
             border-radius: 50%;
@@ -41,22 +46,15 @@
             margin-right: 18px;
             font-weight: 700; font-size: 1.25rem;
             flex-shrink: 0;
-            transition: all 0.2s;
         }
         .ok .letra-circulo { background: #10b981; color: white; }
         .err .letra-circulo { background: #ef4444; color: white; }
 
-        .timer { font-weight: 700; font-size: 1.35rem; transition: color 0.4s; }
         .progress-bar { height: 8px; background: linear-gradient(to right, #2563eb, #10b981); transition: width 0.5s ease; }
         
         .dificuldade-facil { color: #10b981; }
         .dificuldade-media { color: #eab308; }
         .dificuldade-dificil { color: #ef4444; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body class="bg-gray-50 p-6 font-sans">
@@ -65,13 +63,13 @@
     <div class="bg-white rounded-3xl shadow border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
-                <h2 id="tema" class="text-sm font-bold uppercase tracking-widest text-blue-600">Conectando...</h2>
-                <span id="dificuldade" class="text-xs font-medium px-3 py-1 rounded-full"></span>
+                <h2 id="tema" class="text-sm font-bold uppercase tracking-widest text-blue-600">Sincronizando...</h2>
+                <span id="dificuldade" class="hidden text-xs font-medium px-3 py-1 rounded-full"></span>
             </div>
             <div class="flex items-center gap-6">
-                <div id="timer" class="timer text-red-500">45s</div>
+                <div id="timer" class="font-bold text-xl text-red-500">45s</div>
                 <div class="text-sm font-medium text-gray-500">
-                    Questão <span id="progresso" class="font-semibold text-gray-700">1</span> de <span id="total" class="font-semibold text-gray-700">0</span>
+                    Questão <span id="progresso" class="font-semibold text-gray-700">0</span> de <span id="total" class="font-semibold text-gray-700">0</span>
                 </div>
             </div>
         </div>
@@ -84,9 +82,10 @@
         <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12">
             <div class="flex flex-col items-center justify-center py-10 gap-4">
                 <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-gray-500">Sincronizando com o banco de dados...</p>
+                <p class="text-gray-500">A carregar questões...</p>
             </div>
         </div>
+        
         <div class="flex gap-4">
             <button id="prev" class="px-7 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-semibold transition">Anterior</button>
             <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition active:scale-95">Responder</button>
@@ -110,19 +109,20 @@ document.addEventListener("DOMContentLoaded", () => {
     let timerInterval = null;
     let tempoRestante = 45;
 
-    // 1. AGUARDAR O SUPABASE CLIENT ESTAR PRONTO (Sincronização)
+    // 1. ESPERA O CLIENTE SUPABASE ESTAR PRONTO
     const aguardarConexao = setInterval(() => {
         if (window.supabaseClient) {
             clearInterval(aguardarConexao);
-            carregar();
+            carregarDados();
         }
-    }, 100);
+    }, 150);
 
-    function getAlt(q, l) {
-        return q[`option_${l.toLowerCase()}`] || "";
+    // Função auxiliar para pegar alternativas do CSV
+    function getAlt(q, letra) {
+        return q[`option_${letra.toLowerCase()}`] || "";
     }
 
-    async function carregar() {
+    async function carregarDados() {
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const temaFiltro = urlParams.get('tema');
@@ -130,34 +130,40 @@ document.addEventListener("DOMContentLoaded", () => {
             let query = window.supabaseClient.from("questoes").select("*");
             
             if (temaFiltro) {
-                query = query.eq('specialty', temaFiltro);
+                // 'ilike' resolve o problema de maiúsculas/minúsculas entre URL e CSV
+                query = query.ilike('specialty', temaFiltro.trim());
             }
 
-            const { data, error } = await query.order("created_date", { ascending: false });
+            const { data, error } = await query.order("id", { ascending: true });
             
             if (error) throw error;
-            questoes = data || [];
+            
+            // Remove registros vazios
+            questoes = data.filter(q => q.title) || [];
             
             document.getElementById("total").textContent = questoes.length;
+            
             if (questoes.length > 0) {
                 mostrarQuestao();
             } else {
-                document.getElementById("conteudo").innerHTML = "<p class='text-center py-10'>Nenhuma questão encontrada para este tema.</p>";
+                document.getElementById("conteudo").innerHTML = `
+                    <div class="text-center py-10">
+                        <p class="text-gray-500 mb-4">Nenhuma questão encontrada para o tema: <b>${temaFiltro || 'Todos'}</b></p>
+                        <button onclick="window.location.href='index.html'" class="text-blue-600 underline">Voltar</button>
+                    </div>`;
             }
         } catch (e) {
-            console.error("Erro no carregamento:", e);
-            document.getElementById("conteudo").innerHTML = "<p class='text-center text-red-500 py-10'>Falha na conexão com o banco.</p>";
+            console.error("Erro:", e);
+            document.getElementById("conteudo").innerHTML = "<p class='text-center text-red-500 py-10'>Erro ao conectar com o banco de dados.</p>";
         }
     }
 
     function mostrarQuestao() {
-        if (!questoes[indexAtual]) return;
         questao = questoes[indexAtual];
         marcada = null;
         respondeu = false;
 
         document.getElementById("btn").innerText = "Responder";
-        document.getElementById("btn").disabled = false;
         document.getElementById("tema").innerText = questao.specialty || "Geral";
         document.getElementById("explicacao-box").classList.add("hidden");
 
@@ -165,16 +171,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const diffEl = document.getElementById("dificuldade");
         if (questao.difficulty) {
             const d = questao.difficulty.toLowerCase();
-            const diffClass = d.includes('facil') ? 'dificuldade-facil' : d.includes('medio') ? 'dificuldade-media' : 'dificuldade-dificil';
-            diffEl.innerHTML = `<span class="${diffClass} font-bold bg-white px-3 py-1 rounded-full shadow-sm">${questao.difficulty.toUpperCase()}</span>`;
+            const cor = d.includes('facil') ? 'dificuldade-facil' : d.includes('medio') ? 'dificuldade-media' : 'dificuldade-dificil';
+            diffEl.innerHTML = `<span class="${cor} font-bold bg-white px-3 py-1 rounded-full shadow-sm">${questao.difficulty.toUpperCase()}</span>`;
             diffEl.classList.remove("hidden");
         }
 
-        // Título e Alternativas (Mapeado do CSV)
-        let html = `<p class="mb-10 font-medium text-xl text-gray-900">${questao.title || "Sem título"}</p><div class="space-y-5">`;
+        // Título e Opções
+        let html = `<p class="mb-10 font-medium text-xl text-gray-900">${questao.title}</p><div class="space-y-5">`;
         ["a", "b", "c", "d", "e"].forEach(l => {
             const texto = getAlt(questao, l);
-            if (texto && texto !== "null" && texto !== "") {
+            if (texto && texto !== "null" && texto.trim() !== "") {
                 html += `
                     <div class="alt" data-l="${l.toUpperCase()}">
                         <div class="letra-circulo">${l.toUpperCase()}</div>
@@ -185,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         html += `</div>`;
         document.getElementById("conteudo").innerHTML = html;
 
+        // Clique nas alternativas
         document.querySelectorAll(".alt").forEach(el => {
             el.addEventListener("click", () => {
                 if (respondeu) return;
@@ -207,55 +214,46 @@ document.addEventListener("DOMContentLoaded", () => {
             timerEl.textContent = `${tempoRestante}s`;
             if (tempoRestante <= 0) {
                 clearInterval(timerInterval);
-                if (!respondeu) autoResponder();
+                if (!respondeu) responder();
             }
         }, 1000);
     }
 
-    function aplicarFeedbackVisual() {
-        const respostaCorreta = String(questao.correct_answer || "").toUpperCase().trim();
-        const itens = document.querySelectorAll(".alt");
-        itens.forEach(item => {
-            const letra = item.dataset.l;
-            if (letra === respostaCorreta) item.classList.add("ok");
-            else if (letra === marcada && marcada !== respostaCorreta) item.classList.add("err");
-        });
-    }
-
-    document.getElementById("btn").addEventListener("click", async () => {
-        if (!respondeu && !marcada) return alert("Selecione uma opção.");
+    async function responder() {
+        if (!marcada && !respondeu) return alert("Selecione uma opção.");
         
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
                 mostrarQuestao();
             } else {
-                location.reload(); 
+                alert("Fim das questões!");
             }
             return;
         }
 
         respondeu = true;
         clearInterval(timerInterval);
-        aplicarFeedbackVisual();
 
-        const respostaCorreta = String(questao.correct_answer || "").toUpperCase().trim();
-        const acertou = marcada === respostaCorreta;
+        const correta = String(questao.correct_answer).toUpperCase().trim();
+        const acertou = marcada === correta;
+
+        // Feedback Visual
+        document.querySelectorAll(".alt").forEach(el => {
+            if (el.dataset.l === correta) el.classList.add("ok");
+            if (el.dataset.l === marcada && !acertou) el.classList.add("err");
+        });
 
         if (acertou) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 
-        // Registra revisão se a função existir no js/supabase.js
-        if (window.registrarRevisao) {
-            await window.registrarRevisao(questao.id, acertou);
-        }
-
-        document.getElementById("btn").innerText = "Próxima Questão";
-        
-        if (questao.explanation) {
+        // Explicação
+        if (questao.explanation && questao.explanation !== "null") {
             document.getElementById("explicacao-texto").innerHTML = questao.explanation;
             document.getElementById("explicacao-box").classList.remove("hidden");
         }
-    });
+
+        document.getElementById("btn").innerText = "Próxima Questão";
+    }
 
     function atualizarProgresso() {
         const percent = ((indexAtual + 1) / questoes.length) * 100;
@@ -263,19 +261,9 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("progresso").textContent = indexAtual + 1;
     }
 
-    function autoResponder() {
-        respondeu = true;
-        aplicarFeedbackVisual();
-        document.getElementById("btn").innerText = "Próxima Questão";
-    }
-
-    // Botões Auxiliares
-    document.getElementById("next").addEventListener("click", () => {
-        if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); }
-    });
-    document.getElementById("prev").addEventListener("click", () => {
-        if (indexAtual > 0) { indexAtual--; mostrarQuestao(); }
-    });
+    document.getElementById("btn").onclick = responder;
+    document.getElementById("next").onclick = () => { if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); } };
+    document.getElementById("prev").onclick = () => { if (indexAtual > 0) { indexAtual--; mostrarQuestao(); } };
 });
 </script>
 </body>
