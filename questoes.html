@@ -27,7 +27,7 @@ body { margin-left: 16rem; }
 
 <div class="bg-white p-6 rounded-xl">
 
-<h2 id="tema" class="font-bold mb-4">Carregando...</h2>
+<h2 id="tema">Carregando...</h2>
 <div id="conteudo"></div>
 
 <div class="flex gap-2 mt-6">
@@ -38,21 +38,15 @@ body { margin-left: 16rem; }
 
 </div>
 
-<!-- COMENTÁRIOS -->
 <div id="comentarios-box" class="hidden mt-6 bg-white p-6 rounded-xl">
+<h3>💬 Comentários</h3>
 
-<h3 class="font-bold mb-4">💬 Comentários</h3>
+<div id="lista-comentarios" class="my-4"></div>
 
-<div id="comentario-professor"></div>
-
-<div id="lista-comentarios" class="space-y-4 my-4"></div>
-
-<div class="flex flex-col gap-2">
-<input id="novo-comentario" class="border p-3 rounded" placeholder="Escreva um comentário...">
-<button id="btn-comentar" class="bg-blue-600 text-white py-2 rounded">
-Postar comentário
+<input id="novo-comentario" class="border p-2 w-full mb-2" placeholder="Comentar...">
+<button id="btn-comentar" class="bg-blue-600 text-white px-4 py-2 rounded">
+Postar
 </button>
-</div>
 
 </div>
 
@@ -61,19 +55,27 @@ Postar comentário
 <script src="js/supabase.js"></script>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+
 let questoes = [];
 let indexAtual = 0;
 let questao = null;
 let marcada = null;
 let respondeu = false;
 
-// =============================
+// =========================
 function getAlt(q, l) {
     return q["op_" + l] || q["opcao_" + l] || q["alternativa_" + l] || "Sem alternativa";
 }
 
-// =============================
+// =========================
 async function carregar() {
+
+    if (!window.supabaseClient) {
+        alert("Supabase não carregou");
+        return;
+    }
+
     const { data, error } = await supabaseClient.from("questoes").select("*");
 
     if (error) {
@@ -83,11 +85,18 @@ async function carregar() {
     }
 
     questoes = data;
+
+    if (!questoes.length) {
+        document.getElementById("conteudo").innerHTML = "Sem questões";
+        return;
+    }
+
     mostrarQuestao();
 }
 
-// =============================
+// =========================
 function mostrarQuestao() {
+
     respondeu = false;
     marcada = null;
 
@@ -95,33 +104,37 @@ function mostrarQuestao() {
 
     document.getElementById("tema").textContent = questao.tema;
 
-    let html = `<p class="mb-4">${questao.enunciado}</p>`;
+    let html = `<p>${questao.enunciado}</p>`;
 
     ["a","b","c","d"].forEach(l => {
         html += `
-        <div class="alt" onclick="selecionar(this,'${l}')">
+        <div class="alt" data-letra="${l}">
             <b>${l})</b> ${getAlt(questao, l)}
         </div>`;
     });
 
     document.getElementById("conteudo").innerHTML = html;
 
+    document.querySelectorAll(".alt").forEach(el => {
+        el.onclick = () => selecionar(el);
+    });
+
     document.getElementById("comentarios-box").classList.add("hidden");
     document.getElementById("btn").textContent = "Responder";
 }
 
-// =============================
-function selecionar(el, l) {
+// =========================
+function selecionar(el) {
     if (respondeu) return;
 
     document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
     el.classList.add("sel");
 
-    marcada = l;
+    marcada = el.dataset.letra;
 }
 
-// =============================
-document.getElementById("btn").onclick = async () => {
+// =========================
+document.getElementById("btn").onclick = () => {
 
     if (!marcada) {
         alert("Selecione uma alternativa");
@@ -141,7 +154,7 @@ document.getElementById("btn").onclick = async () => {
     const mapa = {a:0,b:1,c:2,d:3};
     const itens = document.querySelectorAll(".alt");
 
-    if (itens[mapa[correta]]) itens[mapa[correta]].classList.add("ok");
+    if (itens[mapa[correta]]) itens[mapa[correta].classList.add("ok");
 
     if (marcada !== correta && itens[mapa[marcada]]) {
         itens[mapa[marcada]].classList.add("err");
@@ -153,7 +166,7 @@ document.getElementById("btn").onclick = async () => {
     carregarComentarios();
 };
 
-// =============================
+// =========================
 document.getElementById("next").onclick = () => {
     if (indexAtual < questoes.length - 1) {
         indexAtual++;
@@ -168,78 +181,42 @@ document.getElementById("prev").onclick = () => {
     }
 };
 
-// =============================
-// COMENTÁRIOS
-// =============================
+// =========================
 async function carregarComentarios() {
-
-    const prof = document.getElementById("comentario-professor");
-
-    if (questao.comentario_professor) {
-        prof.innerHTML = `
-        <div class="bg-yellow-50 border p-3 rounded">
-            <b>👨‍⚕️ Professor:</b> ${questao.comentario_professor}
-        </div>`;
-    } else {
-        prof.innerHTML = "";
-    }
 
     const { data } = await supabaseClient
         .from("comentarios")
         .select("*")
-        .eq("questao_id", questao.id)
-        .order("created_at", { ascending: false });
+        .eq("questao_id", questao.id);
 
     const lista = document.getElementById("lista-comentarios");
     lista.innerHTML = "";
 
     data?.forEach(c => {
-        lista.innerHTML += `
-        <div class="border p-3 rounded">
-            <div class="text-xs text-gray-400 mb-1">
-                👤 ${c.user_id || "Anônimo"} • ${new Date(c.created_at).toLocaleString()}
-            </div>
-            <p>${c.texto}</p>
-        </div>`;
+        lista.innerHTML += `<div>${c.texto}</div>`;
     });
 }
 
-// =============================
-// BOTÃO COMENTAR (FIX REAL)
-// =============================
-document.getElementById("btn-comentar").addEventListener("click", async () => {
+// =========================
+document.getElementById("btn-comentar").onclick = async () => {
 
-    try {
-        const input = document.getElementById("novo-comentario");
-        const texto = input.value.trim();
+    const texto = document.getElementById("novo-comentario").value;
 
-        if (!texto) {
-            alert("Digite um comentário");
-            return;
-        }
+    if (!texto) return;
 
-        const { error } = await supabaseClient
-            .from("comentarios")
-            .insert([{
-                questao_id: questao.id,
-                texto: texto,
-                user_id: "Usuário"
-            }]);
+    await supabaseClient.from("comentarios").insert([{
+        questao_id: questao.id,
+        texto: texto
+    }]);
 
-        if (error) throw error;
+    document.getElementById("novo-comentario").value = "";
 
-        input.value = "";
-
-        carregarComentarios();
-
-    } catch (e) {
-        console.error("Erro ao comentar:", e.message);
-        alert("Erro ao postar comentário");
-    }
-
-});
+    carregarComentarios();
+};
 
 carregar();
+
+});
 </script>
 
 </body>
