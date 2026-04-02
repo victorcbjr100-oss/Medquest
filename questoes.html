@@ -3,198 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Questões - MedQuest Pro</title>
-    
+    <title>Login - MedQuest Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js" defer></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { display: flex; margin: 0; background: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; color: #1e293b; }
-        
-        main { flex: 1; margin-left: 260px; padding: 2rem; transition: 0.3s; }
-        @media (max-width: 768px) { main { margin-left: 0; padding: 1rem; } }
-
-        .questao-card { background: white; padding: 40px; border-radius: 32px; border: 1px solid #f1f5f9; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.03); }
-        
-        .alternativa { 
-            padding: 18px; border: 2px solid #f1f5f9; border-radius: 20px; margin-bottom: 12px; 
-            cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 14px;
-        }
-        .alternativa:hover { border-color: #3b82f6; background: #eff6ff; transform: translateX(4px); }
-        .selecionada { border-color: #3b82f6; background: #eff6ff; ring: 1px inset #3b82f6; }
-        
-        /* Cores de Feedback */
-        .correta { border-color: #10b981 !important; background: #ecfdf5 !important; color: #065f46 !important; }
-        .errada { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
-        
-        .progresso-bar { height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; width: 100%; }
-        .progresso-fill { height: 100%; background: #3b82f6; transition: width 0.5s ease; width: 0%; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
-    <main>
-        <div class="max-w-4xl mx-auto">
-            <div class="flex flex-col gap-4 mb-8">
-                <div class="flex justify-between items-center">
-                    <div id="display-tema" class="text-blue-600 font-extrabold uppercase text-[10px] tracking-[0.2em]">CARREGANDO...</div>
-                    <div class="flex items-center gap-4">
-                        <div class="bg-red-50 text-red-500 px-3 py-1 rounded-lg text-xs font-bold border border-red-100 flex items-center gap-2">
-                            <i data-lucide="timer" class="w-3 h-3"></i> <span id="cronometro">00:00</span>
-                        </div>
-                        <div class="text-gray-400 text-[10px] font-bold uppercase">Questão <span id="num-atual">0</span> de <span id="total-questoes">0</span></div>
-                    </div>
-                </div>
-                <div class="progresso-bar"><div id="progresso-status" class="progresso-fill"></div></div>
-            </div>
-
-            <div class="questao-card">
-                <div id="conteudo-questao">
-                    <div class="flex flex-col items-center justify-center py-20">
-                        <div class="animate-spin text-blue-500 mb-4"><i data-lucide="refresh-cw"></i></div>
-                        <p class="text-gray-400 font-bold text-sm tracking-tight">Sincronizando com o banco médico...</p>
-                    </div>
-                </div>
-
-                <div id="painel-comentario" class="hidden mt-8 p-6 bg-slate-50 border border-slate-100 rounded-[24px]">
-                    <div class="flex items-center gap-2 mb-3 text-blue-600">
-                        <i data-lucide="message-square" class="w-4 h-4"></i>
-                        <span class="text-xs font-black uppercase tracking-widest">Comentário do Professor</span>
-                    </div>
-                    <p id="texto-comentario" class="text-sm text-slate-600 leading-relaxed"></p>
-                </div>
-
-                <div id="area-botoes" class="hidden mt-10 pt-8 border-t border-gray-100 flex justify-between items-center">
-                    <button onclick="window.location.href='temas.html'" class="text-gray-400 hover:text-gray-600 text-[10px] font-bold uppercase tracking-widest transition">Desistir</button>
-                    
-                    <div class="flex gap-3">
-                        <button id="btn-conferir" onclick="conferirResposta()" class="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-700 transition shadow-xl shadow-blue-100 active:scale-95">Responder</button>
-                        <button id="btn-proxima" onclick="proxima()" class="hidden bg-gray-900 text-white px-10 py-4 rounded-2xl font-bold hover:bg-black transition flex items-center gap-2">Próxima Questão <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
-                    </div>
-                </div>
-            </div>
+    <div class="max-w-md w-full bg-white p-8 rounded-[32px] shadow-2xl border border-slate-100 text-center">
+        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <i data-lucide="graduation-cap" class="text-white w-8 h-8"></i>
         </div>
-    </main>
+        
+        <h2 class="text-3xl font-black text-slate-800 mb-2">MedQuest <span class="text-blue-600">Pro</span></h2>
+        <p class="text-slate-400 font-medium mb-10">Acesse sua plataforma de estudos</p>
+
+        <button id="btn-google" onclick="loginGoogle()" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-100 py-4 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-all mb-8">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa/google.svg" class="w-5 h-5">
+            Entrar com Google
+        </button>
+
+        <div class="space-y-4 text-left">
+            <input type="email" id="email" placeholder="E-mail" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:border-blue-500 text-sm">
+            <input type="password" id="senha" placeholder="Senha" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:border-blue-500 text-sm">
+            <button onclick="loginEmail()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black shadow-lg">Acessar Plataforma</button>
+        </div>
+    </div>
 
     <script>
-        let questoes = [];
-        let index = 0;
-        let respondida = false;
-        let tempoSegundos = 0;
-
-        // Inicia o cronômetro
-        setInterval(() => {
-            tempoSegundos++;
-            const min = Math.floor(tempoSegundos / 60).toString().padStart(2, '0');
-            const seg = (tempoSegundos % 60).toString().padStart(2, '0');
-            document.getElementById('cronometro').innerText = `${min}:${seg}`;
-        }, 1000);
-
-        async function buscarQuestoes() {
-            const urlParams = new URLSearchParams(window.location.search);
-            let tema = urlParams.get('tema') || 'Hipertensão';
-            if (tema.toUpperCase() === 'HAS') tema = 'Hipertensão';
+        async function loginGoogle() {
+            const btn = document.getElementById('btn-google');
+            btn.innerText = "Conectando...";
             
-            document.getElementById('display-tema').innerText = tema;
-
-            try {
-                const { data, error } = await window.supabaseClient
-                    .from('questoes')
-                    .select('*')
-                    .ilike('specialty', `%${tema}%`);
-
-                if (error) throw error;
-                if (!data || data.length === 0) {
-                    document.getElementById('conteudo-questao').innerHTML = `<div class="text-center py-10"><p class="text-gray-500">Sem questões para o tema <b>${tema}</b>.</p></div>`;
-                    return;
-                }
-
-                questoes = data;
-                document.getElementById('total-questoes').innerText = questoes.length;
-                document.getElementById('area-botoes').classList.remove('hidden');
-                mostrar();
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        function mostrar() {
-            respondida = false;
-            const q = questoes[index];
-            
-            // UI Update
-            document.getElementById('num-atual').innerText = index + 1;
-            document.getElementById('progresso-status').style.width = `${((index + 1) / questoes.length) * 100}%`;
-            document.getElementById('btn-conferir').classList.remove('hidden');
-            document.getElementById('btn-proxima').classList.add('hidden');
-            document.getElementById('painel-comentario').classList.add('hidden');
-
-            let html = `<h2 class="text-2xl font-bold text-slate-800 mb-8 leading-snug">${q.title}</h2><div class="space-y-3">`;
-            
-            ['a', 'b', 'c', 'd', 'e'].forEach(l => {
-                if (q[`option_${l}`]) {
-                    html += `
-                        <div class="alternativa" id="opt-${l}" onclick="selecionar('${l}')">
-                            <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-[11px] font-black border border-slate-100 letra-badge">${l.toUpperCase()}</div>
-                            <span class="text-[15px] font-medium">${q[`option_${l}`]}</span>
-                        </div>`;
+            const { error } = await window.supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: { 
+                    // ATENÇÃO: Esta URL deve estar EXATAMENTE IGUAL no Google Cloud Console
+                    redirectTo: 'https://victorcbjr100-oss.github.io/Medquest/index.html'
                 }
             });
-
-            document.getElementById('conteudo-questao').innerHTML = html + `</div>`;
-            lucide.createIcons();
-        }
-
-        function selecionar(letra) {
-            if (respondida) return;
-            document.querySelectorAll('.alternativa').forEach(el => el.classList.remove('selecionada'));
-            document.getElementById(`opt-${letra}`).classList.add('selecionada');
-        }
-
-        function conferirResposta() {
-            const sel = document.querySelector('.alternativa.selecionada');
-            if (!sel) return;
-
-            respondida = true;
-            const correta = questoes[index].correct_answer.toLowerCase();
-            const escolhida = sel.id.split('-');
-
-            // Marcar Correta/Errada
-            document.getElementById(`opt-${correta}`).classList.add('correta');
-            if (escolhida !== correta) document.getElementById(`opt-${escolhida}`).classList.add('errada');
-
-            // Mostrar Comentário/Explicação
-            const comentario = questoes[index].explanation;
-            if (comentario) {
-                document.getElementById('texto-comentario').innerText = comentario;
-                document.getElementById('painel-comentario').classList.remove('hidden');
-            }
-
-            document.getElementById('btn-conferir').classList.add('hidden');
-            document.getElementById('btn-proxima').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function proxima() {
-            if (index < questoes.length - 1) {
-                index++;
-                mostrar();
-            } else {
-                alert("Você completou este bloco de questões!");
-                window.location.href = "index.html";
+            if (error) {
+                alert("Erro: " + error.message);
+                btn.innerHTML = `<img src="..." class="w-5 h-5"> Entrar com Google`;
             }
         }
 
-        async function iniciarApp() {
-            const pronto = await inicializarSupabase();
-            if (pronto) { buscarQuestoes(); } 
-            else { setTimeout(iniciarApp, 500); }
+        async function loginEmail() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('senha').value;
+            const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) alert(error.message);
+            else window.location.href = 'index.html';
         }
 
-        window.onload = iniciarApp;
+        window.onload = () => lucide.createIcons();
     </script>
 </body>
 </html>
