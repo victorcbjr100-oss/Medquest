@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/supabase.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="sidebar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -53,14 +53,6 @@
         .dificuldade-media { color: #eab308; }
         .dificuldade-dificil { color: #ef4444; }
 
-        .reply-box {
-            margin-top: 12px;
-            padding: 14px 16px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            animation: fadeIn 0.3s ease;
-        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -73,11 +65,11 @@
     <div class="bg-white rounded-3xl shadow border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
-                <h2 id="tema" class="text-sm font-bold uppercase tracking-widest text-blue-600">Carregando...</h2>
+                <h2 id="tema" class="text-sm font-bold uppercase tracking-widest text-blue-600">Conectando...</h2>
                 <span id="dificuldade" class="text-xs font-medium px-3 py-1 rounded-full"></span>
             </div>
             <div class="flex items-center gap-6">
-                <div id="timer" class="timer text-red-500">30s</div>
+                <div id="timer" class="timer text-red-500">45s</div>
                 <div class="text-sm font-medium text-gray-500">
                     Questão <span id="progresso" class="font-semibold text-gray-700">1</span> de <span id="total" class="font-semibold text-gray-700">0</span>
                 </div>
@@ -89,10 +81,14 @@
     </div>
 
     <div class="bg-white p-9 rounded-3xl shadow border border-gray-100">
-        <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12"></div>
+        <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12">
+            <div class="flex flex-col items-center justify-center py-10 gap-4">
+                <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-gray-500">Sincronizando com o banco de dados...</p>
+            </div>
+        </div>
         <div class="flex gap-4">
             <button id="prev" class="px-7 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-semibold transition">Anterior</button>
-            <button id="pular" class="px-7 py-4 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-2xl font-semibold transition">Pular</button>
             <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition active:scale-95">Responder</button>
             <button id="next" class="px-7 py-4 bg-gray-800 hover:bg-black text-white rounded-2xl font-semibold transition">Próxima</button>
         </div>
@@ -104,33 +100,34 @@
     </div>
 </div>
 
-<script src="js/supabase.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Pegando as credenciais do seu arquivo de configuração centralizado se disponível
-    const client = typeof supabaseClient !== 'undefined' ? supabaseClient : null;
-
     let questoes = [];
     let indexAtual = 0;
     let questao = null;
     let marcada = null;
     let respondeu = false;
     let timerInterval = null;
-    let tempoRestante = 30;
-    let respostasUsuario = [];
+    let tempoRestante = 45;
 
-    // Função ajustada para o novo formato das colunas do CSV (option_a, option_b...)
+    // 1. AGUARDAR O SUPABASE CLIENT ESTAR PRONTO (Sincronização)
+    const aguardarConexao = setInterval(() => {
+        if (window.supabaseClient) {
+            clearInterval(aguardarConexao);
+            carregar();
+        }
+    }, 100);
+
     function getAlt(q, l) {
-        return q[`option_${l}`] || "";
+        return q[`option_${l.toLowerCase()}`] || "";
     }
 
     async function carregar() {
         try {
-            // Verifica se um tema foi passado pela URL (ex: questoes.html?tema=dermatologia)
             const urlParams = new URLSearchParams(window.location.search);
             const temaFiltro = urlParams.get('tema');
 
-            let query = supabaseClient.from("questoes").select("*");
+            let query = window.supabaseClient.from("questoes").select("*");
             
             if (temaFiltro) {
                 query = query.eq('specialty', temaFiltro);
@@ -148,8 +145,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("conteudo").innerHTML = "<p class='text-center py-10'>Nenhuma questão encontrada para este tema.</p>";
             }
         } catch (e) {
-            console.error(e);
-            alert("Erro ao carregar banco de dados.");
+            console.error("Erro no carregamento:", e);
+            document.getElementById("conteudo").innerHTML = "<p class='text-center text-red-500 py-10'>Falha na conexão com o banco.</p>";
         }
     }
 
@@ -161,11 +158,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("btn").innerText = "Responder";
         document.getElementById("btn").disabled = false;
-        
-        // Sincronizado com a coluna 'specialty'
         document.getElementById("tema").innerText = questao.specialty || "Geral";
         document.getElementById("explicacao-box").classList.add("hidden");
 
+        // Dificuldade
         const diffEl = document.getElementById("dificuldade");
         if (questao.difficulty) {
             const d = questao.difficulty.toLowerCase();
@@ -174,13 +170,11 @@ document.addEventListener("DOMContentLoaded", () => {
             diffEl.classList.remove("hidden");
         }
 
-        // Sincronizado com a coluna 'title' (enunciado)
+        // Título e Alternativas (Mapeado do CSV)
         let html = `<p class="mb-10 font-medium text-xl text-gray-900">${questao.title || "Sem título"}</p><div class="space-y-5">`;
-        
-        // Suporta de A até E conforme seu CSV
         ["a", "b", "c", "d", "e"].forEach(l => {
             const texto = getAlt(questao, l);
-            if (texto && texto !== "null") {
+            if (texto && texto !== "null" && texto !== "") {
                 html += `
                     <div class="alt" data-l="${l.toUpperCase()}">
                         <div class="letra-circulo">${l.toUpperCase()}</div>
@@ -196,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (respondeu) return;
                 document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
                 el.classList.add("sel");
-                marcada = el.dataset.l; // Agora pega em Maiúsculo para bater com o CSV (A, B, C...)
+                marcada = el.dataset.l;
             });
         });
 
@@ -206,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function iniciarTimer() {
         clearInterval(timerInterval);
-        tempoRestante = 45; // Aumentado para questões médicas
+        tempoRestante = 45;
         const timerEl = document.getElementById("timer");
         timerInterval = setInterval(() => {
             tempoRestante--;
@@ -219,21 +213,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function aplicarFeedbackVisual() {
-        // Seu CSV usa letras MAIÚSCULAS na coluna 'correct_answer'
         const respostaCorreta = String(questao.correct_answer || "").toUpperCase().trim();
         const itens = document.querySelectorAll(".alt");
-
         itens.forEach(item => {
             const letra = item.dataset.l;
-            if (letra === respostaCorreta) {
-                item.classList.add("ok");
-            } else if (letra === marcada && marcada !== respostaCorreta) {
-                item.classList.add("err");
-            }
+            if (letra === respostaCorreta) item.classList.add("ok");
+            else if (letra === marcada && marcada !== respostaCorreta) item.classList.add("err");
         });
     }
 
-    document.getElementById("btn").addEventListener("click", () => {
+    document.getElementById("btn").addEventListener("click", async () => {
         if (!respondeu && !marcada) return alert("Selecione uma opção.");
         
         if (respondeu) {
@@ -241,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 indexAtual++;
                 mostrarQuestao();
             } else {
-                mostrarResumoFinal();
+                location.reload(); 
             }
             return;
         }
@@ -251,8 +240,13 @@ document.addEventListener("DOMContentLoaded", () => {
         aplicarFeedbackVisual();
 
         const respostaCorreta = String(questao.correct_answer || "").toUpperCase().trim();
-        if (marcada === respostaCorreta) {
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        const acertou = marcada === respostaCorreta;
+
+        if (acertou) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+
+        // Registra revisão se a função existir no js/supabase.js
+        if (window.registrarRevisao) {
+            await window.registrarRevisao(questao.id, acertou);
         }
 
         document.getElementById("btn").innerText = "Próxima Questão";
@@ -269,7 +263,19 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("progresso").textContent = indexAtual + 1;
     }
 
-    carregar();
+    function autoResponder() {
+        respondeu = true;
+        aplicarFeedbackVisual();
+        document.getElementById("btn").innerText = "Próxima Questão";
+    }
+
+    // Botões Auxiliares
+    document.getElementById("next").addEventListener("click", () => {
+        if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); }
+    });
+    document.getElementById("prev").addEventListener("click", () => {
+        if (indexAtual > 0) { indexAtual--; mostrarQuestao(); }
+    });
 });
 </script>
 </body>
