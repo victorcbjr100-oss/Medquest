@@ -63,38 +63,23 @@ let questao = null;
 let marcada = null;
 let respondeu = false;
 
-// =========================
 function getAlt(q, l) {
     return q["op_" + l] || q["opcao_" + l] || q["alternativa_" + l] || "Sem alternativa";
 }
 
-// =========================
 async function carregar() {
-
-    if (!window.supabaseClient) {
-        alert("Supabase não carregou");
-        return;
-    }
-
     const { data, error } = await supabaseClient.from("questoes").select("*");
 
     if (error) {
         console.error(error);
-        alert("Erro ao carregar questões");
+        document.getElementById("conteudo").innerHTML = "Erro ao carregar";
         return;
     }
 
     questoes = data;
-
-    if (!questoes.length) {
-        document.getElementById("conteudo").innerHTML = "Sem questões";
-        return;
-    }
-
     mostrarQuestao();
 }
 
-// =========================
 function mostrarQuestao() {
 
     respondeu = false;
@@ -123,7 +108,6 @@ function mostrarQuestao() {
     document.getElementById("btn").textContent = "Responder";
 }
 
-// =========================
 function selecionar(el) {
     if (respondeu) return;
 
@@ -133,7 +117,6 @@ function selecionar(el) {
     marcada = el.dataset.letra;
 }
 
-// =========================
 document.getElementById("btn").onclick = () => {
 
     if (!marcada) {
@@ -154,7 +137,10 @@ document.getElementById("btn").onclick = () => {
     const mapa = {a:0,b:1,c:2,d:3};
     const itens = document.querySelectorAll(".alt");
 
-    if (itens[mapa[correta]]) itens[mapa[correta].classList.add("ok");
+    // ✅ CORREÇÃO AQUI
+    if (itens[mapa[correta]]) {
+        itens[mapa[correta]].classList.add("ok");
+    }
 
     if (marcada !== correta && itens[mapa[marcada]]) {
         itens[mapa[marcada]].classList.add("err");
@@ -166,7 +152,6 @@ document.getElementById("btn").onclick = () => {
     carregarComentarios();
 };
 
-// =========================
 document.getElementById("next").onclick = () => {
     if (indexAtual < questoes.length - 1) {
         indexAtual++;
@@ -181,7 +166,6 @@ document.getElementById("prev").onclick = () => {
     }
 };
 
-// =========================
 async function carregarComentarios() {
 
     const { data } = await supabaseClient
@@ -197,7 +181,6 @@ async function carregarComentarios() {
     });
 }
 
-// =========================
 document.getElementById("btn-comentar").onclick = async () => {
 
     const texto = document.getElementById("novo-comentario").value;
