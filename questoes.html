@@ -10,30 +10,62 @@
     <style>
         body { margin-left: 16rem; transition: margin 0.3s; }
         @media (max-width: 768px) { body { margin-left: 0; } }
-        
-        .alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; transition: all 0.2s; display: flex; align-items: center; background: white; }
-        .alt:hover:not(.ok):not(.err) { border-color: #3b82f6; background: #f8fafc; }
-        
-        .sel { background:#eff6ff; border-color:#3b82f6; box-shadow: 0 0 0 2px #3b82f6; }
-        
-        /* CORES FORTES PARA FEEDBACK */
-        .ok { background:#d1fae5 !important; border-color:#10b981 !important; color: #064e3b !important; font-weight: 600; }
-        .err { background:#fee2e2 !important; border-color:#ef4444 !important; color: #7f1d1d !important; }
-
-        .letra-circulo { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0; transition: 0.2s; }
+       
+        .alt { 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid #e5e7eb; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            display: flex; 
+            align-items: center; 
+            background: white; 
+        }
+        .alt:hover:not(.ok):not(.err) { 
+            border-color: #3b82f6; 
+            background: #f8fafc; 
+        }
+       
+        .sel { 
+            background: #eff6ff; 
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 2px #3b82f6; 
+        }
+       
+        .ok { 
+            background: #d1fae5 !important; 
+            border-color: #10b981 !important; 
+            color: #064e3b !important; 
+            font-weight: 600; 
+        }
+        .err { 
+            background: #fee2e2 !important; 
+            border-color: #ef4444 !important; 
+            color: #7f1d1d !important; 
+        }
+        .letra-circulo { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            background: #f3f4f6; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-right: 12px; 
+            font-weight: bold; 
+            flex-shrink: 0; 
+            transition: 0.2s; 
+        }
         .ok .letra-circulo { background: #10b981; color: white; }
         .err .letra-circulo { background: #ef4444; color: white; }
     </style>
 </head>
-
 <body class="bg-gray-50 p-6 font-sans">
-
     <div class="max-w-3xl mx-auto space-y-6">
-
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
             <h2 id="tema" class="text-xs font-bold uppercase tracking-widest mb-2 text-blue-600">Carregando...</h2>
             <div id="conteudo" class="text-gray-800 text-lg leading-relaxed mb-8"></div>
-
+            
             <div class="flex gap-3">
                 <button id="prev" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition">Anterior</button>
                 <button id="btn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition active:scale-95">Responder</button>
@@ -44,7 +76,7 @@
         <div id="comentarios-box" class="hidden space-y-6">
             <h3 class="font-bold text-xl text-gray-800 border-b pb-4">💬 Discussão Clínica</h3>
             <div id="lista-comentarios" class="space-y-4"></div>
-
+            
             <div class="bg-white p-4 rounded-2xl border shadow-sm">
                 <textarea id="novo-comentario" class="w-full border-none focus:ring-0 outline-none resize-none text-gray-700" rows="3" placeholder="Escreva seu comentário..."></textarea>
                 <div class="flex justify-end pt-2 border-t mt-2">
@@ -52,12 +84,10 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
-
     <script>
     document.addEventListener("DOMContentLoaded", () => {
         let questoes = [];
@@ -67,38 +97,51 @@
         let respondeu = false;
 
         function getAlt(q, l) {
-            return q["op_" + l] || q["opcao_" + l] || q["alternativa_" + l];
+            return q["op_" + l] || q["opcao_" + l] || q["alternativa_" + l] || "";
         }
 
         async function carregar() {
             try {
                 const { data, error } = await supabaseClient.from("questoes").select("*");
                 if (error) throw error;
-                questoes = data;
-                mostrarQuestao();
-            } catch (e) { console.error("Erro ao carregar banco:", e); }
+                questoes = data || [];
+                if (questoes.length > 0) mostrarQuestao();
+            } catch (e) {
+                console.error("Erro ao carregar questões:", e);
+                alert("Erro ao carregar as questões do banco.");
+            }
         }
 
         function mostrarQuestao() {
             if (!questoes[indexAtual]) return;
+
             questao = questoes[indexAtual];
-            marcada = null; 
+            marcada = null;
             respondeu = false;
 
             document.getElementById("btn").innerText = "Responder";
+            document.getElementById("btn").disabled = false;
             document.getElementById("tema").innerText = questao.tema || "Geral";
             document.getElementById("comentarios-box").classList.add("hidden");
 
-            let html = `<p class="mb-6 font-medium">${questao.enunciado}</p><div class="space-y-3">`;
+            let html = `<p class="mb-6 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p>
+                        <div class="space-y-3">`;
+
             ["a", "b", "c", "d"].forEach(l => {
-                html += `<div class="alt" data-l="${l}">
-                    <div class="letra-circulo">${l.toUpperCase()}</div>
-                    <span>${getAlt(questao, l)}</span>
-                </div>`;
+                const texto = getAlt(questao, l);
+                if (texto) {
+                    html += `
+                        <div class="alt" data-l="${l}">
+                            <div class="letra-circulo">${l.toUpperCase()}</div>
+                            <span>${texto}</span>
+                        </div>`;
+                }
             });
             html += `</div>`;
+
             document.getElementById("conteudo").innerHTML = html;
 
+            // Clique nas alternativas
             document.querySelectorAll(".alt").forEach(el => {
                 el.onclick = () => {
                     if (respondeu) return;
@@ -109,89 +152,121 @@
             });
         }
 
+        // === BOTÃO RESPONDER / PRÓXIMA ===
         document.getElementById("btn").onclick = async () => {
-            if (!marcada) return alert("Escolha uma alternativa");
-            
-            if (respondeu) {
-                indexAtual++;
-                if (indexAtual < questoes.length) mostrarQuestao();
-                else alert("Fim das questões!");
+            if (!marcada) {
+                alert("Escolha uma alternativa antes de responder.");
                 return;
             }
 
-            respondeu = true;
-            
-            // Tratamento preventivo da string da resposta
-            const correta = String(questao.resposta_correta).toLowerCase().trim();
-            const acertou = (marcada === correta);
+            if (respondeu) {
+                // Avança para próxima
+                indexAtual++;
+                if (indexAtual < questoes.length) {
+                    mostrarQuestao();
+                } else {
+                    alert("Você chegou ao final das questões!");
+                    indexAtual = questoes.length - 1;
+                }
+                return;
+            }
 
-            // FEEDBACK VISUAL (Isso roda antes de qualquer chamada ao banco para não bugar a tela)
+            // Primeira vez respondendo
+            respondeu = true;
+            document.getElementById("btn").disabled = true;
+
+            const respostaCorreta = String(questao.resposta_correta || "").toLowerCase().trim();
+            const acertou = (marcada === respostaCorreta);
+
+            // Feedback visual
             const mapa = { a: 0, b: 1, c: 2, d: 3 };
             const itens = document.querySelectorAll(".alt");
-            
-            itens[mapa[correta]]?.classList.add("ok");
-            if (!acertou) {
+
+            if (mapa[respostaCorreta] !== undefined) {
+                itens[mapa[respostaCorreta]]?.classList.add("ok");
+            }
+            if (!acertou && mapa[marcada] !== undefined) {
                 itens[mapa[marcada]]?.classList.add("err");
             }
 
             document.getElementById("btn").innerText = "Próxima Questão";
+            document.getElementById("btn").disabled = false;
             document.getElementById("comentarios-box").classList.remove("hidden");
-            
-            // Gravação no banco (em segundo plano para não travar a UI)
+
+            // Gravação em segundo plano
             try {
                 if (typeof registrarRevisao === "function") {
                     await registrarRevisao(questao.id, acertou);
                 }
                 await carregarComentarios();
-            } catch (e) { console.error("Erro pós-resposta:", e); }
+            } catch (e) {
+                console.error("Erro ao registrar revisão ou carregar comentários:", e);
+            }
         };
 
-        // --- SISTEMA DE COMENTÁRIOS ---
+        // === COMENTÁRIOS ===
         async function carregarComentarios() {
-            const { data, error } = await supabaseClient.from("comentarios")
-                .select("*").eq("questao_id", questao.id).order("created_at", { ascending: false });
+            if (!questao?.id) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from("comentarios")
+                    .select("*")
+                    .eq("questao_id", questao.id)
+                    .order("created_at", { ascending: false });
 
-            const lista = document.getElementById("lista-comentarios");
-            lista.innerHTML = "";
+                if (error) throw error;
 
-            if (!data || data.length === 0) {
-                lista.innerHTML = "<p class='text-gray-400 text-sm italic py-4 text-center'>Nenhum comentário clínico enviado.</p>";
-                return;
+                const lista = document.getElementById("lista-comentarios");
+                lista.innerHTML = "";
+
+                if (!data || data.length === 0) {
+                    lista.innerHTML = `<p class="text-gray-400 text-sm italic py-4 text-center">Nenhum comentário clínico enviado ainda.</p>`;
+                    return;
+                }
+
+                const comentariosPrincipais = data.filter(c => !c.parent_id);
+
+                comentariosPrincipais.forEach(c => {
+                    const respostas = data.filter(r => r.parent_id === c.id);
+
+                    lista.innerHTML += `
+                        <div class="bg-white p-5 rounded-2xl border shadow-sm border-gray-100">
+                            <div class="flex justify-between mb-2">
+                                <b class="text-blue-600 text-sm">${c.usuario_nome || 'Anônimo'}</b>
+                                <span class="text-[10px] text-gray-400 font-medium">${new Date(c.created_at).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <p class="text-gray-700 text-sm leading-relaxed">${c.texto}</p>
+                            <div class="flex gap-4 mt-3">
+                                <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition flex items-center gap-1">
+                                    👍 ${c.likes || 0}
+                                </button>
+                                <button onclick="responderComentario('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase tracking-tight">
+                                    Responder
+                                </button>
+                            </div>
+                            <div class="ml-6 mt-3 space-y-3 border-l-2 border-blue-50 pl-4">
+                                ${respostas.map(r => `
+                                    <div class="text-sm">
+                                        <b class="text-[11px] text-gray-500 block">${r.usuario_nome || 'Anônimo'}:</b>
+                                        <span class="text-gray-600">"${r.texto}"</span>
+                                    </div>
+                                `).join("")}
+                            </div>
+                        </div>`;
+                });
+            } catch (e) {
+                console.error("Erro ao carregar comentários:", e);
             }
-
-            data.filter(c => !c.parent_id).forEach(c => {
-                const respostas = data.filter(r => r.parent_id === c.id);
-                lista.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl border shadow-sm border-gray-100">
-                        <div class="flex justify-between mb-2">
-                            <b class="text-blue-600 text-sm">${c.usuario_nome || 'Anônimo'}</b>
-                            <span class="text-[10px] text-gray-400 font-medium">${new Date(c.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <p class="text-gray-700 text-sm leading-relaxed">${c.texto}</p>
-                        <div class="flex gap-4 mt-3">
-                            <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition flex items-center gap-1">👍 ${c.likes || 0}</button>
-                            <button onclick="responderComentario('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase tracking-tight">Responder</button>
-                        </div>
-                        <div class="ml-6 mt-3 space-y-3 border-l-2 border-blue-50 pl-4">
-                            ${respostas.map(r => `
-                                <div class="text-sm">
-                                    <b class="text-[11px] text-gray-500 block">${r.usuario_nome}:</b> 
-                                    <span class="text-gray-600 italic">"${r.texto}"</span>
-                                </div>
-                            `).join("")}
-                        </div>
-                    </div>`;
-            });
         }
 
         document.getElementById("btn-comentar").onclick = async () => {
             const campo = document.getElementById("novo-comentario");
             const texto = campo.value.trim();
-            if (!texto) return;
+            if (!texto || !questao?.id) return;
 
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
-                const nome = user?.email ? user.email.split("@") : "Colega";
+                const nome = user?.email ? user.email.split("@")[0] : "Colega";
 
                 await supabaseClient.from("comentarios").insert([{
                     questao_id: questao.id,
@@ -201,35 +276,59 @@
 
                 campo.value = "";
                 await carregarComentarios();
-            } catch (e) { alert("Erro ao comentar"); }
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao postar comentário.");
+            }
         };
 
         window.like = async (id) => {
-            await supabaseClient.rpc("increment_like", { comment_id: id });
-            await carregarComentarios();
+            try {
+                await supabaseClient.rpc("increment_like", { comment_id: id });
+                await carregarComentarios();
+            } catch (e) {
+                console.error("Erro no like:", e);
+            }
         };
 
         window.responderComentario = async (parent_id) => {
-            const texto = prompt("Sua resposta:");
-            if (!texto) return;
+            const texto = prompt("Digite sua resposta ao comentário:");
+            if (!texto || !questao?.id) return;
 
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const nome = user?.email ? user.email.split("@") : "Colega";
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                const nome = user?.email ? user.email.split("@")[0] : "Colega";
 
-            await supabaseClient.from("comentarios").insert([{
-                questao_id: questao.id,
-                texto: texto,
-                parent_id: parent_id,
-                usuario_nome: nome
-            }]);
+                await supabaseClient.from("comentarios").insert([{
+                    questao_id: questao.id,
+                    texto: texto,
+                    parent_id: parent_id,
+                    usuario_nome: nome
+                }]);
 
-            await carregarComentarios();
+                await carregarComentarios();
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao responder comentário.");
+            }
         };
 
-        // Navegação simples
-        document.getElementById("next").onclick = () => { if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); } };
-        document.getElementById("prev").onclick = () => { if (indexAtual > 0) { indexAtual--; mostrarQuestao(); } };
+        // Navegação
+        document.getElementById("next").onclick = () => {
+            if (indexAtual < questoes.length - 1) {
+                indexAtual++;
+                mostrarQuestao();
+            }
+        };
 
+        document.getElementById("prev").onclick = () => {
+            if (indexAtual > 0) {
+                indexAtual--;
+                mostrarQuestao();
+            }
+        };
+
+        // Inicialização
         carregar();
     });
     </script>
