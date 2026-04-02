@@ -35,16 +35,8 @@
             border-color: #2563eb;
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
         }
-        .ok { 
-            background: #d1fae5 !important; 
-            border-color: #10b981 !important; 
-            color: #052e16 !important; 
-        }
-        .err { 
-            background: #fee2e2 !important; 
-            border-color: #ef4444 !important; 
-            color: #7f1d1d !important; 
-        }
+        .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #052e16 !important; }
+        .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
         .letra-circulo {
             width: 42px; height: 42px;
             border-radius: 50%;
@@ -127,7 +119,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // ==================== CONFIGURAÇÃO SUPABASE ====================
     const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
 
@@ -148,24 +139,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function carregar() {
         try {
-            const { data, error } = await supabaseClient
-                .from("questoes")
-                .select("*")
-                .order("id", { ascending: true });
-
+            const { data, error } = await supabaseClient.from("questoes").select("*").order("id", { ascending: true });
             if (error) throw error;
-
             questoes = data || [];
             document.getElementById("total").textContent = questoes.length;
-
-            if (questoes.length > 0) {
-                mostrarQuestao();
-            } else {
-                document.getElementById("conteudo").innerHTML = `<p class="text-center py-20 text-gray-500">Nenhuma questão encontrada no banco.</p>`;
-            }
+            if (questoes.length > 0) mostrarQuestao();
         } catch (e) {
             console.error("Erro ao carregar questões:", e);
-            alert("Não foi possível carregar as questões. Verifique o console (F12).");
+            alert("Não foi possível carregar as questões.");
         }
     }
 
@@ -208,16 +189,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function aplicarFeedbackVisual() {
         const respostaCorreta = String(questao.resposta_correta || "").toLowerCase().trim();
         const acertou = marcada === respostaCorreta;
-
         const mapa = { a: 0, b: 1, c: 2, d: 3 };
         const itens = document.querySelectorAll(".alt");
 
-        if (mapa[respostaCorreta] !== undefined) {
-            itens[mapa[respostaCorreta]]?.classList.add("ok");
-        }
-        if (!acertou && marcada && mapa[marcada] !== undefined) {
-            itens[mapa[marcada]]?.classList.add("err");
-        }
+        if (mapa[respostaCorreta] !== undefined) itens[mapa[respostaCorreta]]?.classList.add("ok");
+        if (!acertou && marcada && mapa[marcada] !== undefined) itens[mapa[marcada]]?.classList.add("err");
     }
 
     function mostrarExplicacao() {
@@ -229,7 +205,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function mostrarQuestao() {
         if (!questoes[indexAtual]) return;
-
         questao = questoes[indexAtual];
         marcada = null;
         respondeu = false;
@@ -248,26 +223,18 @@ document.addEventListener("DOMContentLoaded", () => {
                              questao.dificuldade.toLowerCase() === 'media' ? 'dificuldade-media' : 'dificuldade-dificil';
             diffEl.innerHTML = `<span class="${diffClass}">${questao.dificuldade}</span>`;
             diffEl.classList.remove("hidden");
-        } else {
-            diffEl.classList.add("hidden");
-        }
+        } else diffEl.classList.add("hidden");
 
         let html = `<p class="mb-10 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p><div class="space-y-5">`;
         ["a", "b", "c", "d"].forEach(l => {
             const texto = getAlt(questao, l);
             if (texto) {
-                html += `
-                    <div class="alt" data-l="${l}">
-                        <div class="letra-circulo">${l.toUpperCase()}</div>
-                        <span>${texto}</span>
-                    </div>`;
+                html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
             }
         });
         html += `</div>`;
-
         document.getElementById("conteudo").innerHTML = html;
 
-        // Clique nas alternativas
         document.querySelectorAll(".alt").forEach(el => {
             el.addEventListener("click", () => {
                 if (respondeu) return;
@@ -281,13 +248,12 @@ document.addEventListener("DOMContentLoaded", () => {
         atualizarProgresso();
     }
 
-    // ==================== BOTÃO RESPONDER ====================
+    // Botão Responder
     document.getElementById("btn").addEventListener("click", async () => {
         if (!respondeu && !marcada) {
             alert("Escolha uma alternativa antes de responder.");
             return;
         }
-
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
@@ -305,35 +271,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const respostaCorreta = String(questao.resposta_correta || "").toLowerCase().trim();
         const acertou = marcada === respostaCorreta;
 
-        if (acertou) {
-            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-        }
+        if (acertou) confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
 
         document.getElementById("btn").innerText = "Próxima Questão";
 
         respostasUsuario.push({ questao_id: questao.id, marcada, acertou });
 
-        if (typeof registrarRevisao === "function") {
-            await registrarRevisao(questao.id, acertou);
-        }
+        if (typeof registrarRevisao === "function") await registrarRevisao(questao.id, acertou);
 
         mostrarExplicacao();
         document.getElementById("comentarios-box").classList.remove("hidden");
         await carregarComentarios();
     });
 
-    // Pular questão
+    // Pular
     document.getElementById("pular").addEventListener("click", () => {
         if (respondeu) return;
-        if (confirm("Deseja realmente pular esta questão? Você não receberá ponto.")) {
+        if (confirm("Deseja realmente pular esta questão?")) {
             clearInterval(timerInterval);
             respostasUsuario.push({ questao_id: questao.id, marcada: null, acertou: false });
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
                 mostrarQuestao();
-            } else {
-                mostrarResumoFinal();
-            }
+            } else mostrarResumoFinal();
         }
     });
 
@@ -348,60 +308,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 <h1 class="text-5xl font-bold text-gray-900 mb-3">Quiz Finalizado!</h1>
                 <p class="text-2xl text-gray-600 mb-12">Aqui está seu desempenho</p>
                 <div class="mx-auto max-w-md bg-white border border-gray-100 shadow-xl rounded-3xl p-12">
-                    <div class="text-[6.5rem] font-black leading-none ${percent >= 80 ? 'text-emerald-600' : percent >= 60 ? 'text-blue-600' : 'text-rose-600'}">
-                        ${percent}%
-                    </div>
+                    <div class="text-[6.5rem] font-black leading-none ${percent >= 80 ? 'text-emerald-600' : percent >= 60 ? 'text-blue-600' : 'text-rose-600'}">${percent}%</div>
                     <p class="text-xl text-gray-500 mt-2">de aproveitamento</p>
                     <div class="mt-10 grid grid-cols-2 gap-8 text-left">
-                        <div>
-                            <div class="text-4xl font-semibold">${acertos}</div>
-                            <div class="text-gray-500">Acertos</div>
-                        </div>
-                        <div>
-                            <div class="text-4xl font-semibold">${total - acertos}</div>
-                            <div class="text-gray-500">Erros</div>
-                        </div>
+                        <div><div class="text-4xl font-semibold">${acertos}</div><div class="text-gray-500">Acertos</div></div>
+                        <div><div class="text-4xl font-semibold">${total - acertos}</div><div class="text-gray-500">Erros</div></div>
                     </div>
                 </div>
                 <div class="mt-12 flex flex-wrap gap-4 justify-center">
-                    <button onclick="reiniciarQuiz()" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-bold text-lg transition">
-                        Reiniciar Quiz Completo
-                    </button>
-                    <button onclick="iniciarRevisao()" 
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-5 rounded-2xl font-bold text-lg transition">
-                        Revisar Apenas os Erros
-                    </button>
+                    <button onclick="reiniciarQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-2xl font-bold text-lg transition">Reiniciar Quiz Completo</button>
+                    <button onclick="iniciarRevisao()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-5 rounded-2xl font-bold text-lg transition">Revisar Apenas os Erros</button>
                 </div>
             </div>`;
-
         document.getElementById("conteudo").innerHTML = html;
         document.getElementById("btn").classList.add("hidden");
         document.getElementById("pular").classList.add("hidden");
-        document.getElementById("explicacao-box").classList.add("hidden");
-        document.getElementById("comentarios-box").classList.add("hidden");
     }
 
     window.reiniciarQuiz = () => location.reload();
-
     window.iniciarRevisao = () => {
-        const indicesErros = respostasUsuario
-            .map((r, idx) => r.acertou ? null : idx)
-            .filter(idx => idx !== null);
-
-        if (indicesErros.length === 0) {
-            alert("Parabéns! Você não errou nenhuma questão.");
-            return;
-        }
-
+        const indicesErros = respostasUsuario.map((r, idx) => r.acertou ? null : idx).filter(idx => idx !== null);
+        if (indicesErros.length === 0) return alert("Parabéns! Você não errou nenhuma questão.");
         questoes = indicesErros.map(i => questoes[i]);
         respostasUsuario = [];
         indexAtual = 0;
         mostrarQuestao();
-        alert(`🔄 Modo Revisão ativado — ${questoes.length} questões para revisar.`);
     };
 
-    // ==================== TECLAS DE ATALHO ====================
+    // Teclas de atalho
     document.addEventListener("keydown", e => {
         if (respondeu) return;
         const key = e.key.toLowerCase();
@@ -413,21 +347,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 marcada = key;
             }
         }
-        if (e.key === "Enter" && marcada) {
-            document.getElementById("btn").click();
-        }
+        if (e.key === "Enter" && marcada) document.getElementById("btn").click();
     });
 
     // ==================== COMENTÁRIOS ====================
     async function carregarComentarios() {
         if (!questao?.id) return;
         try {
-            const { data, error } = await supabaseClient
-                .from("comentarios")
-                .select("*")
-                .eq("questao_id", questao.id)
-                .order("created_at", { ascending: false });
-
+            const { data, error } = await supabaseClient.from("comentarios").select("*").eq("questao_id", questao.id).order("created_at", { ascending: false });
             if (error) throw error;
 
             const lista = document.getElementById("lista-comentarios");
@@ -446,9 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString('pt-BR')}</div>
                         </div>
                         <p class="text-gray-700">${c.texto}</p>
-                        <button onclick="like('${c.id}')" class="mt-5 text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">
-                            👍 ${c.likes || 0}
-                        </button>
+                        <button onclick="like('${c.id}')" class="mt-5 text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
                     </div>`;
             });
         } catch (e) {
@@ -456,15 +381,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Botão Postar Comentário
-    document.getElementById("btn-comentar").addEventListener("click", async () => {
+    // Botão Postar Comentário - Melhorado
+    document.getElementById("btn-comentar").addEventListener("click", async function() {
+        const btn = this;
+        const originalText = btn.textContent;
         const campo = document.getElementById("novo-comentario");
         const texto = campo.value.trim();
 
-        if (!texto || !questao?.id) {
+        if (!texto) {
             alert("Digite um comentário antes de postar.");
             return;
         }
+        if (!questao?.id) {
+            alert("Erro: Questão não identificada.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Enviando...";
 
         try {
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -480,10 +414,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             campo.value = "";
             await carregarComentarios();
-            console.log("✅ Comentário postado com sucesso");
+            console.log("✅ Comentário publicado com sucesso");
         } catch (e) {
-            console.error("Erro ao postar comentário:", e);
-            alert("Erro ao publicar o comentário. Tente novamente.");
+            console.error("Erro completo ao publicar comentário:", e);
+            alert(`Erro ao publicar comentário:\n${e.message || e}`);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     });
 
