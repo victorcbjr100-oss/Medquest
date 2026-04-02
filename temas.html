@@ -4,64 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Temas - MedQuest Pro</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="sidebar.js"></script> 
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .card-tema { transition: all 0.3s ease; cursor: pointer; }
-        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        main { margin-left: 16rem; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        .card-tema { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .card-tema:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.1); }
+        
+        /* Layout Sidebar */
+        main { margin-left: 16rem; min-height: 100vh; }
+        @media (max-width: 768px) { main { margin-left: 0; } }
 
-        @media (max-width: 768px) {
-            main { margin-left: 0; }
-        }
+        /* Cores Dinâmicas do Tailwind para os ícones */
+        .bg-red-soft { background-color: #fef2f2; color: #ef4444; }
+        .bg-emerald-soft { background-color: #ecfdf5; color: #10b981; }
+        .bg-cyan-soft { background-color: #ecfeff; color: #06b6d4; }
+        .bg-purple-soft { background-color: #faf5ff; color: #a855f7; }
+        .bg-blue-soft { background-color: #eff6ff; color: #3b82f6; }
     </style>
 </head>
-<body class="bg-[#f8fafc] flex min-h-screen">
+<body class="flex">
 
-    <main class="flex-1 p-10">
+    <script src="sidebar.js"></script> 
+
+    <main class="flex-1 p-6 md:p-12">
         <div class="max-w-6xl mx-auto">
-            <header class="mb-10">
-                <div id="btn-voltar" class="hidden items-center gap-2 text-[10px] font-bold text-blue-600 uppercase mb-4 cursor-pointer hover:underline" onclick="resetarNavegacao()">
+            <header class="mb-12">
+                <div id="btn-voltar" class="hidden items-center gap-2 text-xs font-black text-blue-600 uppercase mb-4 cursor-pointer hover:text-blue-800 transition" onclick="resetarNavegacao()">
                     <i class="fas fa-arrow-left"></i> Voltar aos Grandes Temas
                 </div>
-                <h2 id="titulo-pagina" class="text-3xl font-bold text-gray-800">Estudar por Temas</h2>
-                <p id="subtitulo-pagina" class="text-gray-500 mt-1">Escolha uma área para começar</p>
+                <h2 id="titulo-pagina" class="text-4xl font-black text-gray-900 tracking-tight">Estudar por Temas</h2>
+                <p id="subtitulo-pagina" class="text-gray-500 mt-2 text-lg">Selecione uma área médica para praticar questões.</p>
             </header>
 
             <div id="secao-principal">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    <div onclick="abrirEspecialidades('Clínica Médica')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                        <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-stethoscope text-2xl"></i></div>
-                        <h4 class="font-bold text-gray-800 text-lg">Clínica Médica</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div onclick="abrirEspecialidades('Clínica Médica')" class="card-tema bg-white border border-gray-100 p-10 rounded-[32px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-20 h-20 bg-blue-50 text-blue-500 rounded-3xl flex items-center justify-center mb-6 shadow-inner"><i class="fas fa-stethoscope text-3xl"></i></div>
+                        <h4 class="font-bold text-gray-800 text-xl">Clínica Médica</h4>
+                        <p class="text-gray-400 text-sm mt-2">Cardio, Pneumo, Gastro e mais</p>
                     </div>
-                    <div onclick="abrirEspecialidades('Pediatria')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                        <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-baby text-2xl"></i></div>
-                        <h4 class="font-bold text-gray-800 text-lg">Pediatria</h4>
+
+                    <div onclick="abrirEspecialidades('Pediatria')" class="card-tema bg-white border border-gray-100 p-10 rounded-[32px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mb-6 shadow-inner"><i class="fas fa-baby text-3xl"></i></div>
+                        <h4 class="font-bold text-gray-800 text-xl">Pediatria</h4>
+                        <p class="text-gray-400 text-sm mt-2">Puericultura e Neonatologia</p>
                     </div>
-                    <div onclick="abrirEspecialidades('Ciclo Básico')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                        <div class="w-16 h-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-microscope text-2xl"></i></div>
-                        <h4 class="font-bold text-gray-800 text-lg">Ciclo Básico</h4>
+
+                    <div onclick="abrirEspecialidades('Ciclo Básico')" class="card-tema bg-white border border-gray-100 p-10 rounded-[32px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-20 h-20 bg-purple-50 text-purple-500 rounded-3xl flex items-center justify-center mb-6 shadow-inner"><i class="fas fa-microscope text-3xl"></i></div>
+                        <h4 class="font-bold text-gray-800 text-xl">Ciclo Básico</h4>
+                        <p class="text-gray-400 text-sm mt-2">Anatomia e Fisiologia</p>
                     </div>
                 </div>
             </div>
 
             <div id="grade-dinamica" class="hidden">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6" id="container-itens"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="container-itens"></div>
             </div>
         </div>
     </main>
 
     <script>
+        // PADRONIZAÇÃO: 'HAS' mudou para 'Hipertensão' para bater com o Banco de Dados
         const dadosSubtemas = {
             'Clínica Médica': [
-                { nome: 'Cardiologia', icon: 'fa-heart', cor: 'red', sub: ['HAS', 'IAM', 'Bradiarritmias'] },
-                { nome: 'Pneumologia', icon: 'fa-lungs', cor: 'cyan', sub: ['DPOC', 'Asma'] }
+                { nome: 'Cardiologia', icon: 'fa-heart', cor: 'red', sub: ['Hipertensão', 'Infarto (IAM)', 'Arritmias'] },
+                { nome: 'Pneumologia', icon: 'fa-lungs', cor: 'cyan', sub: ['DPOC', 'Asma', 'Pneumonia'] }
             ],
             'Pediatria': [
-                { nome: 'Puericultura', icon: 'fa-child', cor: 'emerald', sub: ['Crescimento', 'Vacinação'] }
+                { nome: 'Puericultura', icon: 'fa-child', cor: 'emerald', sub: ['Crescimento', 'Vacinação'] },
+                { nome: 'Neonatologia', icon: 'fa-baby-carriage', cor: 'blue', sub: ['Icterícia Neonatal', 'Teste do Pezinho'] }
             ],
             'Ciclo Básico': [
                 { nome: 'Anatomia', icon: 'fa-skeleton', cor: 'purple', sub: ['Sist. Cardiovascular', 'Sist. Nervoso'] }
@@ -73,13 +90,16 @@
             document.getElementById('grade-dinamica').classList.remove('hidden');
             document.getElementById('btn-voltar').classList.remove('hidden');
             document.getElementById('titulo-pagina').innerText = area;
+            document.getElementById('subtitulo-pagina').innerText = "Escolha uma especialidade";
+            
             const container = document.getElementById('container-itens');
             container.innerHTML = '';
+            
             dadosSubtemas[area].forEach(esp => {
                 container.innerHTML += `
-                    <div onclick="abrirAssuntos('${area}', '${esp.nome}')" class="card-tema bg-white border border-gray-100 p-8 rounded-[24px] shadow-sm flex flex-col items-center text-center">
-                        <div class="w-14 h-14 bg-${esp.cor}-50 text-${esp.cor}-500 rounded-2xl flex items-center justify-center mb-4"><i class="fas ${esp.icon} text-xl"></i></div>
-                        <h4 class="font-bold text-gray-800 text-sm">${esp.nome}</h4>
+                    <div onclick="abrirAssuntos('${area}', '${esp.nome}')" class="card-tema bg-white border border-gray-100 p-8 rounded-[28px] shadow-sm flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-${esp.cor}-soft rounded-2xl flex items-center justify-center mb-4"><i class="fas ${esp.icon} text-2xl"></i></div>
+                        <h4 class="font-bold text-gray-800 text-base">${esp.nome}</h4>
                     </div>`;
             });
         }
@@ -87,16 +107,20 @@
         function abrirAssuntos(area, espNome) {
             const especialidade = dadosSubtemas[area].find(e => e.nome === espNome);
             document.getElementById('titulo-pagina').innerText = espNome;
+            document.getElementById('subtitulo-pagina').innerText = "Selecione o assunto específico";
+            
             const container = document.getElementById('container-itens');
             container.innerHTML = '';
+            
             especialidade.sub.forEach(assunto => {
-                // PADRONIZAÇÃO: O assunto é enviado em UPPERCASE para a URL
-                const assuntoPadronizado = assunto.toUpperCase().trim();
+                // Remove parênteses e limpa o texto para a busca no Banco
+                const termoBusca = assunto.replace(/\(.*\)/, '').trim(); 
+                
                 container.innerHTML += `
-                    <div onclick="window.location.href='questoes.html?tema=${encodeURIComponent(assuntoPadronizado)}'" class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
+                    <div onclick="window.location.href='questoes.html?tema=${encodeURIComponent(termoBusca)}'" class="card-tema bg-white border border-gray-100 p-6 rounded-[24px] shadow-sm flex flex-col items-center text-center">
                         <div class="w-12 h-12 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center mb-3"><i class="fas fa-file-medical text-lg"></i></div>
-                        <h4 class="font-bold text-gray-800 text-xs">${assunto}</h4>
-                        <p class="text-[9px] text-blue-600 mt-2 font-bold uppercase">Praticar</p>
+                        <h4 class="font-bold text-gray-800 text-sm">${assunto}</h4>
+                        <span class="text-[10px] text-blue-600 mt-3 font-black uppercase tracking-widest">Praticar →</span>
                     </div>`;
             });
         }
@@ -106,6 +130,7 @@
             document.getElementById('grade-dinamica').classList.add('hidden');
             document.getElementById('btn-voltar').classList.add('hidden');
             document.getElementById('titulo-pagina').innerText = "Estudar por Temas";
+            document.getElementById('subtitulo-pagina').innerText = "Escolha uma área para começar";
         }
     </script>
 </body>
