@@ -14,7 +14,7 @@
 body { margin-left: 16rem; }
 @media (max-width: 768px) { body { margin-left: 0; } }
 
-.alt { padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; }
+.alt { padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
 .sel { background: #eff6ff; border-color: #3b82f6; }
 .ok { background: #ecfdf5; border-color: #10b981; }
 .err { background: #fef2f2; border-color: #ef4444; }
@@ -25,6 +25,7 @@ body { margin-left: 16rem; }
 
 <div class="max-w-2xl mx-auto">
 
+<!-- QUESTÃO -->
 <div class="bg-white p-6 rounded-xl">
 
 <h2 id="tema">Carregando...</h2>
@@ -38,14 +39,20 @@ body { margin-left: 16rem; }
 
 </div>
 
+<!-- COMENTÁRIOS -->
 <div id="comentarios-box" class="hidden mt-6 bg-white p-6 rounded-xl">
-<h3>💬 Comentários</h3>
 
-<div id="lista-comentarios" class="my-4"></div>
+<h3 class="font-bold mb-4">💬 Comentários</h3>
 
-<input id="novo-comentario" class="border p-2 w-full mb-2" placeholder="Comentar...">
-<button id="btn-comentar" class="bg-blue-600 text-white px-4 py-2 rounded">
-Postar
+<div id="lista-comentarios" class="space-y-3 mb-4"></div>
+
+<textarea id="novo-comentario"
+class="w-full border p-3 rounded mb-2"
+placeholder="Escreva um comentário..."></textarea>
+
+<button id="btn-comentar"
+class="bg-blue-600 text-white px-4 py-2 rounded">
+Postar comentário
 </button>
 
 </div>
@@ -53,6 +60,7 @@ Postar
 </div>
 
 <script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -63,23 +71,33 @@ let questao = null;
 let marcada = null;
 let respondeu = false;
 
+// =========================
 function getAlt(q, l) {
     return q["op_" + l] || q["opcao_" + l] || q["alternativa_" + l] || "Sem alternativa";
 }
 
+// =========================
 async function carregar() {
+
     const { data, error } = await supabaseClient.from("questoes").select("*");
 
     if (error) {
         console.error(error);
-        document.getElementById("conteudo").innerHTML = "Erro ao carregar";
+        alert("Erro ao carregar questões");
         return;
     }
 
     questoes = data;
+
+    if (!questoes.length) {
+        document.getElementById("conteudo").innerHTML = "Sem questões";
+        return;
+    }
+
     mostrarQuestao();
 }
 
+// =========================
 function mostrarQuestao() {
 
     respondeu = false;
@@ -89,7 +107,7 @@ function mostrarQuestao() {
 
     document.getElementById("tema").textContent = questao.tema;
 
-    let html = `<p>${questao.enunciado}</p>`;
+    let html = `<p class="mb-4">${questao.enunciado}</p>`;
 
     ["a","b","c","d"].forEach(l => {
         html += `
@@ -108,6 +126,7 @@ function mostrarQuestao() {
     document.getElementById("btn").textContent = "Responder";
 }
 
+// =========================
 function selecionar(el) {
     if (respondeu) return;
 
@@ -117,7 +136,8 @@ function selecionar(el) {
     marcada = el.dataset.letra;
 }
 
-document.getElementById("btn").onclick = () => {
+// =========================
+document.getElementById("btn").onclick = async () => {
 
     if (!marcada) {
         alert("Selecione uma alternativa");
@@ -137,7 +157,6 @@ document.getElementById("btn").onclick = () => {
     const mapa = {a:0,b:1,c:2,d:3};
     const itens = document.querySelectorAll(".alt");
 
-    // ✅ CORREÇÃO AQUI
     if (itens[mapa[correta]]) {
         itens[mapa[correta]].classList.add("ok");
     }
@@ -152,6 +171,7 @@ document.getElementById("btn").onclick = () => {
     carregarComentarios();
 };
 
+// =========================
 document.getElementById("next").onclick = () => {
     if (indexAtual < questoes.length - 1) {
         indexAtual++;
@@ -166,37 +186,85 @@ document.getElementById("prev").onclick = () => {
     }
 };
 
+// =========================
+// 🔥 COMENTÁRIOS COMPLETOS
 async function carregarComentarios() {
 
     const { data } = await supabaseClient
         .from("comentarios")
         .select("*")
-        .eq("questao_id", questao.id);
+        .eq("questao_id", questao.id)
+        .order("created_at", { ascending: false });
 
     const lista = document.getElementById("lista-comentarios");
     lista.innerHTML = "";
 
     data?.forEach(c => {
-        lista.innerHTML += `<div>${c.texto}</div>`;
+
+        const dataFormatada = new Date(c.created_at).toLocaleString();
+
+        lista.innerHTML += `
+        <div class="border p-3 rounded">
+
+            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <span><b>${c.usuario_nome || "Usuário"}</b></span>
+                <span>${dataFormatada}</span>
+            </div>
+
+            <div class="text-sm mb-2">${c.texto}</div>
+
+            <button onclick="responderComentario('${c.id}')"
+            class="text-blue-600 text-xs">
+                Responder
+            </button>
+
+        </div>`;
     });
 }
 
+// =========================
+// 🔥 POSTAR COMENTÁRIO (CORRIGIDO)
 document.getElementById("btn-comentar").onclick = async () => {
 
     const texto = document.getElementById("novo-comentario").value;
 
-    if (!texto) return;
+    if (!texto) {
+        alert("Digite algo");
+        return;
+    }
 
-    await supabaseClient.from("comentarios").insert([{
+    let nome = "Usuário";
+
+    try {
+        if (typeof getUser === "function") {
+            const user = await getUser();
+            if (user?.email) nome = user.email.split("@")[0];
+        }
+    } catch {}
+
+    const { error } = await supabaseClient.from("comentarios").insert([{
         questao_id: questao.id,
-        texto: texto
+        texto: texto,
+        usuario_nome: nome
     }]);
+
+    if (error) {
+        alert("Erro ao comentar");
+        console.error(error);
+        return;
+    }
 
     document.getElementById("novo-comentario").value = "";
 
     carregarComentarios();
 };
 
+// =========================
+window.responderComentario = function(id) {
+    alert("Sistema de resposta em thread vem no próximo upgrade 😄");
+};
+
+// =========================
 carregar();
 
 });
