@@ -128,32 +128,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function carregar() {
-        console.log("🔄 Tentando carregar questões...");
         try {
-            const { data, error } = await supabaseClient
-                .from("questoes")
-                .select("*")
-                .order("id", { ascending: true });
-
-            if (error) {
-                console.error("❌ Erro Supabase:", error);
-                alert(`Erro ao carregar questões:\n${error.message}\n\nVerifique se a tabela 'questoes' existe e se tem política RLS para SELECT.`);
-                return;
-            }
-
+            const { data, error } = await supabaseClient.from("questoes").select("*").order("id", { ascending: true });
+            if (error) throw error;
             questoes = data || [];
-            console.log(`✅ ${questoes.length} questões carregadas com sucesso!`);
-
             document.getElementById("total").textContent = questoes.length;
-
-            if (questoes.length > 0) {
-                mostrarQuestao();
-            } else {
-                document.getElementById("conteudo").innerHTML = `<p class="text-center py-20 text-gray-500">Nenhuma questão encontrada no banco.</p>`;
-            }
+            if (questoes.length > 0) mostrarQuestao();
+            else document.getElementById("conteudo").innerHTML = `<p class="text-center py-20 text-gray-500">Nenhuma questão encontrada.</p>`;
         } catch (e) {
-            console.error("🚨 Erro inesperado:", e);
-            alert("Erro inesperado ao carregar questões. Abra o console (F12).");
+            console.error("Erro ao carregar questões:", e);
+            alert("Não foi possível carregar as questões.");
         }
     }
 
@@ -233,9 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let html = `<p class="mb-10 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p><div class="space-y-5">`;
         ["a", "b", "c", "d"].forEach(l => {
             const texto = getAlt(questao, l);
-            if (texto) {
-                html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
-            }
+            if (texto) html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
         });
         html += `</div>`;
         document.getElementById("conteudo").innerHTML = html;
@@ -255,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Botão Responder
     document.getElementById("btn").addEventListener("click", async () => {
-        if (!respondeu && !marcada) return alert("Escolha uma alternativa.");
+        if (!respondeu && !marcada) return alert("Escolha uma alternativa antes de responder.");
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
@@ -283,15 +265,51 @@ document.addEventListener("DOMContentLoaded", () => {
         await carregarComentarios();
     });
 
+    // Função carregarComentarios (corrigida e declarada corretamente)
+    async function carregarComentarios() {
+        if (!questao?.id) return;
+        try {
+            const { data, error } = await supabaseClient
+                .from("comentarios")
+                .select("*")
+                .eq("questao_id", questao.id)
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            const lista = document.getElementById("lista-comentarios");
+            lista.innerHTML = "";
+
+            if (!data || data.length === 0) {
+                lista.innerHTML = `<p class="text-center text-gray-400 py-10 italic">Nenhum comentário ainda. Seja o primeiro!</p>`;
+                return;
+            }
+
+            data.filter(c => !c.parent_id).forEach(c => {
+                lista.innerHTML += `
+                    <div class="bg-white p-7 rounded-3xl border shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="font-semibold text-blue-700">${c.usuario_nome || 'Colega'}</div>
+                            <div class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString('pt-BR')}</div>
+                        </div>
+                        <p class="text-gray-700">${c.texto}</p>
+                        <button onclick="like('${c.id}')" class="mt-5 text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
+                    </div>`;
+            });
+        } catch (e) {
+            console.error("Erro ao carregar comentários:", e);
+        }
+    }
+
     // Botão Postar Comentário
     document.getElementById("btn-comentar").addEventListener("click", async () => {
         const btn = document.getElementById("btn-comentar");
         const texto = document.getElementById("novo-comentario").value.trim();
 
-        if (!texto) return alert("Digite um comentário.");
+        if (!texto) return alert("Digite um comentário antes de postar.");
         if (!questao?.id) return alert("Questão não identificada.");
 
-        const original = btn.textContent;
+        const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = "Enviando...";
 
@@ -301,7 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const { error } = await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
-                texto,
+                texto: texto,
                 usuario_nome: nome
             }]);
 
@@ -309,17 +327,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("novo-comentario").value = "";
             await carregarComentarios();
-            alert("✅ Comentário publicado!");
+            alert("✅ Comentário publicado com sucesso!");
         } catch (e) {
-            console.error(e);
+            console.error("Erro ao publicar comentário:", e);
             alert("Erro ao publicar comentário: " + (e.message || e));
         } finally {
             btn.disabled = false;
-            btn.textContent = original;
+            btn.textContent = originalText;
         }
     });
 
-    // Funções restantes simplificadas
+    window.like = async (id) => {
+        try {
+            await supabaseClient.rpc("increment_like", { comment_id: id });
+            await carregarComentarios();
+        } catch (e) {
+            console.error("Erro no like:", e);
+        }
+    };
+
     function mostrarResumoFinal() {
         const total = questoes.length;
         const acertos = respostasUsuario.filter(r => r.acertou).length;
@@ -330,18 +356,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="text-8xl mb-8">🎉</div>
                 <h1 class="text-5xl font-bold text-gray-900 mb-3">Quiz Finalizado!</h1>
                 <p class="text-2xl text-gray-600 mb-12">Aproveitamento: ${percent}%</p>
-                <button onclick="location.reload()" class="bg-blue-600 text-white px-12 py-5 rounded-2xl font-bold">Reiniciar</button>
+                <button onclick="location.reload()" class="bg-blue-600 text-white px-12 py-5 rounded-2xl font-bold">Reiniciar Quiz</button>
             </div>`;
     }
 
-    window.like = async (id) => {
-        try {
-            await supabaseClient.rpc("increment_like", { comment_id: id });
-            await carregarComentarios();
-        } catch (e) { console.error(e); }
-    };
-
-    // Iniciar
+    // Iniciar aplicação
     carregar();
 });
 </script>
