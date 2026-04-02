@@ -6,10 +6,11 @@
     <title>MedQuest Pro - Questões</title>
     
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" src="js/supabase.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="sidebar.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <script src="js/supabase.js"></script>
+    <script src="sidebar.js" defer></script>
 
     <style>
         body { margin-left: 16rem; transition: margin 0.3s; }
@@ -25,46 +26,44 @@
             align-items: center;
             background: white;
             font-size: 1.08rem;
-            line-height: 1.4;
         }
         .alt:hover:not(.ok):not(.err) {
             border-color: #2563eb;
             background: #f0f9ff;
-            transform: translateX(4px);
+            transform: translateX(5px);
         }
-        .sel { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        .sel { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
         .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #064e3b !important; }
         .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
         
         .letra-circulo {
-            width: 40px; height: 40px;
+            width: 38px; height: 38px;
             border-radius: 50%;
-            background: #f1f5f9;
+            background: #f8fafc;
             display: flex; align-items: center; justify-content: center;
-            margin-right: 18px;
-            font-weight: 700; font-size: 1.1rem;
-            flex-shrink: 0;
-            transition: all 0.2s;
+            margin-right: 15px;
+            font-weight: 700; flex-shrink: 0;
+            border: 1px solid #e2e8f0;
         }
-        .ok .letra-circulo { background: #10b981; color: white; }
-        .err .letra-circulo { background: #ef4444; color: white; }
+        .ok .letra-circulo { background: #10b981; color: white; border-color: #10b981; }
+        .err .letra-circulo { background: #ef4444; color: white; border-color: #ef4444; }
 
-        .progress-bar { height: 8px; background: linear-gradient(to right, #3b82f6, #10b981); transition: width 0.5s ease; }
+        .progress-bar { height: 8px; background: linear-gradient(to right, #2563eb, #10b981); transition: width 0.5s ease; }
     </style>
 </head>
-<body class="bg-gray-50 p-6 font-sans">
+<body class="bg-gray-50 p-4 md:p-8 font-sans">
 
 <div class="max-w-3xl mx-auto space-y-6">
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-4">
-            <div class="flex flex-col gap-1">
-                <h2 id="tema" class="text-xs font-bold uppercase tracking-widest text-blue-600">Sincronizando...</h2>
-                <div id="dificuldade" class="hidden"></div>
+            <div class="flex flex-col">
+                <h2 id="tema" class="text-xs font-black uppercase tracking-widest text-blue-600">Carregando...</h2>
+                <div id="dificuldade" class="mt-1"></div>
             </div>
-            <div class="flex items-center gap-6">
-                <div id="timer" class="font-mono font-bold text-2xl text-red-500 bg-red-50 px-4 py-1 rounded-2xl">60s</div>
-                <div class="text-sm font-medium text-gray-500">
-                    <span id="progresso" class="font-bold text-gray-800">0</span> / <span id="total" class="text-gray-400">0</span>
+            <div class="flex items-center gap-5">
+                <div id="timer" class="font-mono font-bold text-2xl text-red-500 bg-red-50 px-3 py-1 rounded-xl">60s</div>
+                <div class="text-sm font-medium text-gray-400">
+                    Questão <span id="progresso" class="text-gray-900">0</span> de <span id="total">0</span>
                 </div>
             </div>
         </div>
@@ -74,25 +73,29 @@
     </div>
 
     <div class="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
-        <div id="conteudo" class="text-gray-800 text-[1.15rem] leading-relaxed mb-10">
+        <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-10">
             <div class="flex flex-col items-center justify-center py-20 gap-4">
                 <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-gray-400">Acessando banco de dados...</p>
+                <p class="text-gray-400 animate-pulse">Sincronizando com o banco médico...</p>
             </div>
         </div>
         
         <div class="flex flex-wrap gap-3">
-            <button id="prev" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition">Anterior</button>
-            <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition active:scale-95">Responder</button>
-            <button id="next" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition">Pular</button>
+            <button id="prev" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition flex items-center gap-2">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i> Anterior
+            </button>
+            <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-100 transition active:scale-95">Responder</button>
+            <button id="next" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition flex items-center gap-2">
+                Pular <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
         </div>
     </div>
 
     <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
-        <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center gap-2">
-            <i data-lucide="message-circle-code" class="w-5 h-5"></i> Comentário Médico
+        <h3 class="font-bold text-lg text-emerald-800 mb-4 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-5 h-5"></i> Comentário do Especialista
         </h3>
-        <div id="explicacao-texto" class="text-emerald-900 leading-relaxed text-[1.05rem]"></div>
+        <div id="explicacao-texto" class="text-emerald-900 leading-relaxed"></div>
     </div>
 </div>
 
@@ -106,13 +109,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let timerInterval = null;
     let tempoRestante = 60;
 
-    // Inicialização
-    const checkSupabase = setInterval(() => {
+    // Inicializa ícones da sidebar e página
+    const atualizarIcones = () => { if (window.lucide) lucide.createIcons(); };
+    atualizarIcones();
+
+    // Loop de verificação para garantir que o Supabase carregou
+    const aguardarBanco = setInterval(() => {
         if (window.supabaseClient) {
-            clearInterval(checkSupabase);
+            clearInterval(aguardarBanco);
             carregarDados();
         }
-    }, 100);
+    }, 150);
 
     async function carregarDados() {
         try {
@@ -121,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let query = window.supabaseClient.from("questoes").select("*");
             
-            // Filtro inteligente (busca parcial no tema)
+            // Busca inteligente (ilike ignora maiúsculas/minúsculas)
             if (temaFiltro && temaFiltro !== "Todos") {
                 query = query.ilike('specialty', `%${temaFiltro.trim()}%`);
             }
@@ -135,20 +142,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("total").textContent = questoes.length;
                 mostrarQuestao();
             } else {
-                renderizarVazio(temaFiltro);
+                renderizarErro(temaFiltro);
             }
         } catch (e) {
-            console.error("Erro:", e);
-            document.getElementById("conteudo").innerHTML = `<p class='text-center text-red-500 py-10'>Falha na conexão.</p>`;
+            console.error("Erro Supabase:", e);
+            document.getElementById("conteudo").innerHTML = `<div class='text-center py-10 text-red-500 font-bold'>Erro de conexão com o banco de dados.</div>`;
         }
     }
 
-    function renderizarVazio(tema) {
+    function renderizarErro(tema) {
         document.getElementById("tema").innerText = "Aviso";
         document.getElementById("conteudo").innerHTML = `
             <div class="text-center py-10">
-                <p class="text-gray-500 mb-6 text-lg">Nenhuma questão de <b>${tema || 'Geral'}</b> disponível.</p>
-                <a href="index.html" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">Voltar</a>
+                <p class="text-gray-500 mb-6 text-lg">Nenhuma questão encontrada para: <b>${tema || 'Geral'}</b></p>
+                <a href="index.html" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-md">Voltar ao Início</a>
             </div>`;
     }
 
@@ -157,18 +164,18 @@ document.addEventListener("DOMContentLoaded", () => {
         marcada = null;
         respondeu = false;
 
-        // Reset Interface
+        // Reset UI
         document.getElementById("btn").innerText = "Responder";
-        document.getElementById("btn").className = "flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition active:scale-95";
+        document.getElementById("btn").className = "flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition active:scale-95";
         document.getElementById("tema").innerText = questao.specialty || "Geral";
         document.getElementById("explicacao-box").classList.add("hidden");
 
-        // Dificuldade Visual
+        // Dificuldade
         const diffEl = document.getElementById("dificuldade");
         if (questao.difficulty) {
             const d = questao.difficulty.toLowerCase();
-            let cor = d.includes('facil') ? 'text-emerald-500' : d.includes('medio') ? 'text-amber-500' : 'text-red-500';
-            diffEl.innerHTML = `<span class="${cor} text-[10px] font-black uppercase tracking-tighter">● ${questao.difficulty}</span>`;
+            const cor = d.includes('facil') ? 'text-emerald-500' : d.includes('medio') ? 'text-amber-500' : 'text-red-500';
+            diffEl.innerHTML = `<span class="${cor} text-[10px] font-black uppercase tracking-widest">● ${questao.difficulty}</span>`;
             diffEl.classList.remove("hidden");
         }
 
@@ -187,6 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         document.getElementById("conteudo").innerHTML = html + "</div>";
 
+        // Clique nas opções
         document.querySelectorAll(".alt").forEach(el => {
             el.onclick = () => {
                 if (respondeu) return;
@@ -196,22 +204,22 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         });
 
-        if (window.lucide) lucide.createIcons();
+        atualizarIcones();
         iniciarTimer();
         atualizarProgresso();
     }
 
     function iniciarTimer() {
         clearInterval(timerInterval);
-        tempoRestante = 60;
+        tempoRestante = 60; // Padrão de 60s
         const timerEl = document.getElementById("timer");
+        timerEl.classList.remove("animate-pulse");
         timerEl.textContent = "60s";
+        
         timerInterval = setInterval(() => {
             tempoRestante--;
             timerEl.textContent = `${tempoRestante}s`;
             if (tempoRestante <= 10) timerEl.classList.add("animate-pulse");
-            else timerEl.classList.remove("animate-pulse");
-            
             if (tempoRestante <= 0) {
                 clearInterval(timerInterval);
                 if (!respondeu) verificarResposta();
@@ -220,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function verificarResposta() {
-        if (!marcada && !respondeu) return alert("Selecione uma opção!");
+        if (!marcada && !respondeu) return alert("Por favor, selecione uma alternativa!");
         
         respondeu = true;
         clearInterval(timerInterval);
@@ -235,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (acertou) {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.7 }, colors: ['#10b981', '#3b82f6'] });
+            confetti({ particleCount: 120, spread: 70, origin: { y: 0.7 }, colors: ['#10b981', '#3b82f6'] });
         }
 
         if (questao.explanation && questao.explanation !== "null") {
@@ -245,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         document.getElementById("btn").innerText = "Próxima Questão";
-        document.getElementById("btn").className = "flex-1 bg-gray-800 hover:bg-black text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition";
+        document.getElementById("btn").className = "flex-1 bg-gray-900 hover:bg-black text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition";
     }
 
     document.getElementById("btn").onclick = () => {
@@ -254,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 indexAtual++;
                 mostrarQuestao();
             } else {
-                alert("Simulado concluído!");
+                alert("Simulado finalizado!");
                 window.location.href = 'index.html';
             }
         } else {
