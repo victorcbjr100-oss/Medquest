@@ -4,247 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
-    <script src="sidebar.js" defer></script>
-
     <style>
-        /* Correção de Layout: Sidebar fixa vs Conteúdo */
-        body { 
-            display: flex;
-            min-height: 100vh;
-            background-color: #f9fafb;
-            margin: 0;
-        }
-
-        /* Área do conteúdo principal à direita da sidebar */
-        main {
-            flex-grow: 1;
-            margin-left: 16rem; /* Largura da sua sidebar */
-            padding: 2rem;
-            transition: all 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
-            main { margin-left: 0; padding: 1rem; }
-        }
-
-        /* Estilização das Alternativas */
-        .alt {
-            padding: 1.25rem;
-            border-radius: 1rem;
-            border: 2px solid #f1f5f9;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            background: white;
-            margin-bottom: 0.75rem;
-        }
-        .alt:hover:not(.ok):not(.err) {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        .sel { border-color: #3b82f6; background: #eff6ff; }
-        .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #064e3b !important; }
-        .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
-        
-        .letra-circulo {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            background: #f1f5f9;
-            display: flex; align-items: center; justify-content: center;
-            margin-right: 1rem;
-            font-weight: 800; flex-shrink: 0;
-        }
-        .ok .letra-circulo { background: #10b981; color: white; }
-        .err .letra-circulo { background: #ef4444; color: white; }
+        body { display: flex; margin: 0; background: #f1f5f9; min-height: 100vh; }
+        main { flex: 1; margin-left: 260px; padding: 2rem; }
+        @media (max-width: 768px) { main { margin-left: 0; } }
+        .questao-card { background: white; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; }
+        .alternativa { padding: 15px; border: 2px solid #f1f5f9; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .alternativa:hover { border-color: #3b82f6; background: #eff6ff; }
+        .selecionada { border-color: #3b82f6; background: #eff6ff; }
     </style>
 </head>
 <body>
-
-<main>
-    <div class="max-w-4xl mx-auto space-y-6">
-        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-            <div class="flex justify-between items-center mb-4">
-                <div>
-                    <h2 id="tema-display" class="text-xs font-black uppercase tracking-widest text-blue-600">Sincronizando...</h2>
-                    <div id="dificuldade" class="text-[10px] font-bold uppercase mt-1"></div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div id="timer" class="font-mono font-bold text-xl text-red-500 bg-red-50 px-3 py-1 rounded-lg">60s</div>
-                    <div class="text-sm font-medium text-gray-400">
-                        Questão <span id="progresso" class="text-gray-900 font-bold">0</span> de <span id="total">0</span>
-                    </div>
-                </div>
-            </div>
-            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500 w-0"></div>
+    <main>
+        <div id="display-tema" class="mb-4 text-blue-600 font-black uppercase text-xs tracking-widest"></div>
+        <div class="questao-card">
+            <div id="conteudo-questao">Carregando questões de Hipertensão...</div>
+            <div id="area-botoes" class="hidden mt-8">
+                <button onclick="proxima()" class="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition">Pular</button>
             </div>
         </div>
+    </main>
 
-        <div class="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
-            <div id="conteudo-questao">
-                <div class="flex flex-col items-center justify-center py-20 gap-4 text-gray-400">
-                    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p>Carregando questões do banco...</p>
-                </div>
-            </div>
+    <script>
+        let questoes = [];
+        let index = 0;
+
+        async function buscarQuestoes() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let tema = urlParams.get('tema') || 'Hipertensão';
             
-            <div id="controles" class="hidden mt-10 flex flex-wrap gap-3 border-t pt-8">
-                <button id="btn-prev" class="px-6 py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition">Anterior</button>
-                <button id="btn-responder" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-blue-700 transition">Responder</button>
-                <button id="btn-next" class="px-6 py-4 bg-gray-800 text-white rounded-2xl font-bold hover:bg-black transition">Pular</button>
-            </div>
-        </div>
-
-        <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
-            <h3 class="font-bold text-emerald-800 mb-4 flex items-center gap-2">
-                <i data-lucide="info" class="w-5 h-5"></i> Comentário do Especialista
-            </h3>
-            <div id="explicacao-texto" class="text-emerald-900 leading-relaxed"></div>
-        </div>
-    </div>
-</main>
-
-<script>
-    // Variáveis Globais para evitar o ReferenceError
-    let questoes = [];
-    let indexAtual = 0;
-    let marcada = null;
-    let respondeu = false;
-    let timerInterval = null;
-
-    async function carregarDados() {
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const tema = params.get('tema');
+            // Converte HAS vindo da URL para Hipertensão se necessário
+            if (tema.toUpperCase() === 'HAS') tema = 'Hipertensão';
             
-            let query = window.supabaseClient.from("questoes").select("*");
-            if (tema && tema !== "Todos") {
+            document.getElementById('display-tema').innerText = tema;
+
+            let query = window.supabaseClient.from('questoes').select('*');
+            
+            if (tema !== 'Todos') {
                 query = query.ilike('specialty', `%${tema}%`);
             }
 
-            const { data, error } = await query.order('id', { ascending: true });
-            if (error) throw error;
-
-            questoes = data || [];
-            document.getElementById("total").innerText = questoes.length;
-
-            if (questoes.length > 0) {
-                document.getElementById("controles").classList.remove("hidden");
-                mostrarQuestao();
-            } else {
-                document.getElementById("conteudo-questao").innerHTML = `
-                    <div class="text-center py-20">
-                        <i data-lucide="database-zap" class="w-12 h-12 mx-auto text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 text-lg">Nenhuma questão encontrada para este tema.</p>
-                        <a href="index.html" class="text-blue-600 font-bold mt-4 inline-block">Voltar</a>
+            const { data, error } = await query;
+            
+            if (error || !data || data.length === 0) {
+                document.getElementById('conteudo-questao').innerHTML = `
+                    <div class="text-center py-10">
+                        <p class="text-gray-500">Nenhuma questão de <b>${tema}</b> disponível no momento.</p>
+                        <a href="index.html" class="text-blue-600 font-bold mt-4 block">Voltar ao Início</a>
                     </div>`;
-                if(window.lucide) lucide.createIcons();
+                return;
             }
-        } catch (err) {
-            console.error(err);
-            document.getElementById("conteudo-questao").innerHTML = "<p class='text-center text-red-500'>Erro ao conectar com o banco.</p>";
+
+            questoes = data;
+            document.getElementById('area-botoes').classList.remove('hidden');
+            mostrar();
         }
-    }
 
-    function mostrarQuestao() {
-        const q = questoes[indexAtual];
-        respondeu = false;
-        marcada = null;
+        function mostrar() {
+            const q = questoes[index];
+            let html = `<h2 class="text-xl font-bold text-gray-800 mb-6">${q.title}</h2>`;
+            
+            ['a', 'b', 'c', 'd'].forEach(l => {
+                if (q[`option_${l}`]) {
+                    html += `<div class="alternativa" onclick="this.classList.toggle('selecionada')">
+                                <b>${l.toUpperCase()})</b> ${q[`option_${l}`]}
+                             </div>`;
+                }
+            });
+            document.getElementById('conteudo-questao').innerHTML = html;
+        }
 
-        document.getElementById("tema-display").innerText = q.specialty || "Geral";
-        document.getElementById("explicacao-box").classList.add("hidden");
-        document.getElementById("btn-responder").innerText = "Responder";
-        document.getElementById("btn-responder").className = "flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-blue-700 transition";
-
-        // Monta o HTML
-        let html = `<h2 class="text-xl font-bold text-gray-900 mb-8 leading-tight">${q.title}</h2><div class="alternativas-container">`;
-        
-        ['a', 'b', 'c', 'd', 'e'].forEach(l => {
-            if (q[`option_${l}`]) {
-                html += `
-                    <div class="alt" onclick="selecionar('${l.toUpperCase()}')" id="alt-${l.toUpperCase()}">
-                        <div class="letra-circulo">${l.toUpperCase()}</div>
-                        <span>${q[`option_${l}`]}</span>
-                    </div>`;
-            }
-        });
-        
-        document.getElementById("conteudo-questao").innerHTML = html + "</div>";
-        
-        atualizarProgresso();
-        if(window.lucide) lucide.createIcons();
-    }
-
-    function selecionar(letra) {
-        if (respondeu) return;
-        marcada = letra;
-        document.querySelectorAll('.alt').forEach(el => el.classList.remove('sel'));
-        document.getElementById(`alt-${letra}`).classList.add('sel');
-    }
-
-    function verificar() {
-        if (respondeu) {
-            if (indexAtual < questoes.length -1) {
-                indexAtual++;
-                mostrarQuestao();
+        function proxima() {
+            if (index < questoes.length - 1) {
+                index++;
+                mostrar();
             } else {
-                alert("Fim do simulado!");
+                alert("Você concluiu as questões deste tema!");
                 window.location.href = "index.html";
             }
-            return;
         }
 
-        if (!marcada) return alert("Selecione uma resposta!");
-
-        respondeu = true;
-        const correta = questoes[indexAtual].correct_answer.toUpperCase();
-        
-        document.querySelectorAll('.alt').forEach(el => {
-            const letra = el.id.split('-');
-            if (letra === correta) el.classList.add('ok');
-            if (letra === marcada && marcada !== correta) el.classList.add('err');
-        });
-
-        if (marcada === correta) {
-            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-        }
-
-        if (questoes[indexAtual].explanation) {
-            document.getElementById("explicacao-texto").innerHTML = questoes[indexAtual].explanation;
-            document.getElementById("explicacao-box").classList.remove("hidden");
-        }
-
-        document.getElementById("btn-responder").innerText = "Próxima Questão";
-        document.getElementById("btn-responder").className = "flex-1 bg-gray-900 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-black transition";
-    }
-
-    function atualizarProgresso() {
-        const p = ((indexAtual + 1) / questoes.length) * 100;
-        document.getElementById("progress-bar").style.width = `${p}%`;
-        document.getElementById("progresso").innerText = indexAtual + 1;
-    }
-
-    // Inicialização
-    document.addEventListener("DOMContentLoaded", () => {
-        const interval = setInterval(() => {
+        // Aguarda inicialização do cliente Supabase
+        const monitor = setInterval(() => {
             if (window.supabaseClient) {
-                clearInterval(interval);
-                carregarDados();
+                clearInterval(monitor);
+                buscarQuestoes();
             }
         }, 100);
-
-        document.getElementById("btn-responder").onclick = verificar;
-        document.getElementById("btn-next").onclick = () => { if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); } };
-        document.getElementById("btn-prev").onclick = () => { if (indexAtual > 0) { indexAtual--; mostrarQuestao(); } };
-    });
-</script>
-
+    </script>
 </body>
 </html>
