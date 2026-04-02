@@ -134,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
             questoes = data || [];
             document.getElementById("total").textContent = questoes.length;
             if (questoes.length > 0) mostrarQuestao();
-            else document.getElementById("conteudo").innerHTML = `<p class="text-center py-20 text-gray-500">Nenhuma questão encontrada.</p>`;
         } catch (e) {
             console.error("Erro ao carregar questões:", e);
             alert("Não foi possível carregar as questões.");
@@ -183,8 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const mapa = { a: 0, b: 1, c: 2, d: 3 };
         const itens = document.querySelectorAll(".alt");
 
-        if (mapa[respostaCorreta] !== undefined) itens[mapa[respostaCorreta]]?.classList.add("ok");
-        if (!acertou && marcada && mapa[marcada] !== undefined) itens[mapa[marcada]]?.classList.add("err");
+        // Sempre marca a correta de verde
+        if (mapa[respostaCorreta] !== undefined) {
+            itens[mapa[respostaCorreta]]?.classList.add("ok");
+        }
+        // Marca a errada em vermelho, se o usuário errou
+        if (!acertou && marcada && mapa[marcada] !== undefined) {
+            itens[mapa[marcada]]?.classList.add("err");
+        }
     }
 
     function mostrarExplicacao() {
@@ -265,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await carregarComentarios();
     });
 
-    // Função carregarComentarios (corrigida e declarada corretamente)
+    // ==================== COMENTÁRIOS ====================
     async function carregarComentarios() {
         if (!questao?.id) return;
         try {
@@ -286,6 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             data.filter(c => !c.parent_id).forEach(c => {
+                const respostas = data.filter(r => r.parent_id === c.id);
                 lista.innerHTML += `
                     <div class="bg-white p-7 rounded-3xl border shadow-sm">
                         <div class="flex justify-between items-start mb-4">
@@ -293,7 +299,19 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString('pt-BR')}</div>
                         </div>
                         <p class="text-gray-700">${c.texto}</p>
-                        <button onclick="like('${c.id}')" class="mt-5 text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
+                        <div class="flex gap-6 mt-4">
+                            <button onclick="like('${c.id}')" class="text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
+                            <button onclick="responderComentario('${c.id}')" class="text-sm text-gray-500 hover:text-blue-600 transition">Responder</button>
+                        </div>
+                        ${respostas.length ? `
+                        <div class="mt-5 ml-6 border-l-2 border-gray-100 pl-5 space-y-4">
+                            ${respostas.map(r => `
+                                <div class="text-sm">
+                                    <span class="font-medium text-gray-600">${r.usuario_nome || 'Colega'}:</span>
+                                    <p class="text-gray-700">${r.texto}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
                     </div>`;
             });
         } catch (e) {
@@ -301,17 +319,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Botão Postar Comentário
+    // Postar comentário principal
     document.getElementById("btn-comentar").addEventListener("click", async () => {
-        const btn = document.getElementById("btn-comentar");
         const texto = document.getElementById("novo-comentario").value.trim();
-
-        if (!texto) return alert("Digite um comentário antes de postar.");
-        if (!questao?.id) return alert("Questão não identificada.");
-
-        const originalText = btn.textContent;
-        btn.disabled = true;
-        btn.textContent = "Enviando...";
+        if (!texto || !questao?.id) return;
 
         try {
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -327,15 +338,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("novo-comentario").value = "";
             await carregarComentarios();
-            alert("✅ Comentário publicado com sucesso!");
         } catch (e) {
-            console.error("Erro ao publicar comentário:", e);
-            alert("Erro ao publicar comentário: " + (e.message || e));
-        } finally {
-            btn.disabled = false;
-            btn.textContent = originalText;
+            console.error(e);
+            alert("Erro ao publicar comentário.");
         }
     });
+
+    // Responder a um comentário (resposta aninhada)
+    window.responderComentario = async (parent_id) => {
+        const texto = prompt("Digite sua resposta ao comentário:");
+        if (!texto || !questao?.id) return;
+
+        try {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const nome = user?.email ? user.email.split("@")[0] : "Colega";
+
+            const { error } = await supabaseClient.from("comentarios").insert([{
+                questao_id: questao.id,
+                texto: texto,
+                usuario_nome: nome,
+                parent_id: parent_id
+            }]);
+
+            if (error) throw error;
+            await carregarComentarios();
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao responder comentário.");
+        }
+    };
 
     window.like = async (id) => {
         try {
@@ -360,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>`;
     }
 
-    // Iniciar aplicação
+    // Iniciar
     carregar();
 });
 </script>
