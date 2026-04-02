@@ -5,185 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
 
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <!-- Sidebar -->
     <script src="sidebar.js"></script>
 
     <style>
-        .alt-item.selecionada { border-color: #3b82f6; background-color: #eff6ff; }
-        .alt-item.correta { border-color: #10b981; background-color: #ecfdf5; }
-        .alt-item.errada { border-color: #ef4444; background-color: #fef2f2; }
-
         body { margin-left: 260px; }
         @media (max-width: 768px) { body { margin-left: 0; } }
+
+        .alt { padding: 12px; border: 1px solid #eee; border-radius: 12px; cursor: pointer; }
+        .alt.sel { background: #eff6ff; border-color: #3b82f6; }
+        .alt.ok { background: #ecfdf5; border-color: #10b981; }
+        .alt.err { background: #fef2f2; border-color: #ef4444; }
     </style>
 </head>
 
-<body class="bg-[#f8fafc] p-4">
+<body class="bg-gray-50 p-4">
 
-    <div class="max-w-2xl mx-auto bg-white p-8 rounded-[32px] shadow-sm border border-gray-100 mt-10">
-        <h1 id="exibir-tema" class="text-2xl font-black text-gray-800 uppercase tracking-tighter">Carregando...</h1>
+<div class="max-w-2xl mx-auto bg-white p-6 rounded-xl mt-10">
 
-        <div id="bloco-questao" class="mt-6"></div>
+    <h2 id="tema" class="text-xl font-bold mb-4">Carregando...</h2>
 
-        <div id="aba-resposta" class="hidden bg-blue-50 p-4 rounded-2xl border-l-4 border-blue-500 mt-4 text-sm text-gray-700">
-            <h4 class="font-bold mb-1 uppercase text-[10px]">Comentário:</h4>
-            <p id="texto-comentario"></p>
-        </div>
+    <div id="q"></div>
 
-        <div id="botoes" class="mt-8 flex gap-3">
-            <button id="btn-acao" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold text-xs uppercase">
-                Responder
-            </button>
-        </div>
-    </div>
+    <button id="btn" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded">
+        Responder
+    </button>
 
-    <!-- JS DO PROJETO -->
-    <script src="js/supabase.js"></script>
-    <script src="js/auth.js"></script>
+</div>
 
-    <script>
-        let questaoAtual = null;
-        let respondida = false;
-        let selecionada = null;
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
 
-        async function carregarQuestao() {
-            try {
-                await protegerRota();
+<script>
+let questao = null;
+let marcada = null;
+let respondeu = false;
 
-                const params = new URLSearchParams(window.location.search);
-                const tema = (params.get('tema') || "HAS").toUpperCase();
+async function carregar() {
+    try {
+        await protegerRota();
 
-                const { data, error } = await supabaseClient
-                    .from('questoes')
-                    .select('*')
-                    .eq('tema', tema);
+        const params = new URLSearchParams(location.search);
+        const temaURL = params.get("tema");
 
-                if (error) throw error;
+        console.log("Tema recebido:", temaURL);
 
-                if (data?.length > 0) {
-                    questaoAtual = data[Math.floor(Math.random() * data.length)];
+        // 🔍 BUSCA FLEXÍVEL (COM OU SEM TEMA)
+        let query = supabaseClient.from("questoes").select("*");
 
-                    document.getElementById('exibir-tema').innerText = questaoAtual.tema;
-
-                    renderizar(questaoAtual);
-                }
-
-            } catch (e) {
-                console.error("Erro ao carregar questão:", e.message);
-            }
+        if (temaURL) {
+            query = query.ilike("tema", temaURL);
         }
 
-        function renderizar(q) {
-            let html = `
-                <p class="text-lg font-bold text-gray-700 mb-6">${q.enunciado}</p>
-                <div class="space-y-3">
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            document.getElementById("q").innerHTML =
+                "<p class='text-red-500'>Nenhuma questão encontrada.</p>";
+            return;
+        }
+
+        questao = data[Math.floor(Math.random() * data.length)];
+
+        document.getElementById("tema").textContent = questao.tema || "Sem tema";
+
+        render();
+
+    } catch (e) {
+        console.error(e);
+        document.getElementById("q").innerHTML =
+            "<p class='text-red-500'>Erro ao carregar questão.</p>";
+    }
+}
+
+function render() {
+    let html = `<p class="mb-4">${questao.enunciado}</p>`;
+
+    ["a","b","c","d"].forEach(l => {
+        const txt =
+            questao["op_" + l] ||
+            questao["opcao_" + l] ||
+            questao["alternativa_" + l];
+
+        if (txt) {
+            html += `
+                <div class="alt" onclick="sel(this,'${l}')">
+                    <b>${l})</b> ${txt}
+                </div>
             `;
-
-            ['a','b','c','d'].forEach(l => {
-                const txt = q[`op_${l}`] || q[`opcao_${l}`] || q[`alternativa_${l}`];
-
-                if (txt) {
-                    html += `
-                        <div onclick="selecionar(this, '${l}')" 
-                             class="alt-item p-4 border border-gray-100 rounded-2xl cursor-pointer hover:bg-gray-50 flex items-center gap-3">
-                            
-                            <span class="w-6 h-6 bg-gray-100 rounded flex items-center justify-center text-[10px] font-bold uppercase">
-                                ${l}
-                            </span>
-
-                            <div class="text-gray-600 text-sm font-medium">
-                                ${txt}
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-
-            document.getElementById('bloco-questao').innerHTML = html + "</div>";
-
-            // botão
-            document.getElementById('btn-acao').onclick = verificarResposta;
         }
+    });
 
-        function selecionar(el, letra) {
-            if (respondida) return;
+    document.getElementById("q").innerHTML = html;
+}
 
-            document.querySelectorAll('.alt-item')
-                .forEach(d => d.classList.remove('selecionada'));
+function sel(el, l) {
+    if (respondeu) return;
 
-            el.classList.add('selecionada');
-            selecionada = letra;
-        }
+    document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
+    el.classList.add("sel");
 
-        async function verificarResposta() {
-            try {
-                if (!selecionada) return;
+    marcada = l;
+}
 
-                if (respondida) {
-                    location.reload();
-                    return;
-                }
+document.getElementById("btn").onclick = async () => {
+    if (!marcada) return;
 
-                respondida = true;
+    if (respondeu) {
+        location.reload();
+        return;
+    }
 
-                const correta = (questaoAtual.resposta_correta || questaoAtual.correta || "")
-                    .toLowerCase()
-                    .trim();
+    respondeu = true;
 
-                const acertou = selecionada === correta;
+    const correta = (questao.resposta_correta || "").toLowerCase();
 
-                const user = await getUser();
+    const itens = document.querySelectorAll(".alt");
 
-                // 💾 salva no banco (NOVO PADRÃO)
-                await supabaseClient.from('respostas_usuario').insert([{
-                    user_id: user.id,
-                    questao_id: questaoAtual.id,
-                    resposta_marcada: selecionada,
-                    acertou: acertou
-                }]);
+    const mapa = {a:0,b:1,c:2,d:3};
 
-                // 🎨 feedback visual
-                const itens = document.querySelectorAll('.alt-item');
-                const mapa = {a:0, b:1, c:2, d:3};
+    if (itens[mapa[correta]]) itens[mapa[correta]].classList.add("ok");
+    if (marcada !== correta && itens[mapa[marcada]]) {
+        itens[mapa[marcada]].classList.add("err");
+    }
 
-                if (itens[mapa[correta]]) {
-                    itens[mapa[correta]].classList.add('correta');
-                }
+    const user = await getUser();
 
-                if (!acertou && itens[mapa[selecionada]]) {
-                    itens[mapa[selecionada]].classList.add('errada');
-                }
+    await supabaseClient.from("respostas_usuario").insert([{
+        user_id: user.id,
+        questao_id: questao.id,
+        resposta_marcada: marcada,
+        acertou: marcada === correta
+    }]);
 
-                // 💬 comentário
-                if (questaoAtual.comentario_professor) {
-                    document.getElementById('texto-comentario').innerText =
-                        questaoAtual.comentario_professor;
+    document.getElementById("btn").textContent = "Próxima";
+};
 
-                    document.getElementById('aba-resposta')
-                        .classList.remove('hidden');
-                }
-
-                // botão próxima
-                const btn = document.getElementById('btn-acao');
-                btn.innerText = "Próxima Questão";
-                btn.className = "flex-1 bg-gray-800 text-white py-3 rounded-xl font-bold text-xs uppercase";
-
-            } catch (e) {
-                console.error("Erro ao responder:", e.message);
-            }
-        }
-
-        window.onload = carregarQuestao;
-    </script>
+carregar();
+</script>
 
 </body>
 </html>
