@@ -5,39 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js" defer></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="js/supabase.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         body { display: flex; margin: 0; background: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; }
-        
         main { flex: 1; margin-left: 260px; padding: 2rem; transition: 0.3s; }
         @media (max-width: 768px) { main { margin-left: 0; padding: 1rem; } }
 
-        .questao-card { background: white; padding: 40px; border-radius: 32px; border: 1px solid #f1f5f9; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        
+        .questao-card { background: white; padding: 40px; border-radius: 32px; border: 1px solid #f1f5f9; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
         .alternativa { 
-            padding: 18px; 
-            border: 2px solid #f1f5f9; 
-            border-radius: 16px; 
-            margin-bottom: 12px; 
-            cursor: pointer; 
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 500;
-            color: #475569;
+            padding: 18px; border: 2px solid #f1f5f9; border-radius: 16px; margin-bottom: 12px; 
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px;
         }
-        
-        .alternativa:hover { border-color: #3b82f6; background: #eff6ff; color: #1e40af; }
-        .selecionada { border-color: #3b82f6; background: #eff6ff; color: #1e40af; ring: 2px; }
-        
-        /* Feedback de Resposta */
+        .alternativa:hover { border-color: #3b82f6; background: #eff6ff; }
+        .selecionada { border-color: #3b82f6; background: #eff6ff; font-weight: 600; }
         .correta { border-color: #10b981 !important; background: #ecfdf5 !important; color: #065f46 !important; }
         .errada { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
     </style>
@@ -47,31 +32,27 @@
     <main>
         <div class="max-w-4xl mx-auto">
             <div class="flex justify-between items-center mb-6">
-                <a href="index.html" class="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-bold">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> VOLTAR
+                <a href="index.html" class="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-xs font-bold tracking-widest">
+                    <i data-lucide="chevron-left"></i> VOLTAR
                 </a>
-                <div id="display-tema" class="bg-blue-50 text-blue-600 px-4 py-1 rounded-full font-black uppercase text-[10px] tracking-tighter">
-                    Carregando...
+                <div id="display-tema" class="bg-blue-50 text-blue-600 px-4 py-1 rounded-full font-black uppercase text-[10px]">
+                    Sincronizando...
                 </div>
             </div>
 
             <div class="questao-card">
                 <div id="conteudo-questao">
-                    <div class="flex flex-col items-center justify-center py-20 text-gray-400">
-                        <div class="animate-spin mb-4"><i data-lucide="loader-2" class="w-8 h-8 text-blue-500"></i></div>
-                        <p class="font-bold">Sincronizando com o banco médico...</p>
+                    <div class="flex flex-col items-center justify-center py-20">
+                        <div class="animate-spin text-blue-500 mb-4"><i data-lucide="loader-2"></i></div>
+                        <p class="text-gray-400 font-medium">Buscando questões no banco...</p>
                     </div>
                 </div>
 
                 <div id="area-botoes" class="hidden mt-10 pt-6 border-t border-gray-100 flex justify-between items-center">
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Questão <span id="num-atual">1</span></p>
+                    <span class="text-[10px] text-gray-400 font-bold uppercase">Questão <span id="num-atual">1</span></span>
                     <div class="flex gap-3">
-                        <button id="btn-conferir" onclick="conferirResposta()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">
-                            Responder
-                        </button>
-                        <button id="btn-proxima" onclick="proxima()" class="hidden bg-gray-900 text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition">
-                            Próxima
-                        </button>
+                        <button id="btn-conferir" onclick="conferirResposta()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-100">Responder</button>
+                        <button id="btn-proxima" onclick="proxima()" class="hidden bg-gray-900 text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition">Próxima</button>
                     </div>
                 </div>
             </div>
@@ -87,28 +68,26 @@
             const urlParams = new URLSearchParams(window.location.search);
             let tema = urlParams.get('tema') || 'Hipertensão';
             
-            // Padronização de segurança
+            // Padronização automática: se a URL tiver HAS, busca Hipertensão no Banco
             if (tema.toUpperCase() === 'HAS') tema = 'Hipertensão';
             document.getElementById('display-tema').innerText = tema;
 
             try {
-                // Busca no banco usando ilike para evitar erros de digitação (ex: hipertensao vs Hipertensão)
-                let { data, error } = await window.supabaseClient
+                // O ilike garante que encontre mesmo com diferenças de maiúscula/minúscula
+                const { data, error } = await window.supabaseClient
                     .from('questoes')
                     .select('*')
                     .ilike('specialty', `%${tema}%`);
-                
+
                 if (error) throw error;
 
                 if (!data || data.length === 0) {
                     document.getElementById('conteudo-questao').innerHTML = `
                         <div class="text-center py-10">
-                            <i data-lucide="search-x" class="w-12 h-12 text-gray-300 mx-auto mb-4"></i>
-                            <h3 class="text-xl font-bold text-gray-800">Nenhuma questão encontrada</h3>
-                            <p class="text-gray-500 mt-2 text-sm">Não encontramos questões para o tema <b>${tema}</b>.</p>
-                            <a href="temas.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-xl font-bold mt-6">Escolher outro tema</a>
+                            <h3 class="text-xl font-bold text-gray-800">Nenhuma questão de ${tema}</h3>
+                            <p class="text-gray-500 mt-2">Tente outro tema ou cadastre novas questões.</p>
+                            <a href="temas.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-xl mt-6">Voltar</a>
                         </div>`;
-                    lucide.createIcons();
                     return;
                 }
 
@@ -116,8 +95,7 @@
                 document.getElementById('area-botoes').classList.remove('hidden');
                 mostrar();
             } catch (err) {
-                console.error("Erro na busca:", err);
-                document.getElementById('conteudo-questao').innerHTML = `<p class="text-red-500 font-bold">Erro ao conectar: ${err.message}</p>`;
+                document.getElementById('conteudo-questao').innerHTML = `<p class="text-red-500">Erro de conexão: ${err.message}</p>`;
             }
         }
 
@@ -134,14 +112,13 @@
                 if (q[`option_${l}`]) {
                     html += `
                         <div class="alternativa" id="opt-${l}" onclick="selecionar('${l}')">
-                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 text-xs font-black">${l.toUpperCase()}</span>
-                            <span>${q[`option_${l}`]}</span>
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-[10px] font-black">${l.toUpperCase()}</span>
+                            <span class="text-sm">${q[`option_${l}`]}</span>
                         </div>`;
                 }
             });
 
-            html += `</div>`;
-            document.getElementById('conteudo-questao').innerHTML = html;
+            document.getElementById('conteudo-questao').innerHTML = html + `</div>`;
             lucide.createIcons();
         }
 
@@ -153,24 +130,20 @@
 
         function conferirResposta() {
             const sel = document.querySelector('.alternativa.selecionada');
-            if (!sel) return alert("Selecione uma alternativa!");
+            if (!sel) return;
 
             respondida = true;
             const correta = questoes[index].correct_answer.toLowerCase();
             const escolhida = sel.id.split('-');
 
-            // Feedback visual
             document.getElementById(`opt-${correta}`).classList.add('correta');
-            if (escolhida !== correta) {
-                document.getElementById(`opt-${escolhida}`).classList.add('errada');
-            }
+            if (escolhida !== correta) document.getElementById(`opt-${escolhida}`).classList.add('errada');
 
-            // Exibe explicação se existir
             if (questoes[index].explanation) {
-                const expDiv = document.createElement('div');
-                expDiv.className = "mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 text-sm rounded-r-xl";
-                expDiv.innerHTML = `<strong>Explicação:</strong> ${questoes[index].explanation}`;
-                document.getElementById('conteudo-questao').appendChild(expDiv);
+                const exp = document.createElement('div');
+                exp.className = "mt-6 p-4 bg-blue-50 text-blue-800 text-xs rounded-2xl border border-blue-100";
+                exp.innerHTML = `<strong>Explicação:</strong> ${questoes[index].explanation}`;
+                document.getElementById('conteudo-questao').appendChild(exp);
             }
 
             document.getElementById('btn-conferir').classList.add('hidden');
@@ -182,21 +155,22 @@
                 index++;
                 mostrar();
             } else {
-                alert("Parabéns! Você concluiu este bloco de questões.");
+                alert("Fim do bloco de questões!");
                 window.location.href = "index.html";
             }
         }
 
-        // Inicialização robusta
-        function verificarClient() {
-            if (window.supabaseClient) {
+        // Função de inicialização segura
+        async function iniciar() {
+            const ok = await inicializarSupabase();
+            if (ok && window.supabaseClient) {
                 buscarQuestoes();
             } else {
-                setTimeout(verificarClient, 200);
+                setTimeout(iniciar, 300); // Tenta novamente se a biblioteca ainda não carregou
             }
         }
-        
-        window.onload = verificarClient;
+
+        window.onload = iniciar;
     </script>
 </body>
 </html>
