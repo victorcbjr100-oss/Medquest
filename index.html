@@ -5,140 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MedQuest Pro</title>
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Fonte -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .main-content {
-            margin-left: 16rem;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-            }
-        }
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Ajuste de margem para não bater na sidebar */
+        .main-content { margin-left: 16rem; transition: margin 0.3s; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+        
+        .stat-card { @apply bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between; }
     </style>
 </head>
 
 <body class="bg-[#f8fafc]">
 
-    <!-- Sidebar -->
     <script src="sidebar.js"></script>
 
-    <main class="main-content p-10 max-w-6xl mx-auto">
+    <main class="main-content p-6 md:p-10 max-w-6xl mx-auto">
         
-        <!-- Header -->
-        <div class="mb-10 flex justify-between items-center">
+        <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <h2 id="saudacao" class="text-3xl font-bold text-gray-800">Olá! 👋</h2>
-                <p class="text-gray-500 mt-1">Acompanhe seu progresso real no MedQuest Pro</p>
+                <p class="text-gray-500 mt-1">Bem-vindo ao seu painel de controle médico.</p>
             </div>
-
-            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+            <button onclick="logout()" class="bg-white border border-red-100 text-red-500 px-5 py-2 rounded-xl font-bold hover:bg-red-50 transition">
                 Sair
             </button>
         </div>
 
-        <!-- Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="stat-card">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Banco</p>
-                    <h3 id="total-banco" class="text-3xl font-bold text-gray-800">0</h3>
+                    <h3 id="total-banco" class="text-3xl font-black text-gray-800">...</h3>
                 </div>
-                <i class="fas fa-database text-blue-500 text-xl"></i>
+                <div class="p-3 bg-blue-50 rounded-xl"><i class="fas fa-database text-blue-500"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div class="stat-card">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Respondidas</p>
-                    <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
+                    <h3 id="stat-total" class="text-3xl font-black text-gray-800">0</h3>
                 </div>
-                <i class="fas fa-check-double text-emerald-500 text-xl"></i>
+                <div class="p-3 bg-emerald-50 rounded-xl"><i class="fas fa-check-double text-emerald-500"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div class="stat-card">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Taxa de Acerto</p>
-                    <h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3>
+                    <h3 id="stat-precisao" class="text-3xl font-black text-blue-600">0%</h3>
                 </div>
-                <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                <div class="p-3 bg-blue-50 rounded-xl"><i class="fas fa-chart-line text-blue-600"></i></div>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div class="stat-card">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos</p>
-                    <h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3>
+                    <h3 id="stat-acertos" class="text-3xl font-black text-emerald-600">0</h3>
                 </div>
-                <i class="fas fa-trophy text-emerald-500 text-xl"></i>
+                <div class="p-3 bg-emerald-50 rounded-xl"><i class="fas fa-trophy text-emerald-500"></i></div>
             </div>
-
         </div>
 
-        <!-- Ações -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div id="btn-temas" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl cursor-pointer hover:scale-[1.02] transition-transform">
-                <h4 class="text-xl font-bold">Estudar por Temas</h4>
-                <p class="text-blue-100 text-xs mt-1">Pratique por especialidade</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-gradient-to-br from-blue-600 to-blue-700 p-8 rounded-[2rem] text-white shadow-lg flex flex-col justify-between">
+                <div>
+                    <h4 class="text-2xl font-bold">Foco em Hipertensão</h4>
+                    <p class="text-blue-100 mt-2 opacity-90">Você tem 0 questões pendentes neste tema hoje. Que tal revisar agora?</p>
+                </div>
+                <button onclick="window.location.href='questoes.html?tema=Hipertensão'" class="mt-8 bg-white text-blue-600 px-8 py-3 rounded-xl font-bold w-max hover:bg-blue-50 transition">
+                    Começar Revisão
+                </button>
+            </div>
+
+            <div id="btn-temas" class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
+                    <i class="fas fa-layer-group text-gray-400 text-2xl"></i>
+                </div>
+                <h4 class="text-xl font-bold text-gray-800">Outros Temas</h4>
+                <p class="text-gray-400 text-sm mt-1">Explorar especialidades</p>
             </div>
         </div>
 
     </main>
 
-    <!-- JS DO PROJETO -->
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
 
-    <!-- Script principal -->
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            try {
-                // 🔐 Protege rota
-                if (typeof protegerRota === "function") {
-                    await protegerRota();
+            // Pequeno atraso para garantir que o cliente Supabase carregou
+            setTimeout(async () => {
+                if (window.supabaseClient) {
+                    await carregarTotalBanco();
                 }
+            }, 500);
 
-                // 👤 Usuário
-                let user = null;
-                if (typeof getUser === "function") {
-                    user = await getUser();
+            async function carregarTotalBanco() {
+                try {
+                    const { count, error } = await window.supabaseClient
+                        .from('questoes')
+                        .select('*', { count: 'exact', head: true });
+                    
+                    if (!error) {
+                        document.getElementById("total-banco").textContent = count || 0;
+                    }
+                } catch (e) {
+                    console.error("Erro ao buscar total:", e);
                 }
-
-                // 👋 Saudação
-                if (user) {
-                    const nome = user.email?.split("@")[0] || "Usuário";
-                    document.getElementById("saudacao").textContent = `Olá, ${nome}! 👋`;
-                }
-
-                // 🔗 Navegação
-                document.getElementById("btn-temas")?.addEventListener("click", () => {
-                    window.location.href = "temas.html";
-                });
-
-                // 📊 Dashboard
-                if (typeof sincronizarDashboard === "function") {
-                    await sincronizarDashboard();
-                }
-
-            } catch (e) {
-                console.error("Erro controlado:", e.message);
             }
+
+            // Configura botão de temas
+            document.getElementById("btn-temas").addEventListener("click", () => {
+                window.location.href = "temas.html";
+            });
         });
     </script>
 
