@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest Pro</title>
+    <title>MedQuest Pro - Questões</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="sidebar.js"></script>
@@ -53,7 +53,6 @@
         .dificuldade-media { color: #eab308; }
         .dificuldade-dificil { color: #ef4444; }
 
-        /* Estilo YouTube-like para respostas */
         .reply-box {
             margin-top: 12px;
             padding: 14px 16px;
@@ -66,28 +65,11 @@
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .reply-textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        .comment-thread {
-            position: relative;
-        }
-        .comment-thread::before {
-            content: '';
-            position: absolute;
-            left: 20px;
-            top: 50px;
-            bottom: 20px;
-            width: 2px;
-            background: #e2e8f0;
-        }
     </style>
 </head>
 <body class="bg-gray-50 p-6 font-sans">
 
 <div class="max-w-3xl mx-auto space-y-8">
-    <!-- Header -->
     <div class="bg-white rounded-3xl shadow border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
@@ -106,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Questão -->
     <div class="bg-white p-9 rounded-3xl shadow border border-gray-100">
         <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12"></div>
         <div class="flex gap-4">
@@ -117,38 +98,17 @@
         </div>
     </div>
 
-    <!-- Explicação -->
     <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
         <h3 class="font-bold text-xl text-emerald-800 mb-4 flex items-center gap-2">📌 Explicação Clínica</h3>
         <div id="explicacao-texto" class="text-gray-700 leading-relaxed text-[1.05rem]"></div>
     </div>
-
-    <!-- Comentários -->
-    <div id="comentarios-box" class="hidden space-y-6">
-        <h3 class="font-bold text-2xl text-gray-800">💬 Discussão Clínica</h3>
-        <div id="lista-comentarios" class="space-y-6"></div>
-
-        <!-- Caixa principal para novo comentário -->
-        <div class="bg-white p-6 rounded-3xl border shadow-sm">
-            <textarea id="novo-comentario" rows="4" 
-                class="w-full border border-gray-200 focus:border-blue-500 rounded-2xl p-5 outline-none resize-y text-gray-700"
-                placeholder="Escreva seu raciocínio ou comentário clínico..."></textarea>
-            <div class="flex justify-end mt-4">
-                <button id="btn-comentar" 
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-3.5 rounded-2xl font-bold transition">
-                    Postar Comentário
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
+<script src="js/supabase.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
-
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Pegando as credenciais do seu arquivo de configuração centralizado se disponível
+    const client = typeof supabaseClient !== 'undefined' ? supabaseClient : null;
 
     let questoes = [];
     let indexAtual = 0;
@@ -159,73 +119,37 @@ document.addEventListener("DOMContentLoaded", () => {
     let tempoRestante = 30;
     let respostasUsuario = [];
 
+    // Função ajustada para o novo formato das colunas do CSV (option_a, option_b...)
     function getAlt(q, l) {
-        return q[`op_${l}`] || q[`opcao_${l}`] || q[`alternativa_${l}`] || "";
+        return q[`option_${l}`] || "";
     }
 
     async function carregar() {
         try {
-            const { data, error } = await supabaseClient.from("questoes").select("*").order("id", { ascending: true });
+            // Verifica se um tema foi passado pela URL (ex: questoes.html?tema=dermatologia)
+            const urlParams = new URLSearchParams(window.location.search);
+            const temaFiltro = urlParams.get('tema');
+
+            let query = supabaseClient.from("questoes").select("*");
+            
+            if (temaFiltro) {
+                query = query.eq('specialty', temaFiltro);
+            }
+
+            const { data, error } = await query.order("created_date", { ascending: false });
+            
             if (error) throw error;
             questoes = data || [];
+            
             document.getElementById("total").textContent = questoes.length;
-            if (questoes.length > 0) mostrarQuestao();
+            if (questoes.length > 0) {
+                mostrarQuestao();
+            } else {
+                document.getElementById("conteudo").innerHTML = "<p class='text-center py-10'>Nenhuma questão encontrada para este tema.</p>";
+            }
         } catch (e) {
             console.error(e);
-            alert("Não foi possível carregar as questões.");
-        }
-    }
-
-    function atualizarProgresso() {
-        const percent = questoes.length ? Math.round(((indexAtual + 1) / questoes.length) * 100) : 0;
-        document.getElementById("progress-bar").style.width = `${percent}%`;
-        document.getElementById("progresso").textContent = indexAtual + 1;
-    }
-
-    function iniciarTimer() {
-        clearInterval(timerInterval);
-        tempoRestante = 30;
-        const timerEl = document.getElementById("timer");
-        timerEl.textContent = "30s";
-        timerEl.classList.remove("text-orange-500", "text-red-600");
-
-        timerInterval = setInterval(() => {
-            tempoRestante--;
-            timerEl.textContent = `${tempoRestante}s`;
-            if (tempoRestante <= 10) timerEl.classList.add("text-red-600");
-            else if (tempoRestante <= 20) timerEl.classList.add("text-orange-500");
-
-            if (tempoRestante <= 0) {
-                clearInterval(timerInterval);
-                if (!respondeu) autoResponder();
-            }
-        }, 1000);
-    }
-
-    function autoResponder() {
-        respondeu = true;
-        document.getElementById("btn").innerText = "Tempo esgotado";
-        document.getElementById("btn").disabled = false;
-        aplicarFeedbackVisual();
-        respostasUsuario.push({ questao_id: questao.id, marcada: null, acertou: false });
-        mostrarExplicacao();
-        document.getElementById("comentarios-box").classList.remove("hidden");
-    }
-
-    function aplicarFeedbackVisual() {
-        const respostaCorreta = String(questao.resposta_correta || "").toLowerCase().trim();
-        const acertou = marcada === respostaCorreta;
-        const mapa = { a: 0, b: 1, c: 2, d: 3 };
-        const itens = document.querySelectorAll(".alt");
-
-        if (mapa[respostaCorreta] !== undefined) itens[mapa[respostaCorreta]]?.classList.add("ok");
-        if (!acertou && marcada && mapa[marcada] !== undefined) itens[mapa[marcada]]?.classList.add("err");
-    }
-
-    function mostrarExplicacao() {
-        if (questao?.explicacao) {
-            document.getElementById("explicacao-texto").innerHTML = questao.explicacao;
-            document.getElementById("explicacao-box").classList.remove("hidden");
+            alert("Erro ao carregar banco de dados.");
         }
     }
 
@@ -237,22 +161,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("btn").innerText = "Responder";
         document.getElementById("btn").disabled = false;
-        document.getElementById("tema").innerText = questao.tema || "Clínica Médica";
+        
+        // Sincronizado com a coluna 'specialty'
+        document.getElementById("tema").innerText = questao.specialty || "Geral";
         document.getElementById("explicacao-box").classList.add("hidden");
-        document.getElementById("comentarios-box").classList.add("hidden");
 
         const diffEl = document.getElementById("dificuldade");
-        if (questao.dificuldade) {
-            const diffClass = questao.dificuldade.toLowerCase() === 'facil' ? 'dificuldade-facil' :
-                             questao.dificuldade.toLowerCase() === 'media' ? 'dificuldade-media' : 'dificuldade-dificil';
-            diffEl.innerHTML = `<span class="${diffClass}">${questao.dificuldade}</span>`;
+        if (questao.difficulty) {
+            const d = questao.difficulty.toLowerCase();
+            const diffClass = d.includes('facil') ? 'dificuldade-facil' : d.includes('medio') ? 'dificuldade-media' : 'dificuldade-dificil';
+            diffEl.innerHTML = `<span class="${diffClass} font-bold bg-white px-3 py-1 rounded-full shadow-sm">${questao.difficulty.toUpperCase()}</span>`;
             diffEl.classList.remove("hidden");
-        } else diffEl.classList.add("hidden");
+        }
 
-        let html = `<p class="mb-10 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p><div class="space-y-5">`;
-        ["a", "b", "c", "d"].forEach(l => {
+        // Sincronizado com a coluna 'title' (enunciado)
+        let html = `<p class="mb-10 font-medium text-xl text-gray-900">${questao.title || "Sem título"}</p><div class="space-y-5">`;
+        
+        // Suporta de A até E conforme seu CSV
+        ["a", "b", "c", "d", "e"].forEach(l => {
             const texto = getAlt(questao, l);
-            if (texto) html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
+            if (texto && texto !== "null") {
+                html += `
+                    <div class="alt" data-l="${l.toUpperCase()}">
+                        <div class="letra-circulo">${l.toUpperCase()}</div>
+                        <span>${texto}</span>
+                    </div>`;
+            }
         });
         html += `</div>`;
         document.getElementById("conteudo").innerHTML = html;
@@ -262,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (respondeu) return;
                 document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
                 el.classList.add("sel");
-                marcada = el.dataset.l;
+                marcada = el.dataset.l; // Agora pega em Maiúsculo para bater com o CSV (A, B, C...)
             });
         });
 
@@ -270,14 +204,45 @@ document.addEventListener("DOMContentLoaded", () => {
         atualizarProgresso();
     }
 
-    // Botão Responder principal
-    document.getElementById("btn").addEventListener("click", async () => {
-        if (!respondeu && !marcada) return alert("Escolha uma alternativa antes de responder.");
+    function iniciarTimer() {
+        clearInterval(timerInterval);
+        tempoRestante = 45; // Aumentado para questões médicas
+        const timerEl = document.getElementById("timer");
+        timerInterval = setInterval(() => {
+            tempoRestante--;
+            timerEl.textContent = `${tempoRestante}s`;
+            if (tempoRestante <= 0) {
+                clearInterval(timerInterval);
+                if (!respondeu) autoResponder();
+            }
+        }, 1000);
+    }
+
+    function aplicarFeedbackVisual() {
+        // Seu CSV usa letras MAIÚSCULAS na coluna 'correct_answer'
+        const respostaCorreta = String(questao.correct_answer || "").toUpperCase().trim();
+        const itens = document.querySelectorAll(".alt");
+
+        itens.forEach(item => {
+            const letra = item.dataset.l;
+            if (letra === respostaCorreta) {
+                item.classList.add("ok");
+            } else if (letra === marcada && marcada !== respostaCorreta) {
+                item.classList.add("err");
+            }
+        });
+    }
+
+    document.getElementById("btn").addEventListener("click", () => {
+        if (!respondeu && !marcada) return alert("Selecione uma opção.");
+        
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
                 mostrarQuestao();
-            } else mostrarResumoFinal();
+            } else {
+                mostrarResumoFinal();
+            }
             return;
         }
 
@@ -285,180 +250,25 @@ document.addEventListener("DOMContentLoaded", () => {
         clearInterval(timerInterval);
         aplicarFeedbackVisual();
 
-        const respostaCorreta = String(questao.resposta_correta || "").toLowerCase().trim();
-        const acertou = marcada === respostaCorreta;
-
-        if (acertou) confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+        const respostaCorreta = String(questao.correct_answer || "").toUpperCase().trim();
+        if (marcada === respostaCorreta) {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        }
 
         document.getElementById("btn").innerText = "Próxima Questão";
-        respostasUsuario.push({ questao_id: questao.id, marcada, acertou });
-
-        if (typeof registrarRevisao === "function") await registrarRevisao(questao.id, acertou);
-
-        mostrarExplicacao();
-        document.getElementById("comentarios-box").classList.remove("hidden");
-        await carregarComentarios();
-    });
-
-    // ==================== COMENTÁRIOS (YouTube Style) ====================
-    async function carregarComentarios() {
-        if (!questao?.id) return;
-        try {
-            const { data, error } = await supabaseClient
-                .from("comentarios")
-                .select("*")
-                .eq("questao_id", questao.id)
-                .order("created_at", { ascending: false });
-
-            if (error) throw error;
-
-            const lista = document.getElementById("lista-comentarios");
-            lista.innerHTML = "";
-
-            if (!data || data.length === 0) {
-                lista.innerHTML = `<p class="text-center text-gray-400 py-10 italic">Nenhum comentário ainda. Seja o primeiro!</p>`;
-                return;
-            }
-
-            data.filter(c => !c.parent_id).forEach(c => {
-                const respostas = data.filter(r => r.parent_id === c.id);
-
-                lista.innerHTML += `
-                    <div class="bg-white p-7 rounded-3xl border shadow-sm comment-thread" id="comment-${c.id}">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="font-semibold text-blue-700">${c.usuario_nome || 'Colega'}</div>
-                            <div class="text-xs text-gray-400">${new Date(c.created_at).toLocaleDateString('pt-BR')}</div>
-                        </div>
-                        <p class="text-gray-700 mb-5">${c.texto}</p>
-                        
-                        <div class="flex gap-6 text-sm">
-                            <button onclick="like('${c.id}')" class="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
-                            <button onclick="toggleReplyBox('${c.id}')" class="text-blue-600 hover:text-blue-700 font-medium transition">Responder</button>
-                        </div>
-
-                        <!-- Caixa de Resposta estilo YouTube -->
-                        <div id="reply-box-${c.id}" class="reply-box hidden mt-5">
-                            <textarea id="reply-text-${c.id}" rows="3" class="reply-textarea w-full border border-gray-300 focus:border-blue-500 rounded-xl p-4 outline-none text-gray-700" 
-                                placeholder="Escreva sua resposta..."></textarea>
-                            <div class="flex justify-end gap-3 mt-3">
-                                <button onclick="cancelReply('${c.id}')" 
-                                    class="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition">Cancelar</button>
-                                <button onclick="enviarResposta('${c.id}')" 
-                                    class="bg-blue-600 text-white px-8 py-2 rounded-xl font-medium hover:bg-blue-700 transition">Responder</button>
-                            </div>
-                        </div>
-
-                        <!-- Respostas -->
-                        ${respostas.length ? `
-                        <div class="mt-6 ml-10 space-y-5">
-                            ${respostas.map(r => `
-                                <div class="bg-gray-50 p-5 rounded-2xl">
-                                    <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                        <span class="font-medium">${r.usuario_nome || 'Colega'}</span>
-                                        <span>${new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
-                                    </div>
-                                    <p class="text-gray-700">${r.texto}</p>
-                                </div>
-                            `).join('')}
-                        </div>` : ''}
-                    </div>`;
-            });
-        } catch (e) {
-            console.error("Erro ao carregar comentários:", e);
-        }
-    }
-
-    // Toggle da caixa de resposta
-    window.toggleReplyBox = (commentId) => {
-        const box = document.getElementById(`reply-box-${commentId}`);
-        box.classList.toggle("hidden");
-    };
-
-    window.cancelReply = (commentId) => {
-        const box = document.getElementById(`reply-box-${commentId}`);
-        const textarea = document.getElementById(`reply-text-${commentId}`);
-        textarea.value = "";
-        box.classList.add("hidden");
-    };
-
-    // Enviar resposta
-    window.enviarResposta = async (parent_id) => {
-        const textarea = document.getElementById(`reply-text-${parent_id}`);
-        const texto = textarea.value.trim();
-
-        if (!texto || !questao?.id) return;
-
-        try {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const nome = user?.email ? user.email.split("@")[0] : "Colega";
-
-            const { error } = await supabaseClient.from("comentarios").insert([{
-                questao_id: questao.id,
-                texto: texto,
-                usuario_nome: nome,
-                parent_id: parent_id
-            }]);
-
-            if (error) throw error;
-
-            textarea.value = "";
-            document.getElementById(`reply-box-${parent_id}`).classList.add("hidden");
-            await carregarComentarios();
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao enviar resposta.");
-        }
-    };
-
-    // Postar comentário principal
-    document.getElementById("btn-comentar").addEventListener("click", async () => {
-        const texto = document.getElementById("novo-comentario").value.trim();
-        if (!texto || !questao?.id) return;
-
-        try {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const nome = user?.email ? user.email.split("@")[0] : "Colega";
-
-            const { error } = await supabaseClient.from("comentarios").insert([{
-                questao_id: questao.id,
-                texto: texto,
-                usuario_nome: nome
-            }]);
-
-            if (error) throw error;
-
-            document.getElementById("novo-comentario").value = "";
-            await carregarComentarios();
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao publicar comentário.");
+        
+        if (questao.explanation) {
+            document.getElementById("explicacao-texto").innerHTML = questao.explanation;
+            document.getElementById("explicacao-box").classList.remove("hidden");
         }
     });
 
-    window.like = async (id) => {
-        try {
-            await supabaseClient.rpc("increment_like", { comment_id: id });
-            await carregarComentarios();
-        } catch (e) {
-            console.error(e);
-        }
-    };
-
-    function mostrarResumoFinal() {
-        const total = questoes.length;
-        const acertos = respostasUsuario.filter(r => r.acertou).length;
-        const percent = total ? Math.round((acertos / total) * 100) : 0;
-
-        document.getElementById("conteudo").innerHTML = `
-            <div class="text-center py-20">
-                <div class="text-8xl mb-8">🎉</div>
-                <h1 class="text-5xl font-bold text-gray-900 mb-3">Quiz Finalizado!</h1>
-                <p class="text-2xl text-gray-600 mb-12">Aproveitamento: ${percent}%</p>
-                <button onclick="location.reload()" class="bg-blue-600 text-white px-12 py-5 rounded-2xl font-bold">Reiniciar Quiz</button>
-            </div>`;
+    function atualizarProgresso() {
+        const percent = ((indexAtual + 1) / questoes.length) * 100;
+        document.getElementById("progress-bar").style.width = `${percent}%`;
+        document.getElementById("progresso").textContent = indexAtual + 1;
     }
 
-    // Iniciar
     carregar();
 });
 </script>
