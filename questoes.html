@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
     
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <script type="module" src="js/supabase.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -82,7 +84,7 @@
         <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12">
             <div class="flex flex-col items-center justify-center py-10 gap-4">
                 <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-gray-500">A carregar questões...</p>
+                <p class="text-gray-500 text-center">Buscando questões no banco de dados...</p>
             </div>
         </div>
         
@@ -94,7 +96,7 @@
     </div>
 
     <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
-        <h3 class="font-bold text-xl text-emerald-800 mb-4 flex items-center gap-2">📌 Explicação Clínica</h3>
+        <h3 class="font-bold text-xl text-emerald-800 mb-4 flex items-center gap-2">📌 Comentário Médico</h3>
         <div id="explicacao-texto" class="text-gray-700 leading-relaxed text-[1.05rem]"></div>
     </div>
 </div>
@@ -109,18 +111,18 @@ document.addEventListener("DOMContentLoaded", () => {
     let timerInterval = null;
     let tempoRestante = 45;
 
-    // 1. ESPERA O CLIENTE SUPABASE ESTAR PRONTO
+    // Inicializa os ícones da Sidebar
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+
+    // Aguarda o Supabase
     const aguardarConexao = setInterval(() => {
         if (window.supabaseClient) {
             clearInterval(aguardarConexao);
             carregarDados();
         }
     }, 150);
-
-    // Função auxiliar para pegar alternativas do CSV
-    function getAlt(q, letra) {
-        return q[`option_${letra.toLowerCase()}`] || "";
-    }
 
     async function carregarDados() {
         try {
@@ -130,17 +132,14 @@ document.addEventListener("DOMContentLoaded", () => {
             let query = window.supabaseClient.from("questoes").select("*");
             
             if (temaFiltro) {
-                // 'ilike' resolve o problema de maiúsculas/minúsculas entre URL e CSV
+                // ilike ignora maiúsculas/minúsculas para bater com o CSV
                 query = query.ilike('specialty', temaFiltro.trim());
             }
 
             const { data, error } = await query.order("id", { ascending: true });
-            
             if (error) throw error;
             
-            // Remove registros vazios
             questoes = data.filter(q => q.title) || [];
-            
             document.getElementById("total").textContent = questoes.length;
             
             if (questoes.length > 0) {
@@ -148,12 +147,12 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 document.getElementById("conteudo").innerHTML = `
                     <div class="text-center py-10">
-                        <p class="text-gray-500 mb-4">Nenhuma questão encontrada para o tema: <b>${temaFiltro || 'Todos'}</b></p>
-                        <button onclick="window.location.href='index.html'" class="text-blue-600 underline">Voltar</button>
+                        <p class="text-gray-500 mb-4">Nenhuma questão de <b>${temaFiltro || 'Todos'}</b> encontrada.</p>
+                        <button onclick="window.location.href='index.html'" class="text-blue-600 underline">Voltar para o Início</button>
                     </div>`;
             }
         } catch (e) {
-            console.error("Erro:", e);
+            console.error(e);
             document.getElementById("conteudo").innerHTML = "<p class='text-center text-red-500 py-10'>Erro ao conectar com o banco de dados.</p>";
         }
     }
@@ -176,10 +175,10 @@ document.addEventListener("DOMContentLoaded", () => {
             diffEl.classList.remove("hidden");
         }
 
-        // Título e Opções
+        // Título e Opções (Mapeado do CSV)
         let html = `<p class="mb-10 font-medium text-xl text-gray-900">${questao.title}</p><div class="space-y-5">`;
         ["a", "b", "c", "d", "e"].forEach(l => {
-            const texto = getAlt(questao, l);
+            const texto = questao[`option_${l}`];
             if (texto && texto !== "null" && texto.trim() !== "") {
                 html += `
                     <div class="alt" data-l="${l.toUpperCase()}">
@@ -188,17 +187,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>`;
             }
         });
-        html += `</div>`;
-        document.getElementById("conteudo").innerHTML = html;
+        document.getElementById("conteudo").innerHTML = html + "</div>";
 
-        // Clique nas alternativas
         document.querySelectorAll(".alt").forEach(el => {
-            el.addEventListener("click", () => {
+            el.onclick = () => {
                 if (respondeu) return;
                 document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
                 el.classList.add("sel");
                 marcada = el.dataset.l;
-            });
+            };
         });
 
         iniciarTimer();
@@ -212,22 +209,20 @@ document.addEventListener("DOMContentLoaded", () => {
         timerInterval = setInterval(() => {
             tempoRestante--;
             timerEl.textContent = `${tempoRestante}s`;
-            if (tempoRestante <= 0) {
-                clearInterval(timerInterval);
-                if (!respondeu) responder();
-            }
+            if (tempoRestante <= 0) clearInterval(timerInterval);
         }, 1000);
     }
 
-    async function responder() {
-        if (!marcada && !respondeu) return alert("Selecione uma opção.");
+    document.getElementById("btn").onclick = () => {
+        if (!marcada && !respondeu) return alert("Selecione uma resposta!");
         
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
                 mostrarQuestao();
             } else {
-                alert("Fim das questões!");
+                alert("Simulado concluído!");
+                window.location.href = 'index.html';
             }
             return;
         }
@@ -238,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const correta = String(questao.correct_answer).toUpperCase().trim();
         const acertou = marcada === correta;
 
-        // Feedback Visual
         document.querySelectorAll(".alt").forEach(el => {
             if (el.dataset.l === correta) el.classList.add("ok");
             if (el.dataset.l === marcada && !acertou) el.classList.add("err");
@@ -246,14 +240,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (acertou) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
 
-        // Explicação
         if (questao.explanation && questao.explanation !== "null") {
             document.getElementById("explicacao-texto").innerHTML = questao.explanation;
             document.getElementById("explicacao-box").classList.remove("hidden");
         }
 
         document.getElementById("btn").innerText = "Próxima Questão";
-    }
+    };
 
     function atualizarProgresso() {
         const percent = ((indexAtual + 1) / questoes.length) * 100;
@@ -261,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("progresso").textContent = indexAtual + 1;
     }
 
-    document.getElementById("btn").onclick = responder;
     document.getElementById("next").onclick = () => { if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); } };
     document.getElementById("prev").onclick = () => { if (indexAtual > 0) { indexAtual--; mostrarQuestao(); } };
 });
