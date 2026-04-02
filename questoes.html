@@ -6,13 +6,9 @@
     <title>MedQuest Pro - Questões</title>
     
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <script type="module" src="js/supabase.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="sidebar.js" defer></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
     <style>
@@ -24,7 +20,7 @@
             border-radius: 16px;
             border: 2px solid #e5e7eb;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             background: white;
@@ -34,44 +30,41 @@
         .alt:hover:not(.ok):not(.err) {
             border-color: #2563eb;
             background: #f0f9ff;
-            transform: translateY(-3px);
+            transform: translateX(4px);
         }
-        .sel { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25); }
-        .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #052e16 !important; }
+        .sel { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #064e3b !important; }
         .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
         
         .letra-circulo {
-            width: 42px; height: 42px;
+            width: 40px; height: 40px;
             border-radius: 50%;
             background: #f1f5f9;
             display: flex; align-items: center; justify-content: center;
             margin-right: 18px;
-            font-weight: 700; font-size: 1.25rem;
+            font-weight: 700; font-size: 1.1rem;
             flex-shrink: 0;
+            transition: all 0.2s;
         }
         .ok .letra-circulo { background: #10b981; color: white; }
         .err .letra-circulo { background: #ef4444; color: white; }
 
-        .progress-bar { height: 8px; background: linear-gradient(to right, #2563eb, #10b981); transition: width 0.5s ease; }
-        
-        .dificuldade-facil { color: #10b981; }
-        .dificuldade-media { color: #eab308; }
-        .dificuldade-dificil { color: #ef4444; }
+        .progress-bar { height: 8px; background: linear-gradient(to right, #3b82f6, #10b981); transition: width 0.5s ease; }
     </style>
 </head>
 <body class="bg-gray-50 p-6 font-sans">
 
-<div class="max-w-3xl mx-auto space-y-8">
-    <div class="bg-white rounded-3xl shadow border border-gray-100 p-6">
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
         <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center gap-3">
-                <h2 id="tema" class="text-sm font-bold uppercase tracking-widest text-blue-600">Sincronizando...</h2>
-                <span id="dificuldade" class="hidden text-xs font-medium px-3 py-1 rounded-full"></span>
+            <div class="flex flex-col gap-1">
+                <h2 id="tema" class="text-xs font-bold uppercase tracking-widest text-blue-600">Sincronizando...</h2>
+                <div id="dificuldade" class="hidden"></div>
             </div>
             <div class="flex items-center gap-6">
-                <div id="timer" class="font-bold text-xl text-red-500">45s</div>
+                <div id="timer" class="font-mono font-bold text-2xl text-red-500 bg-red-50 px-4 py-1 rounded-2xl">60s</div>
                 <div class="text-sm font-medium text-gray-500">
-                    Questão <span id="progresso" class="font-semibold text-gray-700">0</span> de <span id="total" class="font-semibold text-gray-700">0</span>
+                    <span id="progresso" class="font-bold text-gray-800">0</span> / <span id="total" class="text-gray-400">0</span>
                 </div>
             </div>
         </div>
@@ -80,24 +73,26 @@
         </div>
     </div>
 
-    <div class="bg-white p-9 rounded-3xl shadow border border-gray-100">
-        <div id="conteudo" class="text-gray-800 text-[1.1rem] leading-relaxed mb-12">
-            <div class="flex flex-col items-center justify-center py-10 gap-4">
-                <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-gray-500 text-center">Buscando questões no banco de dados...</p>
+    <div class="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
+        <div id="conteudo" class="text-gray-800 text-[1.15rem] leading-relaxed mb-10">
+            <div class="flex flex-col items-center justify-center py-20 gap-4">
+                <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-gray-400">Acessando banco de dados...</p>
             </div>
         </div>
         
-        <div class="flex gap-4">
-            <button id="prev" class="px-7 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl font-semibold transition">Anterior</button>
-            <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition active:scale-95">Responder</button>
-            <button id="next" class="px-7 py-4 bg-gray-800 hover:bg-black text-white rounded-2xl font-semibold transition">Próxima</button>
+        <div class="flex flex-wrap gap-3">
+            <button id="prev" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition">Anterior</button>
+            <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition active:scale-95">Responder</button>
+            <button id="next" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition">Pular</button>
         </div>
     </div>
 
     <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
-        <h3 class="font-bold text-xl text-emerald-800 mb-4 flex items-center gap-2">📌 Comentário Médico</h3>
-        <div id="explicacao-texto" class="text-gray-700 leading-relaxed text-[1.05rem]"></div>
+        <h3 class="font-bold text-lg text-emerald-800 mb-3 flex items-center gap-2">
+            <i data-lucide="message-circle-code" class="w-5 h-5"></i> Comentário Médico
+        </h3>
+        <div id="explicacao-texto" class="text-emerald-900 leading-relaxed text-[1.05rem]"></div>
     </div>
 </div>
 
@@ -109,20 +104,15 @@ document.addEventListener("DOMContentLoaded", () => {
     let marcada = null;
     let respondeu = false;
     let timerInterval = null;
-    let tempoRestante = 45;
+    let tempoRestante = 60;
 
-    // Inicializa os ícones da Sidebar
-    if (window.lucide) {
-        lucide.createIcons();
-    }
-
-    // Aguarda o Supabase
-    const aguardarConexao = setInterval(() => {
+    // Inicialização
+    const checkSupabase = setInterval(() => {
         if (window.supabaseClient) {
-            clearInterval(aguardarConexao);
+            clearInterval(checkSupabase);
             carregarDados();
         }
-    }, 150);
+    }, 100);
 
     async function carregarDados() {
         try {
@@ -131,30 +121,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let query = window.supabaseClient.from("questoes").select("*");
             
-            if (temaFiltro) {
-                // ilike ignora maiúsculas/minúsculas para bater com o CSV
-                query = query.ilike('specialty', temaFiltro.trim());
+            // Filtro inteligente (busca parcial no tema)
+            if (temaFiltro && temaFiltro !== "Todos") {
+                query = query.ilike('specialty', `%${temaFiltro.trim()}%`);
             }
 
             const { data, error } = await query.order("id", { ascending: true });
             if (error) throw error;
-            
-            questoes = data.filter(q => q.title) || [];
-            document.getElementById("total").textContent = questoes.length;
+
+            questoes = data.filter(q => q.title && q.title.trim() !== "") || [];
             
             if (questoes.length > 0) {
+                document.getElementById("total").textContent = questoes.length;
                 mostrarQuestao();
             } else {
-                document.getElementById("conteudo").innerHTML = `
-                    <div class="text-center py-10">
-                        <p class="text-gray-500 mb-4">Nenhuma questão de <b>${temaFiltro || 'Todos'}</b> encontrada.</p>
-                        <button onclick="window.location.href='index.html'" class="text-blue-600 underline">Voltar para o Início</button>
-                    </div>`;
+                renderizarVazio(temaFiltro);
             }
         } catch (e) {
-            console.error(e);
-            document.getElementById("conteudo").innerHTML = "<p class='text-center text-red-500 py-10'>Erro ao conectar com o banco de dados.</p>";
+            console.error("Erro:", e);
+            document.getElementById("conteudo").innerHTML = `<p class='text-center text-red-500 py-10'>Falha na conexão.</p>`;
         }
+    }
+
+    function renderizarVazio(tema) {
+        document.getElementById("tema").innerText = "Aviso";
+        document.getElementById("conteudo").innerHTML = `
+            <div class="text-center py-10">
+                <p class="text-gray-500 mb-6 text-lg">Nenhuma questão de <b>${tema || 'Geral'}</b> disponível.</p>
+                <a href="index.html" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-bold">Voltar</a>
+            </div>`;
     }
 
     function mostrarQuestao() {
@@ -162,28 +157,31 @@ document.addEventListener("DOMContentLoaded", () => {
         marcada = null;
         respondeu = false;
 
+        // Reset Interface
         document.getElementById("btn").innerText = "Responder";
+        document.getElementById("btn").className = "flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition active:scale-95";
         document.getElementById("tema").innerText = questao.specialty || "Geral";
         document.getElementById("explicacao-box").classList.add("hidden");
 
-        // Dificuldade
+        // Dificuldade Visual
         const diffEl = document.getElementById("dificuldade");
         if (questao.difficulty) {
             const d = questao.difficulty.toLowerCase();
-            const cor = d.includes('facil') ? 'dificuldade-facil' : d.includes('medio') ? 'dificuldade-media' : 'dificuldade-dificil';
-            diffEl.innerHTML = `<span class="${cor} font-bold bg-white px-3 py-1 rounded-full shadow-sm">${questao.difficulty.toUpperCase()}</span>`;
+            let cor = d.includes('facil') ? 'text-emerald-500' : d.includes('medio') ? 'text-amber-500' : 'text-red-500';
+            diffEl.innerHTML = `<span class="${cor} text-[10px] font-black uppercase tracking-tighter">● ${questao.difficulty}</span>`;
             diffEl.classList.remove("hidden");
         }
 
-        // Título e Opções (Mapeado do CSV)
-        let html = `<p class="mb-10 font-medium text-xl text-gray-900">${questao.title}</p><div class="space-y-5">`;
+        // Título e Alternativas
+        let html = `<p class="mb-8 font-bold text-xl text-gray-900 leading-tight">${questao.title}</p><div class="space-y-4">`;
+        
         ["a", "b", "c", "d", "e"].forEach(l => {
             const texto = questao[`option_${l}`];
             if (texto && texto !== "null" && texto.trim() !== "") {
                 html += `
                     <div class="alt" data-l="${l.toUpperCase()}">
                         <div class="letra-circulo">${l.toUpperCase()}</div>
-                        <span>${texto}</span>
+                        <span class="flex-1">${texto}</span>
                     </div>`;
             }
         });
@@ -198,24 +196,59 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         });
 
+        if (window.lucide) lucide.createIcons();
         iniciarTimer();
         atualizarProgresso();
     }
 
     function iniciarTimer() {
         clearInterval(timerInterval);
-        tempoRestante = 45;
+        tempoRestante = 60;
         const timerEl = document.getElementById("timer");
+        timerEl.textContent = "60s";
         timerInterval = setInterval(() => {
             tempoRestante--;
             timerEl.textContent = `${tempoRestante}s`;
-            if (tempoRestante <= 0) clearInterval(timerInterval);
+            if (tempoRestante <= 10) timerEl.classList.add("animate-pulse");
+            else timerEl.classList.remove("animate-pulse");
+            
+            if (tempoRestante <= 0) {
+                clearInterval(timerInterval);
+                if (!respondeu) verificarResposta();
+            }
         }, 1000);
     }
 
-    document.getElementById("btn").onclick = () => {
-        if (!marcada && !respondeu) return alert("Selecione uma resposta!");
+    function verificarResposta() {
+        if (!marcada && !respondeu) return alert("Selecione uma opção!");
         
+        respondeu = true;
+        clearInterval(timerInterval);
+
+        const correta = String(questao.correct_answer).toUpperCase().trim();
+        const acertou = marcada === correta;
+
+        document.querySelectorAll(".alt").forEach(el => {
+            el.classList.remove("sel");
+            if (el.dataset.l === correta) el.classList.add("ok");
+            if (el.dataset.l === marcada && !acertou) el.classList.add("err");
+        });
+
+        if (acertou) {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.7 }, colors: ['#10b981', '#3b82f6'] });
+        }
+
+        if (questao.explanation && questao.explanation !== "null") {
+            document.getElementById("explicacao-texto").innerHTML = questao.explanation;
+            document.getElementById("explicacao-box").classList.remove("hidden");
+            document.getElementById("explicacao-box").scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        document.getElementById("btn").innerText = "Próxima Questão";
+        document.getElementById("btn").className = "flex-1 bg-gray-800 hover:bg-black text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition";
+    }
+
+    document.getElementById("btn").onclick = () => {
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
@@ -224,28 +257,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("Simulado concluído!");
                 window.location.href = 'index.html';
             }
-            return;
+        } else {
+            verificarResposta();
         }
-
-        respondeu = true;
-        clearInterval(timerInterval);
-
-        const correta = String(questao.correct_answer).toUpperCase().trim();
-        const acertou = marcada === correta;
-
-        document.querySelectorAll(".alt").forEach(el => {
-            if (el.dataset.l === correta) el.classList.add("ok");
-            if (el.dataset.l === marcada && !acertou) el.classList.add("err");
-        });
-
-        if (acertou) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-
-        if (questao.explanation && questao.explanation !== "null") {
-            document.getElementById("explicacao-texto").innerHTML = questao.explanation;
-            document.getElementById("explicacao-box").classList.remove("hidden");
-        }
-
-        document.getElementById("btn").innerText = "Próxima Questão";
     };
 
     function atualizarProgresso() {
