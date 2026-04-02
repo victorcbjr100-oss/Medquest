@@ -8,51 +8,48 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="sidebar.js"></script>
     <style>
-        body { margin-left: 16rem; }
+        body { margin-left: 16rem; transition: margin 0.3s; }
         @media (max-width: 768px) { body { margin-left: 0; } }
         
-        .alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; transition: all 0.2s; }
+        .alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; transition: all 0.2s; display: flex; align-items: center; }
         .alt:hover:not(.ok):not(.err) { border-color: #3b82f6; background: #f8fafc; }
-        .sel { background:#eff6ff; border-color:#3b82f6; ring: 2px solid #3b82f6; }
-        .ok { background:#ecfdf5; border-color:#10b981; color: #065f46; font-weight: 500; }
-        .err { background:#fef2f2; border-color:#ef4444; color: #991b1b; }
+        
+        .sel { background:#eff6ff; border-color:#3b82f6; box-shadow: 0 0 0 2px #3b82f6; }
+        
+        /* ESTADOS DE RESPOSTA MAIS VIBRANTES */
+        .ok { background:#d1fae5 !important; border-color:#10b981 !important; color: #065f46 !important; font-weight: 600; }
+        .err { background:#fee2e2 !important; border-color:#ef4444 !important; color: #991b1b !important; }
 
-        /* Estilo Custom para Scrollbar */
-        #lista-comentarios::-webkit-scrollbar { width: 6px; }
-        #lista-comentarios::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .letra-circulo { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0; }
+        .ok .letra-circulo { background: #10b981; color: white; }
+        .err .letra-circulo { background: #ef4444; color: white; }
     </style>
 </head>
 
-<body class="bg-gray-50 p-6">
+<body class="bg-gray-50 p-6 font-sans">
 
     <div class="max-w-3xl mx-auto space-y-6">
 
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h2 id="tema" class="text-sm font-bold uppercase tracking-wider mb-2 text-blue-500">Carregando...</h2>
-            <div id="conteudo" class="text-gray-800 text-lg leading-relaxed mb-6"></div>
+            <h2 id="tema" class="text-xs font-bold uppercase tracking-widest mb-2 text-blue-600">Carregando...</h2>
+            <div id="conteudo" class="text-gray-800 text-lg leading-relaxed mb-8"></div>
 
-            <div class="flex gap-3 mt-8">
+            <div class="flex gap-3">
                 <button id="prev" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition">Anterior</button>
-                <button id="btn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-blue-200 shadow-lg hover:bg-blue-700 transition transform active:scale-95">Responder</button>
+                <button id="btn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition active:scale-95">Responder</button>
                 <button id="next" class="px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-black transition">Próxima</button>
             </div>
         </div>
 
-        <div id="comentarios-box" class="hidden space-y-4">
-            <div class="flex items-center justify-between px-2">
-                <h3 class="font-bold text-xl text-gray-800 flex items-center gap-2">
-                    <span class="text-2xl">💬</span> Discussão Clínica
-                </h3>
-            </div>
+        <div id="comentarios-box" class="hidden space-y-6">
+            <h3 class="font-bold text-xl text-gray-800 border-b pb-4">💬 Discussão Clínica</h3>
 
-            <div id="lista-comentarios" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
+            <div id="lista-comentarios" class="space-y-4"></div>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mt-4">
-                <textarea id="novo-comentario" 
-                    class="w-full border-none p-2 text-gray-700 placeholder-gray-400 focus:ring-0 outline-none resize-none" 
-                    rows="2" placeholder="Adicione uma observação clínica ou dúvida..."></textarea>
-                <div class="flex justify-end border-t pt-3 mt-2">
-                    <button id="btn-comentar" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition">Enviar</button>
+            <div class="bg-white p-4 rounded-2xl border shadow-sm">
+                <textarea id="novo-comentario" class="w-full border-none focus:ring-0 outline-none resize-none text-gray-700" rows="3" placeholder="Escreva seu comentário..."></textarea>
+                <div class="flex justify-end pt-2 border-t mt-2">
+                    <button id="btn-comentar" class="bg-blue-600 text-white px-8 py-2 rounded-xl font-bold hover:bg-blue-700 transition">Postar</button>
                 </div>
             </div>
         </div>
@@ -76,7 +73,7 @@
 
         async function carregar() {
             const { data, error } = await supabaseClient.from("questoes").select("*");
-            if (error) return console.error(error);
+            if (error) return;
             questoes = data;
             mostrarQuestao();
         }
@@ -91,11 +88,11 @@
             document.getElementById("tema").innerText = questao.tema;
             document.getElementById("comentarios-box").classList.add("hidden");
 
-            let html = `<p class="mb-6">${questao.enunciado}</p><div class="space-y-3">`;
+            let html = `<p class="mb-6 font-medium">${questao.enunciado}</p><div class="space-y-3">`;
             ["a", "b", "c", "d"].forEach(l => {
-                html += `<div class="alt group" data-l="${l}">
-                    <span class="inline-block w-8 h-8 rounded-full bg-gray-100 text-center leading-8 font-bold mr-3 group-hover:bg-blue-100 transition">${l.toUpperCase()}</span> 
-                    ${getAlt(questao, l)}
+                html += `<div class="alt" data-l="${l}">
+                    <div class="letra-circulo">${l.toUpperCase()}</div>
+                    <span>${getAlt(questao, l)}</span>
                 </div>`;
             });
             html += `</div>`;
@@ -112,7 +109,8 @@
         }
 
         document.getElementById("btn").onclick = async () => {
-            if (!marcada) return alert("Selecione uma opção");
+            if (!marcada) return alert("Escolha uma alternativa");
+            
             if (respondeu) {
                 indexAtual++;
                 if (indexAtual < questoes.length) mostrarQuestao();
@@ -120,85 +118,93 @@
             }
 
             respondeu = true;
-            const correta = questao.resposta_correta;
+            const correta = questao.resposta_correta.toLowerCase().trim();
             const acertou = (marcada === correta);
 
-            if (typeof registrarRevisao === "function") await registrarRevisao(questao.id, acertou);
+            if (window.registrarRevisao) await registrarRevisao(questao.id, acertou);
 
             const mapa = { a: 0, b: 1, c: 2, d: 3 };
             const itens = document.querySelectorAll(".alt");
+            
+            // MARCA VERDE A CORRETA SEMPRE
             itens[mapa[correta]]?.classList.add("ok");
-            if (!acertou) itens[mapa[marcada]]?.classList.add("err");
+            
+            // MARCA VERMELHO SE ERROU
+            if (!acertou) {
+                itens[mapa[marcada]]?.classList.add("err");
+            }
 
             document.getElementById("btn").innerText = "Próxima Questão";
             document.getElementById("comentarios-box").classList.remove("hidden");
+            
+            // Carrega os comentários da questão atual
             carregarComentarios();
         };
 
-        // --- SISTEMA DE COMENTÁRIOS MELHORADO ---
+        // --- FIX DOS COMENTÁRIOS ---
 
         async function carregarComentarios() {
-            const { data } = await supabaseClient.from("comentarios")
-                .select("*").eq("questao_id", questao.id).order("created_at", { ascending: false });
+            const { data, error } = await supabaseClient
+                .from("comentarios")
+                .select("*")
+                .eq("questao_id", questao.id) // Filtra pela questão atual
+                .order("created_at", { ascending: false });
+
+            if (error) return console.error("Erro ao carregar:", error);
 
             const lista = document.getElementById("lista-comentarios");
-            lista.innerHTML = data.length ? "" : "<p class='text-center text-gray-400 py-4'>Nenhum comentário. Inicie a discussão!</p>";
+            lista.innerHTML = "";
+
+            if (data.length === 0) {
+                lista.innerHTML = "<p class='text-gray-400 text-sm italic'>Sem comentários para esta questão.</p>";
+                return;
+            }
 
             data.filter(c => !c.parent_id).forEach(c => {
-                lista.innerHTML += renderComentario(c, data);
-            });
-        }
-
-        function renderComentario(c, all) {
-            const respostas = all.filter(x => x.parent_id === c.id);
-            return `
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
-                                ${c.usuario_nome.charAt(0).toUpperCase()}
-                            </div>
-                            <span class="font-bold text-gray-700 text-sm">${c.usuario_nome}</span>
+                const respostas = data.filter(r => r.parent_id === c.id);
+                lista.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                        <div class="flex justify-between mb-2">
+                            <b class="text-blue-600 text-sm">${c.usuario_nome}</b>
+                            <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleDateString()}</span>
                         </div>
-                        <span class="text-[10px] text-gray-400 font-medium">${new Date(c.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <p class="text-gray-600 text-sm leading-relaxed">${c.texto}</p>
-                    <div class="flex gap-4 pt-2">
-                        <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition flex items-center gap-1">
-                            👍 ${c.likes || 0}
-                        </button>
-                        <button onclick="responder('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase tracking-tighter">
-                            Responder
-                        </button>
-                    </div>
-                    ${respostas.length ? `
-                        <div class="mt-4 ml-6 pl-4 border-l-2 border-gray-100 space-y-3">
+                        <p class="text-gray-700 text-sm">${c.texto}</p>
+                        <div class="flex gap-4 mt-3">
+                            <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
+                            <button onclick="responderComentario('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase">Responder</button>
+                        </div>
+                        <div class="ml-6 mt-3 space-y-2 border-l-2 border-blue-50 pl-3">
                             ${respostas.map(r => `
                                 <div class="text-sm">
-                                    <span class="font-bold text-blue-600 text-xs">${r.usuario_nome}</span>
-                                    <p class="text-gray-600 mt-0.5">${r.texto}</p>
+                                    <b class="text-xs text-gray-500">${r.usuario_nome}:</b> 
+                                    <span class="text-gray-600">${r.texto}</span>
                                 </div>
                             `).join("")}
                         </div>
-                    ` : ""}
-                </div>`;
+                    </div>`;
+            });
         }
 
         document.getElementById("btn-comentar").onclick = async () => {
             const campo = document.getElementById("novo-comentario");
-            if (!campo.value.trim()) return;
+            const texto = campo.value.trim();
+            if (!texto) return;
 
             const { data: { user } } = await supabaseClient.auth.getUser();
-            const nomeUser = user?.email ? user.email.split("@") : "Usuário";
+            const nome = user?.email ? user.email.split("@") : "Usuário";
 
-            await supabaseClient.from("comentarios").insert([{
+            const { error } = await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
-                texto: campo.value,
-                usuario_nome: nomeUser
+                texto: texto,
+                usuario_nome: nome
             }]);
 
-            campo.value = "";
-            carregarComentarios();
+            if (error) {
+                alert("Erro ao enviar: " + error.message);
+            } else {
+                campo.value = "";
+                await carregarComentarios(); // Força o recarregamento
+            }
         };
 
         window.like = async (id) => {
@@ -206,18 +212,18 @@
             carregarComentarios();
         };
 
-        window.responder = async (parent_id) => {
-            const texto = prompt("Digite sua resposta:");
+        window.responderComentario = async (parent_id) => {
+            const texto = prompt("Sua resposta:");
             if (!texto) return;
 
             const { data: { user } } = await supabaseClient.auth.getUser();
-            const nomeUser = user?.email ? user.email.split("@") : "Usuário";
+            const nome = user?.email ? user.email.split("@") : "Usuário";
 
             await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
                 texto: texto,
                 parent_id: parent_id,
-                usuario_nome: nomeUser
+                usuario_nome: nome
             }]);
 
             carregarComentarios();
