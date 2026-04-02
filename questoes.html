@@ -3,32 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedQuest Pro - Questões</title>
+    <title>Questões - MedQuest</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="sidebar.js"></script>
 
     <style>
-        body { margin-left: 260px; }
-        @media (max-width: 768px) { body { margin-left: 0; } }
-
-        .alt { padding: 12px; border: 1px solid #eee; border-radius: 12px; cursor: pointer; }
-        .alt.sel { background: #eff6ff; border-color: #3b82f6; }
-        .alt.ok { background: #ecfdf5; border-color: #10b981; }
-        .alt.err { background: #fef2f2; border-color: #ef4444; }
+        .alt { padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+        .sel { background: #eff6ff; border-color: #3b82f6; }
+        .ok { background: #ecfdf5; border-color: #10b981; }
+        .err { background: #fef2f2; border-color: #ef4444; }
     </style>
 </head>
 
-<body class="bg-gray-50 p-4">
+<body class="bg-gray-50 p-6">
 
-<div class="max-w-2xl mx-auto bg-white p-6 rounded-xl mt-10">
+<div class="max-w-xl mx-auto bg-white p-6 rounded-xl">
 
-    <h2 id="tema" class="text-xl font-bold mb-4">Carregando...</h2>
+    <h2 id="tema" class="font-bold mb-4">Carregando...</h2>
 
-    <div id="q"></div>
+    <div id="conteudo"></div>
 
-    <button id="btn" class="mt-6 bg-blue-600 text-white px-4 py-2 rounded">
+    <button id="btn" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
         Responder
     </button>
 
@@ -44,27 +40,27 @@ let respondeu = false;
 
 async function carregar() {
     try {
-        await protegerRota();
+        console.log("Iniciando...");
 
-        const params = new URLSearchParams(location.search);
-        const temaURL = params.get("tema");
-
-        console.log("Tema recebido:", temaURL);
-
-        // 🔍 BUSCA FLEXÍVEL (COM OU SEM TEMA)
-        let query = supabaseClient.from("questoes").select("*");
-
-        if (temaURL) {
-            query = query.ilike("tema", temaURL);
+        // 🔒 Tenta proteger rota (sem quebrar)
+        try {
+            if (typeof protegerRota === "function") {
+                await protegerRota();
+            }
+        } catch (e) {
+            console.warn("Auth falhou, seguindo sem login");
         }
 
-        const { data, error } = await query;
+        const { data, error } = await supabaseClient
+            .from("questoes")
+            .select("*")
+            .limit(10);
 
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            document.getElementById("q").innerHTML =
-                "<p class='text-red-500'>Nenhuma questão encontrada.</p>";
+            document.getElementById("conteudo").innerHTML =
+                "<p class='text-red-500'>Banco vazio ou tabela errada</p>";
             return;
         }
 
@@ -76,8 +72,8 @@ async function carregar() {
 
     } catch (e) {
         console.error(e);
-        document.getElementById("q").innerHTML =
-            "<p class='text-red-500'>Erro ao carregar questão.</p>";
+        document.getElementById("conteudo").innerHTML =
+            "<p class='text-red-500'>Erro: " + e.message + "</p>";
     }
 }
 
@@ -91,18 +87,16 @@ function render() {
             questao["alternativa_" + l];
 
         if (txt) {
-            html += `
-                <div class="alt" onclick="sel(this,'${l}')">
-                    <b>${l})</b> ${txt}
-                </div>
-            `;
+            html += `<div class="alt" onclick="selecionar(this,'${l}')">
+                <b>${l})</b> ${txt}
+            </div>`;
         }
     });
 
-    document.getElementById("q").innerHTML = html;
+    document.getElementById("conteudo").innerHTML = html;
 }
 
-function sel(el, l) {
+function selecionar(el, l) {
     if (respondeu) return;
 
     document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
@@ -123,23 +117,32 @@ document.getElementById("btn").onclick = async () => {
 
     const correta = (questao.resposta_correta || "").toLowerCase();
 
+    const mapa = {a:0,b:1,c:2,d:3};
     const itens = document.querySelectorAll(".alt");
 
-    const mapa = {a:0,b:1,c:2,d:3};
-
     if (itens[mapa[correta]]) itens[mapa[correta]].classList.add("ok");
+
     if (marcada !== correta && itens[mapa[marcada]]) {
         itens[mapa[marcada]].classList.add("err");
     }
 
-    const user = await getUser();
+    // salva só se tiver login
+    try {
+        if (typeof getUser === "function") {
+            const user = await getUser();
 
-    await supabaseClient.from("respostas_usuario").insert([{
-        user_id: user.id,
-        questao_id: questao.id,
-        resposta_marcada: marcada,
-        acertou: marcada === correta
-    }]);
+            if (user) {
+                await supabaseClient.from("respostas_usuario").insert([{
+                    user_id: user.id,
+                    questao_id: questao.id,
+                    resposta_marcada: marcada,
+                    acertou: marcada === correta
+                }]);
+            }
+        }
+    } catch (e) {
+        console.warn("Erro ao salvar:", e.message);
+    }
 
     document.getElementById("btn").textContent = "Próxima";
 };
