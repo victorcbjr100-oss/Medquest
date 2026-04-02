@@ -1,12 +1,45 @@
-// js/supabase.js
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+// js/supabase.js - Configurado para seu projeto Supabase
+let supabaseClient = null;
 
-const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
+async function inicializarSupabase() {
+    try {
+        console.log('🔄 Inicializando Supabase...');
+        
+        // Suas credenciais EXATAS
+        const { createClient } = supabase;
+        supabaseClient = createClient(
+            'https://xkhwfudjcqmbhcdkpewr.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI'
+        );
+        
+        // Teste de conexão
+        const { data: testData, error: testError } = await supabaseClient
+            .from('questoes')
+            .select('count')
+            .limit(1)
+            .single();
+            
+        if (testError) {
+            console.warn('⚠️ Teste de conexão falhou (tabela pode estar vazia):', testError.message);
+        } else {
+            console.log('✅ Supabase conectado com sucesso!');
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Erro crítico ao conectar Supabase:', error);
+        return false;
+    }
+}
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Inicializa automaticamente
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        inicializarSupabase();
+    });
+} else {
+    inicializarSupabase();
+}
 
-// Expõe globalmente para os scripts que não são módulos
-window.supabaseClient = supabase;
-
-console.log("🚀 Supabase Initialized");
+// Exporta para uso global
+window.supabaseClient = supabaseClient;
