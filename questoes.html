@@ -11,16 +11,16 @@
         body { margin-left: 16rem; transition: margin 0.3s; }
         @media (max-width: 768px) { body { margin-left: 0; } }
         
-        .alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; transition: all 0.2s; display: flex; align-items: center; }
+        .alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; transition: all 0.2s; display: flex; align-items: center; background: white; }
         .alt:hover:not(.ok):not(.err) { border-color: #3b82f6; background: #f8fafc; }
         
         .sel { background:#eff6ff; border-color:#3b82f6; box-shadow: 0 0 0 2px #3b82f6; }
         
-        /* ESTADOS DE RESPOSTA MAIS VIBRANTES */
-        .ok { background:#d1fae5 !important; border-color:#10b981 !important; color: #065f46 !important; font-weight: 600; }
-        .err { background:#fee2e2 !important; border-color:#ef4444 !important; color: #991b1b !important; }
+        /* CORES FORTES PARA FEEDBACK */
+        .ok { background:#d1fae5 !important; border-color:#10b981 !important; color: #064e3b !important; font-weight: 600; }
+        .err { background:#fee2e2 !important; border-color:#ef4444 !important; color: #7f1d1d !important; }
 
-        .letra-circulo { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0; }
+        .letra-circulo { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; flex-shrink: 0; transition: 0.2s; }
         .ok .letra-circulo { background: #10b981; color: white; }
         .err .letra-circulo { background: #ef4444; color: white; }
     </style>
@@ -43,7 +43,6 @@
 
         <div id="comentarios-box" class="hidden space-y-6">
             <h3 class="font-bold text-xl text-gray-800 border-b pb-4">💬 Discussão Clínica</h3>
-
             <div id="lista-comentarios" class="space-y-4"></div>
 
             <div class="bg-white p-4 rounded-2xl border shadow-sm">
@@ -72,10 +71,12 @@
         }
 
         async function carregar() {
-            const { data, error } = await supabaseClient.from("questoes").select("*");
-            if (error) return;
-            questoes = data;
-            mostrarQuestao();
+            try {
+                const { data, error } = await supabaseClient.from("questoes").select("*");
+                if (error) throw error;
+                questoes = data;
+                mostrarQuestao();
+            } catch (e) { console.error("Erro ao carregar banco:", e); }
         }
 
         function mostrarQuestao() {
@@ -85,7 +86,7 @@
             respondeu = false;
 
             document.getElementById("btn").innerText = "Responder";
-            document.getElementById("tema").innerText = questao.tema;
+            document.getElementById("tema").innerText = questao.tema || "Geral";
             document.getElementById("comentarios-box").classList.add("hidden");
 
             let html = `<p class="mb-6 font-medium">${questao.enunciado}</p><div class="space-y-3">`;
@@ -114,22 +115,21 @@
             if (respondeu) {
                 indexAtual++;
                 if (indexAtual < questoes.length) mostrarQuestao();
+                else alert("Fim das questões!");
                 return;
             }
 
             respondeu = true;
-            const correta = questao.resposta_correta.toLowerCase().trim();
+            
+            // Tratamento preventivo da string da resposta
+            const correta = String(questao.resposta_correta).toLowerCase().trim();
             const acertou = (marcada === correta);
 
-            if (window.registrarRevisao) await registrarRevisao(questao.id, acertou);
-
+            // FEEDBACK VISUAL (Isso roda antes de qualquer chamada ao banco para não bugar a tela)
             const mapa = { a: 0, b: 1, c: 2, d: 3 };
             const itens = document.querySelectorAll(".alt");
             
-            // MARCA VERDE A CORRETA SEMPRE
             itens[mapa[correta]]?.classList.add("ok");
-            
-            // MARCA VERMELHO SE ERROU
             if (!acertou) {
                 itens[mapa[marcada]]?.classList.add("err");
             }
@@ -137,47 +137,46 @@
             document.getElementById("btn").innerText = "Próxima Questão";
             document.getElementById("comentarios-box").classList.remove("hidden");
             
-            // Carrega os comentários da questão atual
-            carregarComentarios();
+            // Gravação no banco (em segundo plano para não travar a UI)
+            try {
+                if (typeof registrarRevisao === "function") {
+                    await registrarRevisao(questao.id, acertou);
+                }
+                await carregarComentarios();
+            } catch (e) { console.error("Erro pós-resposta:", e); }
         };
 
-        // --- FIX DOS COMENTÁRIOS ---
-
+        // --- SISTEMA DE COMENTÁRIOS ---
         async function carregarComentarios() {
-            const { data, error } = await supabaseClient
-                .from("comentarios")
-                .select("*")
-                .eq("questao_id", questao.id) // Filtra pela questão atual
-                .order("created_at", { ascending: false });
-
-            if (error) return console.error("Erro ao carregar:", error);
+            const { data, error } = await supabaseClient.from("comentarios")
+                .select("*").eq("questao_id", questao.id).order("created_at", { ascending: false });
 
             const lista = document.getElementById("lista-comentarios");
             lista.innerHTML = "";
 
-            if (data.length === 0) {
-                lista.innerHTML = "<p class='text-gray-400 text-sm italic'>Sem comentários para esta questão.</p>";
+            if (!data || data.length === 0) {
+                lista.innerHTML = "<p class='text-gray-400 text-sm italic py-4 text-center'>Nenhum comentário clínico enviado.</p>";
                 return;
             }
 
             data.filter(c => !c.parent_id).forEach(c => {
                 const respostas = data.filter(r => r.parent_id === c.id);
                 lista.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl border shadow-sm">
+                    <div class="bg-white p-5 rounded-2xl border shadow-sm border-gray-100">
                         <div class="flex justify-between mb-2">
-                            <b class="text-blue-600 text-sm">${c.usuario_nome}</b>
-                            <span class="text-[10px] text-gray-400">${new Date(c.created_at).toLocaleDateString()}</span>
+                            <b class="text-blue-600 text-sm">${c.usuario_nome || 'Anônimo'}</b>
+                            <span class="text-[10px] text-gray-400 font-medium">${new Date(c.created_at).toLocaleDateString()}</span>
                         </div>
-                        <p class="text-gray-700 text-sm">${c.texto}</p>
+                        <p class="text-gray-700 text-sm leading-relaxed">${c.texto}</p>
                         <div class="flex gap-4 mt-3">
-                            <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
-                            <button onclick="responderComentario('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase">Responder</button>
+                            <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition flex items-center gap-1">👍 ${c.likes || 0}</button>
+                            <button onclick="responderComentario('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase tracking-tight">Responder</button>
                         </div>
-                        <div class="ml-6 mt-3 space-y-2 border-l-2 border-blue-50 pl-3">
+                        <div class="ml-6 mt-3 space-y-3 border-l-2 border-blue-50 pl-4">
                             ${respostas.map(r => `
                                 <div class="text-sm">
-                                    <b class="text-xs text-gray-500">${r.usuario_nome}:</b> 
-                                    <span class="text-gray-600">${r.texto}</span>
+                                    <b class="text-[11px] text-gray-500 block">${r.usuario_nome}:</b> 
+                                    <span class="text-gray-600 italic">"${r.texto}"</span>
                                 </div>
                             `).join("")}
                         </div>
@@ -190,26 +189,24 @@
             const texto = campo.value.trim();
             if (!texto) return;
 
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const nome = user?.email ? user.email.split("@") : "Usuário";
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                const nome = user?.email ? user.email.split("@") : "Colega";
 
-            const { error } = await supabaseClient.from("comentarios").insert([{
-                questao_id: questao.id,
-                texto: texto,
-                usuario_nome: nome
-            }]);
+                await supabaseClient.from("comentarios").insert([{
+                    questao_id: questao.id,
+                    texto: texto,
+                    usuario_nome: nome
+                }]);
 
-            if (error) {
-                alert("Erro ao enviar: " + error.message);
-            } else {
                 campo.value = "";
-                await carregarComentarios(); // Força o recarregamento
-            }
+                await carregarComentarios();
+            } catch (e) { alert("Erro ao comentar"); }
         };
 
         window.like = async (id) => {
             await supabaseClient.rpc("increment_like", { comment_id: id });
-            carregarComentarios();
+            await carregarComentarios();
         };
 
         window.responderComentario = async (parent_id) => {
@@ -217,7 +214,7 @@
             if (!texto) return;
 
             const { data: { user } } = await supabaseClient.auth.getUser();
-            const nome = user?.email ? user.email.split("@") : "Usuário";
+            const nome = user?.email ? user.email.split("@") : "Colega";
 
             await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
@@ -226,8 +223,12 @@
                 usuario_nome: nome
             }]);
 
-            carregarComentarios();
+            await carregarComentarios();
         };
+
+        // Navegação simples
+        document.getElementById("next").onclick = () => { if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); } };
+        document.getElementById("prev").onclick = () => { if (indexAtual > 0) { indexAtual--; mostrarQuestao(); } };
 
         carregar();
     });
