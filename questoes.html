@@ -4,27 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MedQuest Pro - Questões</title>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="js/supabase.js"></script>
+
     <style>
-        body { display: flex; margin: 0; background: #f1f5f9; min-height: 100vh; }
-        main { flex: 1; margin-left: 260px; padding: 2rem; }
-        @media (max-width: 768px) { main { margin-left: 0; } }
-        .questao-card { background: white; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; }
-        .alternativa { padding: 15px; border: 2px solid #f1f5f9; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .alternativa:hover { border-color: #3b82f6; background: #eff6ff; }
-        .selecionada { border-color: #3b82f6; background: #eff6ff; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { display: flex; margin: 0; background: #f8fafc; min-height: 100vh; font-family: 'Inter', sans-serif; }
+        
+        main { flex: 1; margin-left: 260px; padding: 2rem; transition: 0.3s; }
+        @media (max-width: 768px) { main { margin-left: 0; padding: 1rem; } }
+
+        .questao-card { background: white; padding: 40px; border-radius: 32px; border: 1px solid #f1f5f9; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        
+        .alternativa { 
+            padding: 18px; 
+            border: 2px solid #f1f5f9; 
+            border-radius: 16px; 
+            margin-bottom: 12px; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            color: #475569;
+        }
+        
+        .alternativa:hover { border-color: #3b82f6; background: #eff6ff; color: #1e40af; }
+        .selecionada { border-color: #3b82f6; background: #eff6ff; color: #1e40af; ring: 2px; }
+        
+        /* Feedback de Resposta */
+        .correta { border-color: #10b981 !important; background: #ecfdf5 !important; color: #065f46 !important; }
+        .errada { border-color: #ef4444 !important; background: #fef2f2 !important; color: #991b1b !important; }
     </style>
 </head>
 <body>
+
     <main>
-        <div id="display-tema" class="mb-4 text-blue-600 font-black uppercase text-xs tracking-widest"></div>
-        <div class="questao-card">
-            <div id="conteudo-questao">Carregando questões de Hipertensão...</div>
-            <div id="area-botoes" class="hidden mt-8">
-                <button onclick="proxima()" class="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-black transition">Pular</button>
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <a href="index.html" class="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-bold">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> VOLTAR
+                </a>
+                <div id="display-tema" class="bg-blue-50 text-blue-600 px-4 py-1 rounded-full font-black uppercase text-[10px] tracking-tighter">
+                    Carregando...
+                </div>
+            </div>
+
+            <div class="questao-card">
+                <div id="conteudo-questao">
+                    <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+                        <div class="animate-spin mb-4"><i data-lucide="loader-2" class="w-8 h-8 text-blue-500"></i></div>
+                        <p class="font-bold">Sincronizando com o banco médico...</p>
+                    </div>
+                </div>
+
+                <div id="area-botoes" class="hidden mt-10 pt-6 border-t border-gray-100 flex justify-between items-center">
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Questão <span id="num-atual">1</span></p>
+                    <div class="flex gap-3">
+                        <button id="btn-conferir" onclick="conferirResposta()" class="bg-blue-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200">
+                            Responder
+                        </button>
+                        <button id="btn-proxima" onclick="proxima()" class="hidden bg-gray-900 text-white px-8 py-3 rounded-2xl font-bold hover:bg-black transition">
+                            Próxima
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -32,50 +81,100 @@
     <script>
         let questoes = [];
         let index = 0;
+        let respondida = false;
 
         async function buscarQuestoes() {
             const urlParams = new URLSearchParams(window.location.search);
             let tema = urlParams.get('tema') || 'Hipertensão';
             
-            // Converte HAS vindo da URL para Hipertensão se necessário
+            // Padronização de segurança
             if (tema.toUpperCase() === 'HAS') tema = 'Hipertensão';
-            
             document.getElementById('display-tema').innerText = tema;
 
-            let query = window.supabaseClient.from('questoes').select('*');
-            
-            if (tema !== 'Todos') {
-                query = query.ilike('specialty', `%${tema}%`);
-            }
+            try {
+                // Busca no banco usando ilike para evitar erros de digitação (ex: hipertensao vs Hipertensão)
+                let { data, error } = await window.supabaseClient
+                    .from('questoes')
+                    .select('*')
+                    .ilike('specialty', `%${tema}%`);
+                
+                if (error) throw error;
 
-            const { data, error } = await query;
-            
-            if (error || !data || data.length === 0) {
-                document.getElementById('conteudo-questao').innerHTML = `
-                    <div class="text-center py-10">
-                        <p class="text-gray-500">Nenhuma questão de <b>${tema}</b> disponível no momento.</p>
-                        <a href="index.html" class="text-blue-600 font-bold mt-4 block">Voltar ao Início</a>
-                    </div>`;
-                return;
-            }
+                if (!data || data.length === 0) {
+                    document.getElementById('conteudo-questao').innerHTML = `
+                        <div class="text-center py-10">
+                            <i data-lucide="search-x" class="w-12 h-12 text-gray-300 mx-auto mb-4"></i>
+                            <h3 class="text-xl font-bold text-gray-800">Nenhuma questão encontrada</h3>
+                            <p class="text-gray-500 mt-2 text-sm">Não encontramos questões para o tema <b>${tema}</b>.</p>
+                            <a href="temas.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-xl font-bold mt-6">Escolher outro tema</a>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
 
-            questoes = data;
-            document.getElementById('area-botoes').classList.remove('hidden');
-            mostrar();
+                questoes = data;
+                document.getElementById('area-botoes').classList.remove('hidden');
+                mostrar();
+            } catch (err) {
+                console.error("Erro na busca:", err);
+                document.getElementById('conteudo-questao').innerHTML = `<p class="text-red-500 font-bold">Erro ao conectar: ${err.message}</p>`;
+            }
         }
 
         function mostrar() {
+            respondida = false;
             const q = questoes[index];
-            let html = `<h2 class="text-xl font-bold text-gray-800 mb-6">${q.title}</h2>`;
+            document.getElementById('num-atual').innerText = index + 1;
+            document.getElementById('btn-conferir').classList.remove('hidden');
+            document.getElementById('btn-proxima').classList.add('hidden');
+
+            let html = `<h2 class="text-2xl font-bold text-gray-800 mb-8 leading-snug">${q.title}</h2><div class="space-y-3">`;
             
-            ['a', 'b', 'c', 'd'].forEach(l => {
+            ['a', 'b', 'c', 'd', 'e'].forEach(l => {
                 if (q[`option_${l}`]) {
-                    html += `<div class="alternativa" onclick="this.classList.toggle('selecionada')">
-                                <b>${l.toUpperCase()})</b> ${q[`option_${l}`]}
-                             </div>`;
+                    html += `
+                        <div class="alternativa" id="opt-${l}" onclick="selecionar('${l}')">
+                            <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 text-xs font-black">${l.toUpperCase()}</span>
+                            <span>${q[`option_${l}`]}</span>
+                        </div>`;
                 }
             });
+
+            html += `</div>`;
             document.getElementById('conteudo-questao').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function selecionar(letra) {
+            if (respondida) return;
+            document.querySelectorAll('.alternativa').forEach(el => el.classList.remove('selecionada'));
+            document.getElementById(`opt-${letra}`).classList.add('selecionada');
+        }
+
+        function conferirResposta() {
+            const sel = document.querySelector('.alternativa.selecionada');
+            if (!sel) return alert("Selecione uma alternativa!");
+
+            respondida = true;
+            const correta = questoes[index].correct_answer.toLowerCase();
+            const escolhida = sel.id.split('-');
+
+            // Feedback visual
+            document.getElementById(`opt-${correta}`).classList.add('correta');
+            if (escolhida !== correta) {
+                document.getElementById(`opt-${escolhida}`).classList.add('errada');
+            }
+
+            // Exibe explicação se existir
+            if (questoes[index].explanation) {
+                const expDiv = document.createElement('div');
+                expDiv.className = "mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 text-sm rounded-r-xl";
+                expDiv.innerHTML = `<strong>Explicação:</strong> ${questoes[index].explanation}`;
+                document.getElementById('conteudo-questao').appendChild(expDiv);
+            }
+
+            document.getElementById('btn-conferir').classList.add('hidden');
+            document.getElementById('btn-proxima').classList.remove('hidden');
         }
 
         function proxima() {
@@ -83,18 +182,21 @@
                 index++;
                 mostrar();
             } else {
-                alert("Você concluiu as questões deste tema!");
+                alert("Parabéns! Você concluiu este bloco de questões.");
                 window.location.href = "index.html";
             }
         }
 
-        // Aguarda inicialização do cliente Supabase
-        const monitor = setInterval(() => {
+        // Inicialização robusta
+        function verificarClient() {
             if (window.supabaseClient) {
-                clearInterval(monitor);
                 buscarQuestoes();
+            } else {
+                setTimeout(verificarClient, 200);
             }
-        }, 100);
+        }
+        
+        window.onload = verificarClient;
     </script>
 </body>
 </html>
