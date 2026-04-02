@@ -64,7 +64,7 @@ function switchTab(novaTab) {
 async function loginGoogle() {
     const { error } = await window.supabaseClient.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: 'https://victorcbjr100-oss.github.io/Medquest/questoes.html' } // Redireciona direto para a página de questões
+        options: { redirectTo: 'index.html' } // Redireciona direto para a página inicial
     });
     if (error) alert("Erro Google: " + error.message);
 }
@@ -77,7 +77,7 @@ async function executarAcao() {
     if (modo === 'login') {
         const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
         if (error) alert(error.message);
-        else window.location.href = 'questoes.html'; // Redireciona para questões após login
+        else window.location.href = 'index.html'; // Redireciona para a página inicial
     } else {
         const { error } = await window.supabaseClient.auth.signUp({ email, password });
         if (error) alert(error.message);
@@ -91,9 +91,9 @@ window.onload = async () => {
 
     const { data: { session } } = await window.supabaseClient.auth.getSession();
 
-    // Se já estiver logado, redireciona para página de questões
+    // Se já estiver logado, redireciona para página inicial
     if (session) {
-        window.location.href = 'questoes.html';
+        window.location.href = 'index.html';
     }
 };
 </script>
