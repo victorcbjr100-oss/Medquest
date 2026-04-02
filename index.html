@@ -5,87 +5,136 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - MedQuest Pro</title>
 
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Fonte -->
     <style>
-        body { font-family: sans-serif; }
-        .main-content { margin-left: 16rem; }
-        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .main-content {
+            margin-left: 16rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-[#f8fafc]">
 
+    <!-- Sidebar -->
     <script src="sidebar.js"></script>
 
     <main class="main-content p-10 max-w-6xl mx-auto">
         
+        <!-- Header -->
         <div class="mb-10 flex justify-between items-center">
             <div>
-                <h2 id="saudacao" class="text-3xl font-bold">Olá! 👋</h2>
+                <h2 id="saudacao" class="text-3xl font-bold text-gray-800">Olá! 👋</h2>
+                <p class="text-gray-500 mt-1">Acompanhe seu progresso real no MedQuest Pro</p>
             </div>
 
-            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
                 Sair
             </button>
         </div>
 
+        <!-- Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded">
-                <h3>Total Banco</h3>
-                <p id="total-banco">0</p>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Banco</p>
+                    <h3 id="total-banco" class="text-3xl font-bold text-gray-800">0</h3>
+                </div>
+                <i class="fas fa-database text-blue-500 text-xl"></i>
             </div>
 
-            <div class="bg-white p-6 rounded">
-                <h3>Respondidas</h3>
-                <p id="stat-total">0</p>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Respondidas</p>
+                    <h3 id="stat-total" class="text-3xl font-bold text-gray-800">0</h3>
+                </div>
+                <i class="fas fa-check-double text-emerald-500 text-xl"></i>
             </div>
 
-            <div class="bg-white p-6 rounded">
-                <h3>Acertos</h3>
-                <p id="stat-acertos">0</p>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Taxa de Acerto</p>
+                    <h3 id="stat-precisao" class="text-3xl font-bold text-blue-600">0%</h3>
+                </div>
+                <i class="fas fa-chart-line text-blue-600 text-xl"></i>
             </div>
 
-            <div class="bg-white p-6 rounded">
-                <h3>Precisão</h3>
-                <p id="stat-precisao">0%</p>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Acertos</p>
+                    <h3 id="stat-acertos" class="text-3xl font-bold text-emerald-600">0</h3>
+                </div>
+                <i class="fas fa-trophy text-emerald-500 text-xl"></i>
             </div>
+
         </div>
 
-        <div id="btn-temas" class="bg-blue-500 text-white p-6 cursor-pointer">
-            Estudar por Temas
+        <!-- Ações -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div id="btn-temas" class="bg-blue-600 p-8 rounded-[24px] text-white shadow-xl cursor-pointer hover:scale-[1.02] transition-transform">
+                <h4 class="text-xl font-bold">Estudar por Temas</h4>
+                <p class="text-blue-100 text-xs mt-1">Pratique por especialidade</p>
+            </div>
         </div>
 
     </main>
 
-    <!-- JS -->
+    <!-- JS DO PROJETO -->
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
 
-    <!-- SCRIPT SEGURO -->
+    <!-- Script principal -->
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             try {
-                // proteção de rota
+                // 🔐 Protege rota
                 if (typeof protegerRota === "function") {
                     await protegerRota();
                 }
 
-                // usuário
+                // 👤 Usuário
+                let user = null;
                 if (typeof getUser === "function") {
-                    const user = await getUser();
-                    if (user) {
-                        const nome = user.email?.split("@")[0];
-                        document.getElementById("saudacao").textContent = `Olá, ${nome}! 👋`;
-                    }
+                    user = await getUser();
                 }
 
-                // botão temas
+                // 👋 Saudação
+                if (user) {
+                    const nome = user.email?.split("@")[0] || "Usuário";
+                    document.getElementById("saudacao").textContent = `Olá, ${nome}! 👋`;
+                }
+
+                // 🔗 Navegação
                 document.getElementById("btn-temas")?.addEventListener("click", () => {
                     window.location.href = "temas.html";
                 });
+
+                // 📊 Dashboard
+                if (typeof sincronizarDashboard === "function") {
+                    await sincronizarDashboard();
+                }
 
             } catch (e) {
                 console.error("Erro controlado:", e.message);
