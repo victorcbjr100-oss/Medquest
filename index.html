@@ -1,9 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>TESTE</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MedQuest Pro</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: sans-serif; }
+        .main-content { margin-left: 16rem; }
+        @media (max-width: 768px) { .main-content { margin-left: 0; } }
+    </style>
 </head>
-<body>
-    <h1>FUNCIONOU</h1>
+
+<body class="bg-[#f8fafc]">
+
+    <script src="sidebar.js"></script>
+
+    <main class="main-content p-10 max-w-6xl mx-auto">
+        
+        <div class="mb-10 flex justify-between items-center">
+            <div>
+                <h2 id="saudacao" class="text-3xl font-bold">Olá! 👋</h2>
+            </div>
+
+            <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">
+                Sair
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded">
+                <h3>Total Banco</h3>
+                <p id="total-banco">0</p>
+            </div>
+
+            <div class="bg-white p-6 rounded">
+                <h3>Respondidas</h3>
+                <p id="stat-total">0</p>
+            </div>
+
+            <div class="bg-white p-6 rounded">
+                <h3>Acertos</h3>
+                <p id="stat-acertos">0</p>
+            </div>
+
+            <div class="bg-white p-6 rounded">
+                <h3>Precisão</h3>
+                <p id="stat-precisao">0%</p>
+            </div>
+        </div>
+
+        <div id="btn-temas" class="bg-blue-500 text-white p-6 cursor-pointer">
+            Estudar por Temas
+        </div>
+
+    </main>
+
+    <!-- JS -->
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+
+    <!-- SCRIPT SEGURO -->
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                // proteção de rota
+                if (typeof protegerRota === "function") {
+                    await protegerRota();
+                }
+
+                // usuário
+                if (typeof getUser === "function") {
+                    const user = await getUser();
+                    if (user) {
+                        const nome = user.email?.split("@")[0];
+                        document.getElementById("saudacao").textContent = `Olá, ${nome}! 👋`;
+                    }
+                }
+
+                // botão temas
+                document.getElementById("btn-temas")?.addEventListener("click", () => {
+                    window.location.href = "temas.html";
+                });
+
+            } catch (e) {
+                console.error("Erro controlado:", e.message);
+            }
+        });
+    </script>
+
 </body>
 </html>
