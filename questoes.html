@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Questões - MedQuest</title>
+<title>MedQuest Pro</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -14,21 +14,22 @@
 body { margin-left: 16rem; }
 @media (max-width: 768px) { body { margin-left: 0; } }
 
-.alt { padding: 12px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; margin-bottom: 8px; }
-.sel { background: #eff6ff; border-color: #3b82f6; }
-.ok { background: #ecfdf5; border-color: #10b981; }
-.err { background: #fef2f2; border-color: #ef4444; }
+.alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; }
+.sel { background:#eff6ff; border-color:#3b82f6; }
+.ok { background:#ecfdf5; border-color:#10b981; }
+.err { background:#fef2f2; border-color:#ef4444; }
 </style>
 </head>
 
 <body class="bg-gray-50 p-6">
 
-<div class="max-w-2xl mx-auto">
+<div class="max-w-3xl mx-auto space-y-6">
 
 <!-- QUESTÃO -->
-<div class="bg-white p-6 rounded-xl">
+<div class="bg-white p-6 rounded-2xl shadow">
 
-<h2 id="tema">Carregando...</h2>
+<h2 id="tema" class="text-lg font-bold mb-4">Carregando...</h2>
+
 <div id="conteudo"></div>
 
 <div class="flex gap-2 mt-6">
@@ -40,20 +41,14 @@ body { margin-left: 16rem; }
 </div>
 
 <!-- COMENTÁRIOS -->
-<div id="comentarios-box" class="hidden mt-6 bg-white p-6 rounded-xl">
+<div id="comentarios-box" class="hidden bg-white p-6 rounded-2xl shadow">
 
-<h3 class="font-bold mb-4">💬 Comentários</h3>
+<h3 class="font-bold mb-4 text-lg">💬 Discussão Clínica</h3>
 
-<div id="lista-comentarios" class="space-y-3 mb-4"></div>
+<div id="lista-comentarios" class="space-y-4"></div>
 
-<textarea id="novo-comentario"
-class="w-full border p-3 rounded mb-2"
-placeholder="Escreva um comentário..."></textarea>
-
-<button id="btn-comentar"
-class="bg-blue-600 text-white px-4 py-2 rounded">
-Postar comentário
-</button>
+<textarea id="novo-comentario" class="w-full border p-3 rounded mt-4" placeholder="Escreva um comentário..."></textarea>
+<button id="btn-comentar" class="bg-blue-600 text-white px-4 py-2 rounded mt-2">Postar</button>
 
 </div>
 
@@ -71,200 +66,167 @@ let questao = null;
 let marcada = null;
 let respondeu = false;
 
-// =========================
-function getAlt(q, l) {
-    return q["op_" + l] || q["opcao_" + l] || q["alternativa_" + l] || "Sem alternativa";
+function getAlt(q, l){
+return q["op_"+l] || q["opcao_"+l] || q["alternativa_"+l];
 }
 
-// =========================
-async function carregar() {
-
-    const { data, error } = await supabaseClient.from("questoes").select("*");
-
-    if (error) {
-        console.error(error);
-        alert("Erro ao carregar questões");
-        return;
-    }
-
-    questoes = data;
-
-    if (!questoes.length) {
-        document.getElementById("conteudo").innerHTML = "Sem questões";
-        return;
-    }
-
-    mostrarQuestao();
+async function carregar(){
+const { data } = await supabaseClient.from("questoes").select("*");
+questoes = data;
+mostrarQuestao();
 }
 
-// =========================
-function mostrarQuestao() {
+function mostrarQuestao(){
+questao = questoes[indexAtual];
+marcada=null; respondeu=false;
 
-    respondeu = false;
-    marcada = null;
+document.getElementById("tema").innerText = questao.tema;
 
-    questao = questoes[indexAtual];
+let html = `<p class="mb-4">${questao.enunciado}</p>`;
 
-    document.getElementById("tema").textContent = questao.tema;
+["a","b","c","d"].forEach(l=>{
+html += `<div class="alt" data-l="${l}">
+<b>${l})</b> ${getAlt(questao,l)}
+</div>`;
+});
 
-    let html = `<p class="mb-4">${questao.enunciado}</p>`;
+document.getElementById("conteudo").innerHTML = html;
 
-    ["a","b","c","d"].forEach(l => {
-        html += `
-        <div class="alt" data-letra="${l}">
-            <b>${l})</b> ${getAlt(questao, l)}
-        </div>`;
-    });
+document.querySelectorAll(".alt").forEach(el=>{
+el.onclick=()=>{
+if(respondeu)return;
+document.querySelectorAll(".alt").forEach(e=>e.classList.remove("sel"));
+el.classList.add("sel");
+marcada = el.dataset.l;
+};
+});
 
-    document.getElementById("conteudo").innerHTML = html;
-
-    document.querySelectorAll(".alt").forEach(el => {
-        el.onclick = () => selecionar(el);
-    });
-
-    document.getElementById("comentarios-box").classList.add("hidden");
-    document.getElementById("btn").textContent = "Responder";
+document.getElementById("comentarios-box").classList.add("hidden");
 }
 
-// =========================
-function selecionar(el) {
-    if (respondeu) return;
-
-    document.querySelectorAll(".alt").forEach(e => e.classList.remove("sel"));
-    el.classList.add("sel");
-
-    marcada = el.dataset.letra;
-}
-
-// =========================
 document.getElementById("btn").onclick = async () => {
 
-    if (!marcada) {
-        alert("Selecione uma alternativa");
-        return;
-    }
+if(!marcada)return alert("Escolha uma alternativa");
 
-    if (respondeu) {
-        indexAtual++;
-        mostrarQuestao();
-        return;
-    }
-
-    respondeu = true;
-
-    const correta = (questao.resposta_correta || "").toLowerCase();
-
-    const mapa = {a:0,b:1,c:2,d:3};
-    const itens = document.querySelectorAll(".alt");
-
-    if (itens[mapa[correta]]) {
-        itens[mapa[correta]].classList.add("ok");
-    }
-
-    if (marcada !== correta && itens[mapa[marcada]]) {
-        itens[mapa[marcada]].classList.add("err");
-    }
-
-    document.getElementById("btn").textContent = "Próxima";
-    document.getElementById("comentarios-box").classList.remove("hidden");
-
-    carregarComentarios();
-};
-
-// =========================
-document.getElementById("next").onclick = () => {
-    if (indexAtual < questoes.length - 1) {
-        indexAtual++;
-        mostrarQuestao();
-    }
-};
-
-document.getElementById("prev").onclick = () => {
-    if (indexAtual > 0) {
-        indexAtual--;
-        mostrarQuestao();
-    }
-};
-
-// =========================
-// 🔥 COMENTÁRIOS COMPLETOS
-async function carregarComentarios() {
-
-    const { data } = await supabaseClient
-        .from("comentarios")
-        .select("*")
-        .eq("questao_id", questao.id)
-        .order("created_at", { ascending: false });
-
-    const lista = document.getElementById("lista-comentarios");
-    lista.innerHTML = "";
-
-    data?.forEach(c => {
-
-        const dataFormatada = new Date(c.created_at).toLocaleString();
-
-        lista.innerHTML += `
-        <div class="border p-3 rounded">
-
-            <div class="flex justify-between text-xs text-gray-500 mb-1">
-                <span><b>${c.usuario_nome || "Usuário"}</b></span>
-                <span>${dataFormatada}</span>
-            </div>
-
-            <div class="text-sm mb-2">${c.texto}</div>
-
-            <button onclick="responderComentario('${c.id}')"
-            class="text-blue-600 text-xs">
-                Responder
-            </button>
-
-        </div>`;
-    });
+if(respondeu){
+indexAtual++;
+mostrarQuestao();
+return;
 }
 
-// =========================
-// 🔥 POSTAR COMENTÁRIO (CORRIGIDO)
-document.getElementById("btn-comentar").onclick = async () => {
+respondeu=true;
 
-    const texto = document.getElementById("novo-comentario").value;
+const correta = questao.resposta_correta;
+const mapa={a:0,b:1,c:2,d:3};
+const itens=document.querySelectorAll(".alt");
 
-    if (!texto) {
-        alert("Digite algo");
-        return;
-    }
+itens[mapa[correta]]?.classList.add("ok");
+if(marcada!==correta) itens[mapa[marcada]]?.classList.add("err");
 
-    let nome = "Usuário";
+document.getElementById("btn").innerText="Próxima";
 
-    try {
-        if (typeof getUser === "function") {
-            const user = await getUser();
-            if (user?.email) nome = user.email.split("@")[0];
-        }
-    } catch {}
+document.getElementById("comentarios-box").classList.remove("hidden");
 
-    const { error } = await supabaseClient.from("comentarios").insert([{
-        questao_id: questao.id,
-        texto: texto,
-        usuario_nome: nome
-    }]);
-
-    if (error) {
-        alert("Erro ao comentar");
-        console.error(error);
-        return;
-    }
-
-    document.getElementById("novo-comentario").value = "";
-
-    carregarComentarios();
+carregarComentarios();
 };
 
-// =========================
-window.responderComentario = function(id) {
-    alert("Sistema de resposta em thread vem no próximo upgrade 😄");
+// =================== COMENTÁRIOS ===================
+
+async function carregarComentarios(){
+
+const { data } = await supabaseClient
+.from("comentarios")
+.select("*")
+.eq("questao_id", questao.id)
+.order("created_at",{ascending:false});
+
+const lista=document.getElementById("lista-comentarios");
+lista.innerHTML="";
+
+data.forEach(c=>{
+if(!c.parent_id){
+lista.innerHTML += renderComentario(c,data);
+}
+});
+
+}
+
+function renderComentario(c, all){
+
+const respostas = all.filter(x=>x.parent_id===c.id);
+
+return `
+<div class="border p-3 rounded-lg">
+
+<div class="flex justify-between text-xs text-gray-500">
+<b>${c.usuario_nome}</b>
+<span>${new Date(c.created_at).toLocaleString()}</span>
+</div>
+
+<div class="mt-1">${c.texto}</div>
+
+<div class="flex gap-3 mt-2 text-xs">
+
+<button onclick="like('${c.id}')">👍 ${c.likes||0}</button>
+
+<button onclick="responder('${c.id}')">Responder</button>
+
+</div>
+
+<div class="ml-4 mt-3 space-y-2">
+${respostas.map(r=>`
+<div class="border-l pl-3 text-sm">
+<b>${r.usuario_nome}</b> - ${r.texto}
+</div>
+`).join("")}
+</div>
+
+</div>`;
+}
+
+// =================== POST ===================
+document.getElementById("btn-comentar").onclick = async ()=>{
+
+const texto = document.getElementById("novo-comentario").value;
+if(!texto)return;
+
+const user = await getUser().catch(()=>null);
+
+await supabaseClient.from("comentarios").insert([{
+questao_id: questao.id,
+texto,
+usuario_nome: user?.email?.split("@")[0] || "User"
+}]);
+
+document.getElementById("novo-comentario").value="";
+carregarComentarios();
 };
 
-// =========================
+// =================== LIKE ===================
+window.like = async (id)=>{
+await supabaseClient.rpc("increment_like",{comment_id:id});
+carregarComentarios();
+};
+
+// =================== RESPONDER ===================
+window.responder = async (parent_id)=>{
+
+const texto = prompt("Responder comentário:");
+
+if(!texto)return;
+
+const user = await getUser().catch(()=>null);
+
+await supabaseClient.from("comentarios").insert([{
+questao_id: questao.id,
+texto,
+parent_id,
+usuario_nome: user?.email?.split("@")[0] || "User"
+}]);
+
+carregarComentarios();
+};
+
 carregar();
 
 });
