@@ -9,234 +9,242 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase.js" defer></script>
+    <script src="js/supabase.js"></script>
     <script src="sidebar.js" defer></script>
 
     <style>
-        /* Seus estilos permanecem iguais */
-        body { margin-left: 16rem; transition: margin 0.3s; }
-        @media (max-width: 768px) { body { margin-left: 0; } }
+        /* Correção de Layout: Sidebar fixa vs Conteúdo */
+        body { 
+            display: flex;
+            min-height: 100vh;
+            background-color: #f9fafb;
+            margin: 0;
+        }
 
+        /* Área do conteúdo principal à direita da sidebar */
+        main {
+            flex-grow: 1;
+            margin-left: 16rem; /* Largura da sua sidebar */
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            main { margin-left: 0; padding: 1rem; }
+        }
+
+        /* Estilização das Alternativas */
         .alt {
-            padding: 18px;
-            border-radius: 16px;
-            border: 2px solid #e5e7eb;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            border: 2px solid #f1f5f9;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             background: white;
-            font-size: 1.08rem;
+            margin-bottom: 0.75rem;
         }
         .alt:hover:not(.ok):not(.err) {
-            border-color: #2563eb;
-            background: #f0f9ff;
-            transform: translateX(5px);
+            border-color: #3b82f6;
+            background: #eff6ff;
         }
-        .sel { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+        .sel { border-color: #3b82f6; background: #eff6ff; }
         .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #064e3b !important; }
         .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
         
         .letra-circulo {
-            width: 38px; height: 38px;
+            width: 32px; height: 32px;
             border-radius: 50%;
-            background: #f8fafc;
+            background: #f1f5f9;
             display: flex; align-items: center; justify-content: center;
-            margin-right: 15px;
-            font-weight: 700; flex-shrink: 0;
-            border: 1px solid #e2e8f0;
+            margin-right: 1rem;
+            font-weight: 800; flex-shrink: 0;
         }
-        .ok .letra-circulo { background: #10b981; color: white; border-color: #10b981; }
-        .err .letra-circulo { background: #ef4444; color: white; border-color: #ef4444; }
-
-        .progress-bar { height: 8px; background: linear-gradient(to right, #2563eb, #10b981); transition: width 0.5s ease; }
-
-        /* Loading melhorado */
-        .loading-sincronizando {
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 300px; gap: 1.5rem;
-        }
-        .spinner { 
-            width: 50px; height: 50px; border: 4px solid #e5e7eb; 
-            border-top: 4px solid #2563eb; border-radius: 50%; 
-            animation: spin 1s linear infinite; 
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ok .letra-circulo { background: #10b981; color: white; }
+        .err .letra-circulo { background: #ef4444; color: white; }
     </style>
 </head>
-<body class="bg-gray-50 p-4 md:p-8 font-sans">
+<body>
 
-<div class="max-w-3xl mx-auto space-y-6">
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex flex-col">
-                <h2 id="tema" class="text-xs font-black uppercase tracking-widest text-blue-600">Carregando...</h2>
-                <div id="dificuldade" class="hidden"></div>
-            </div>
-            <div class="flex items-center gap-5">
-                <div id="timer" class="font-mono font-bold text-2xl text-red-500 bg-red-50 px-3 py-1 rounded-xl animate-pulse">60s</div>
-                <div class="text-sm font-medium text-gray-400">
-                    Questão <span id="progresso" class="text-gray-900">0</span> de <span id="total">0</span>
+<main>
+    <div class="max-w-4xl mx-auto space-y-6">
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 id="tema-display" class="text-xs font-black uppercase tracking-widest text-blue-600">Sincronizando...</h2>
+                    <div id="dificuldade" class="text-[10px] font-bold uppercase mt-1"></div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="timer" class="font-mono font-bold text-xl text-red-500 bg-red-50 px-3 py-1 rounded-lg">60s</div>
+                    <div class="text-sm font-medium text-gray-400">
+                        Questão <span id="progresso" class="text-gray-900 font-bold">0</span> de <span id="total">0</span>
+                    </div>
                 </div>
             </div>
+            <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500 w-0"></div>
+            </div>
         </div>
-        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div id="progress-bar" class="progress-bar w-0"></div>
-        </div>
-    </div>
 
-    <div class="bg-white p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
-        <div id="conteudo" class="loading-sincronizando">
-            <div class="spinner"></div>
-            <p class="text-gray-400 text-lg font-medium">🔄 Sincronizando com o banco médico...</p>
-            <p class="text-sm text-gray-300">Aguarde alguns segundos</p>
+        <div class="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
+            <div id="conteudo-questao">
+                <div class="flex flex-col items-center justify-center py-20 gap-4 text-gray-400">
+                    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p>Carregando questões do banco...</p>
+                </div>
+            </div>
+            
+            <div id="controles" class="hidden mt-10 flex flex-wrap gap-3 border-t pt-8">
+                <button id="btn-prev" class="px-6 py-4 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition">Anterior</button>
+                <button id="btn-responder" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-blue-700 transition">Responder</button>
+                <button id="btn-next" class="px-6 py-4 bg-gray-800 text-white rounded-2xl font-bold hover:bg-black transition">Pular</button>
+            </div>
         </div>
-        
-        <div class="flex flex-wrap gap-3 hidden" id="botoes-container">
-            <button id="prev" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition flex items-center gap-2" disabled>
-                <i data-lucide="chevron-left" class="w-5 h-5"></i> Anterior
-            </button>
-            <button id="btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-100 transition active:scale-95" disabled>Responder</button>
-            <button id="next" class="px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-semibold transition flex items-center gap-2" disabled>
-                Pular <i data-lucide="chevron-right" class="w-5 h-5"></i>
-            </button>
-        </div>
-    </div>
 
-    <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
-        <h3 class="font-bold text-lg text-emerald-800 mb-4 flex items-center gap-2">
-            <i data-lucide="check-circle" class="w-5 h-5"></i> Comentário do Especialista
-        </h3>
-        <div id="explicacao-texto" class="text-emerald-900 leading-relaxed"></div>
+        <div id="explicacao-box" class="hidden bg-emerald-50 border border-emerald-100 p-8 rounded-3xl">
+            <h3 class="font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                <i data-lucide="info" class="w-5 h-5"></i> Comentário do Especialista
+            </h3>
+            <div id="explicacao-texto" class="text-emerald-900 leading-relaxed"></div>
+        </div>
     </div>
-</div>
+</main>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+    // Variáveis Globais para evitar o ReferenceError
     let questoes = [];
     let indexAtual = 0;
-    let questao = null;
     let marcada = null;
     let respondeu = false;
     let timerInterval = null;
-    let tempoRestante = 60;
-
-    const atualizarIcones = () => { if (window.lucide) lucide.createIcons(); };
-    atualizarIcones();
-
-    // 🔧 MELHOR TRATAMENTO DE ERRO - Timeout de 10s
-    const maxTentativas = 70; // 10 segundos (70 * 150ms)
-    let tentativas = 0;
-
-    const aguardarBanco = setInterval(() => {
-        tentativas++;
-        
-        if (window.supabaseClient) {
-            clearInterval(aguardarBanco);
-            console.log('✅ Supabase pronto!');
-            carregarDados();
-        } else if (tentativas >= maxTentativas) {
-            clearInterval(aguardarBanco);
-            mostrarErroConexao();
-        }
-    }, 150);
-
-    function mostrarErroConexao() {
-        const conteudo = document.getElementById("conteudo");
-        conteudo.innerHTML = `
-            <div class="text-center py-12">
-                <div class="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-3xl flex items-center justify-center">
-                    <i data-lucide="database-off" class="w-10 h-10 text-red-500"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-2">Erro de Conexão</h3>
-                <p class="text-gray-500 mb-8 max-w-md mx-auto">
-                    Não foi possível sincronizar com o banco médico. 
-                    Verifique sua conexão ou tente novamente.
-                </p>
-                <div class="space-y-3">
-                    <button onclick="location.reload()" 
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-8 rounded-2xl font-bold shadow-lg transition">
-                        🔄 Tentar Novamente
-                    </button>
-                    <a href="index.html" 
-                       class="block w-full text-center text-blue-600 hover:text-blue-800 font-semibold py-3 px-8 rounded-2xl border border-blue-200 hover:bg-blue-50 transition">
-                        ← Voltar ao Início
-                    </a>
-                </div>
-            </div>`;
-        atualizarIcones();
-    }
 
     async function carregarDados() {
         try {
-            // Mostra status de carregamento
-            document.getElementById("conteudo").innerHTML = `
-                <div class="loading-sincronizando">
-                    <div class="spinner"></div>
-                    <p class="text-gray-400 text-lg font-medium">📚 Carregando questões médicas...</p>
-                </div>`;
-
-            const urlParams = new URLSearchParams(window.location.search);
-            const temaFiltro = urlParams.get('tema');
-
-            let query = window.supabaseClient
-                .from("questoes")
-                .select("*")
-                .eq('active', true) // Só questões ativas
-                .order("id", { ascending: true });
-
-            if (temaFiltro && temaFiltro !== "Todos") {
-                query = query.ilike('specialty', `%${temaFiltro.trim()}%`);
-            }
-
-            const { data, error } = await query;
+            const params = new URLSearchParams(window.location.search);
+            const tema = params.get('tema');
             
-            if (error) {
-                console.error("❌ Erro Supabase:", error);
-                throw new Error(`Erro no banco: ${error.message}`);
+            let query = window.supabaseClient.from("questoes").select("*");
+            if (tema && tema !== "Todos") {
+                query = query.ilike('specialty', `%${tema}%`);
             }
 
-            questoes = data?.filter(q => 
-                q.title && 
-                q.title.trim() !== "" && 
-                q.correct_answer
-            ) || [];
+            const { data, error } = await query.order('id', { ascending: true });
+            if (error) throw error;
 
-            console.log(`✅ ${questoes.length} questões carregadas`);
+            questoes = data || [];
+            document.getElementById("total").innerText = questoes.length;
 
             if (questoes.length > 0) {
-                document.getElementById("total").textContent = questoes.length;
-                document.getElementById("botoes-container").classList.remove("hidden");
+                document.getElementById("controles").classList.remove("hidden");
                 mostrarQuestao();
             } else {
-                renderizarErro(temaFiltro);
+                document.getElementById("conteudo-questao").innerHTML = `
+                    <div class="text-center py-20">
+                        <i data-lucide="database-zap" class="w-12 h-12 mx-auto text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Nenhuma questão encontrada para este tema.</p>
+                        <a href="index.html" class="text-blue-600 font-bold mt-4 inline-block">Voltar</a>
+                    </div>`;
+                if(window.lucide) lucide.createIcons();
             }
-        } catch (e) {
-            console.error("❌ Erro ao carregar dados:", e);
-            mostrarErroConexao();
+        } catch (err) {
+            console.error(err);
+            document.getElementById("conteudo-questao").innerHTML = "<p class='text-center text-red-500'>Erro ao conectar com o banco.</p>";
         }
     }
 
-    // Resto do código permanece igual...
-    function renderizarErro(tema) {
-        document.getElementById("tema").innerText = "Aviso";
-        document.getElementById("conteudo").innerHTML = `
-            <div class="text-center py-12">
-                <div class="w-20 h-20 mx-auto mb-6 bg-yellow-100 rounded-3xl flex items-center justify-center">
-                    <i data-lucide="search" class="w-10 h-10 text-yellow-500"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-2">Nenhuma Questão Encontrada</h3>
-                <p class="text-gray-500 mb-8">Para: <strong>${tema || 'Geral'}</strong></p>
-                <a href="index.html" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition">Voltar ao Início</a>
-            </div>`;
-        atualizarIcones();
+    function mostrarQuestao() {
+        const q = questoes[indexAtual];
+        respondeu = false;
+        marcada = null;
+
+        document.getElementById("tema-display").innerText = q.specialty || "Geral";
+        document.getElementById("explicacao-box").classList.add("hidden");
+        document.getElementById("btn-responder").innerText = "Responder";
+        document.getElementById("btn-responder").className = "flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-blue-700 transition";
+
+        // Monta o HTML
+        let html = `<h2 class="text-xl font-bold text-gray-900 mb-8 leading-tight">${q.title}</h2><div class="alternativas-container">`;
+        
+        ['a', 'b', 'c', 'd', 'e'].forEach(l => {
+            if (q[`option_${l}`]) {
+                html += `
+                    <div class="alt" onclick="selecionar('${l.toUpperCase()}')" id="alt-${l.toUpperCase()}">
+                        <div class="letra-circulo">${l.toUpperCase()}</div>
+                        <span>${q[`option_${l}`]}</span>
+                    </div>`;
+            }
+        });
+        
+        document.getElementById("conteudo-questao").innerHTML = html + "</div>";
+        
+        atualizarProgresso();
+        if(window.lucide) lucide.createIcons();
     }
 
-    // [Resto das funções mostrarQuestao, verificarResposta, etc. permanecem EXATAMENTE iguais]
-    // ... (copie o resto do seu código JavaScript original aqui)
-});
+    function selecionar(letra) {
+        if (respondeu) return;
+        marcada = letra;
+        document.querySelectorAll('.alt').forEach(el => el.classList.remove('sel'));
+        document.getElementById(`alt-${letra}`).classList.add('sel');
+    }
+
+    function verificar() {
+        if (respondeu) {
+            if (indexAtual < questoes.length -1) {
+                indexAtual++;
+                mostrarQuestao();
+            } else {
+                alert("Fim do simulado!");
+                window.location.href = "index.html";
+            }
+            return;
+        }
+
+        if (!marcada) return alert("Selecione uma resposta!");
+
+        respondeu = true;
+        const correta = questoes[indexAtual].correct_answer.toUpperCase();
+        
+        document.querySelectorAll('.alt').forEach(el => {
+            const letra = el.id.split('-');
+            if (letra === correta) el.classList.add('ok');
+            if (letra === marcada && marcada !== correta) el.classList.add('err');
+        });
+
+        if (marcada === correta) {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+
+        if (questoes[indexAtual].explanation) {
+            document.getElementById("explicacao-texto").innerHTML = questoes[indexAtual].explanation;
+            document.getElementById("explicacao-box").classList.remove("hidden");
+        }
+
+        document.getElementById("btn-responder").innerText = "Próxima Questão";
+        document.getElementById("btn-responder").className = "flex-1 bg-gray-900 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-black transition";
+    }
+
+    function atualizarProgresso() {
+        const p = ((indexAtual + 1) / questoes.length) * 100;
+        document.getElementById("progress-bar").style.width = `${p}%`;
+        document.getElementById("progresso").innerText = indexAtual + 1;
+    }
+
+    // Inicialização
+    document.addEventListener("DOMContentLoaded", () => {
+        const interval = setInterval(() => {
+            if (window.supabaseClient) {
+                clearInterval(interval);
+                carregarDados();
+            }
+        }, 100);
+
+        document.getElementById("btn-responder").onclick = verificar;
+        document.getElementById("btn-next").onclick = () => { if (indexAtual < questoes.length - 1) { indexAtual++; mostrarQuestao(); } };
+        document.getElementById("btn-prev").onclick = () => { if (indexAtual > 0) { indexAtual--; mostrarQuestao(); } };
+    });
 </script>
+
 </body>
 </html>
