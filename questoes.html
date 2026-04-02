@@ -30,11 +30,7 @@
             background: #f0f9ff;
             transform: translateY(-3px);
         }
-        .sel {
-            background: #dbeafe;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
-        }
+        .sel { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25); }
         .ok { background: #d1fae5 !important; border-color: #10b981 !important; color: #052e16 !important; }
         .err { background: #fee2e2 !important; border-color: #ef4444 !important; color: #7f1d1d !important; }
         .letra-circulo {
@@ -228,9 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let html = `<p class="mb-10 font-medium">${questao.enunciado || "Enunciado não encontrado"}</p><div class="space-y-5">`;
         ["a", "b", "c", "d"].forEach(l => {
             const texto = getAlt(questao, l);
-            if (texto) {
-                html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
-            }
+            if (texto) html += `<div class="alt" data-l="${l}"><div class="letra-circulo">${l.toUpperCase()}</div><span>${texto}</span></div>`;
         });
         html += `</div>`;
         document.getElementById("conteudo").innerHTML = html;
@@ -250,17 +244,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Botão Responder
     document.getElementById("btn").addEventListener("click", async () => {
-        if (!respondeu && !marcada) {
-            alert("Escolha uma alternativa antes de responder.");
-            return;
-        }
+        if (!respondeu && !marcada) return alert("Escolha uma alternativa antes de responder.");
         if (respondeu) {
             if (indexAtual < questoes.length - 1) {
                 indexAtual++;
                 mostrarQuestao();
-            } else {
-                mostrarResumoFinal();
-            }
+            } else mostrarResumoFinal();
             return;
         }
 
@@ -274,7 +263,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (acertou) confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
 
         document.getElementById("btn").innerText = "Próxima Questão";
-
         respostasUsuario.push({ questao_id: questao.id, marcada, acertou });
 
         if (typeof registrarRevisao === "function") await registrarRevisao(questao.id, acertou);
@@ -284,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await carregarComentarios();
     });
 
-    // Pular
+    // Pular, Resumo, Teclas... (mantidos iguais)
     document.getElementById("pular").addEventListener("click", () => {
         if (respondeu) return;
         if (confirm("Deseja realmente pular esta questão?")) {
@@ -335,7 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
         mostrarQuestao();
     };
 
-    // Teclas de atalho
     document.addEventListener("keydown", e => {
         if (respondeu) return;
         const key = e.key.toLowerCase();
@@ -354,19 +341,16 @@ document.addEventListener("DOMContentLoaded", () => {
     async function carregarComentarios() {
         if (!questao?.id) return;
         try {
-            const { data, error } = await supabaseClient.from("comentarios").select("*").eq("questao_id", questao.id).order("created_at", { ascending: false });
+            const { data, error } = await supabaseClient
+                .from("comentarios")
+                .select("*")
+                .eq("questao_id", questao.id)
+                .order("created_at", { ascending: false });
             if (error) throw error;
 
             const lista = document.getElementById("lista-comentarios");
-            lista.innerHTML = "";
-
-            if (!data || data.length === 0) {
-                lista.innerHTML = `<p class="text-center text-gray-400 py-10 italic">Nenhum comentário ainda. Seja o primeiro!</p>`;
-                return;
-            }
-
-            data.filter(c => !c.parent_id).forEach(c => {
-                lista.innerHTML += `
+            lista.innerHTML = data && data.length 
+                ? data.filter(c => !c.parent_id).map(c => `
                     <div class="bg-white p-7 rounded-3xl border shadow-sm">
                         <div class="flex justify-between items-start mb-4">
                             <div class="font-semibold text-blue-700">${c.usuario_nome || 'Colega'}</div>
@@ -374,28 +358,21 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                         <p class="text-gray-700">${c.texto}</p>
                         <button onclick="like('${c.id}')" class="mt-5 text-sm flex items-center gap-2 text-gray-500 hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
-                    </div>`;
-            });
+                    </div>`).join('')
+                : `<p class="text-center text-gray-400 py-10 italic">Nenhum comentário ainda. Seja o primeiro!</p>`;
         } catch (e) {
-            console.error("Erro ao carregar comentários:", e);
+            console.error(e);
         }
     }
 
-    // Botão Postar Comentário - Melhorado
-    document.getElementById("btn-comentar").addEventListener("click", async function() {
-        const btn = this;
+    // Botão Postar Comentário (com melhor tratamento de erro)
+    document.getElementById("btn-comentar").addEventListener("click", async () => {
+        const btn = document.getElementById("btn-comentar");
         const originalText = btn.textContent;
-        const campo = document.getElementById("novo-comentario");
-        const texto = campo.value.trim();
+        const texto = document.getElementById("novo-comentario").value.trim();
 
-        if (!texto) {
-            alert("Digite um comentário antes de postar.");
-            return;
-        }
-        if (!questao?.id) {
-            alert("Erro: Questão não identificada.");
-            return;
-        }
+        if (!texto) return alert("Digite um comentário antes de postar.");
+        if (!questao?.id) return alert("Erro interno: questão não identificada.");
 
         btn.disabled = true;
         btn.textContent = "Enviando...";
@@ -412,12 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (error) throw error;
 
-            campo.value = "";
+            document.getElementById("novo-comentario").value = "";
             await carregarComentarios();
-            console.log("✅ Comentário publicado com sucesso");
+            console.log("✅ Comentário publicado!");
         } catch (e) {
-            console.error("Erro completo ao publicar comentário:", e);
-            alert(`Erro ao publicar comentário:\n${e.message || e}`);
+            console.error("Erro ao publicar comentário:", e);
+            alert(`Erro ao publicar comentário:\n${e.message || e}\n\nVerifique se a coluna 'usuario_nome' existe na tabela 'comentarios'.`);
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
@@ -428,25 +405,8 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             await supabaseClient.rpc("increment_like", { comment_id: id });
             await carregarComentarios();
-        } catch (e) {
-            console.error("Erro no like:", e);
-        }
+        } catch (e) { console.error(e); }
     };
-
-    // Navegação
-    document.getElementById("next").addEventListener("click", () => {
-        if (indexAtual < questoes.length - 1) {
-            indexAtual++;
-            mostrarQuestao();
-        }
-    });
-
-    document.getElementById("prev").addEventListener("click", () => {
-        if (indexAtual > 0) {
-            indexAtual--;
-            mostrarQuestao();
-        }
-    });
 
     // Iniciar
     carregar();
