@@ -21,3 +21,27 @@ async function inicializarSupabase() {
         return false;
     }
 }
+// Verifica se o usuário está logado
+async function verificarAcesso() {
+    // Aguarda o cliente carregar se necessário
+    if (!window.supabaseClient) {
+        setTimeout(verificarAcesso, 200);
+        return;
+    }
+
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    
+    // Se não houver sessão e não estiver na página de login, redireciona
+    if (!session && !window.location.pathname.includes('login.html')) {
+        window.location.href = 'login.html';
+    } 
+    
+    // Se estiver logado, você pode capturar os dados do usuário
+    if (session) {
+        console.log("Usuário ativo:", session.user.email);
+        // Exemplo: session.user.user_metadata.full_name (nome do Google)
+        // Exemplo: session.user.user_metadata.avatar_url (foto do Google)
+    }
+}
+
+verificarAcesso();
