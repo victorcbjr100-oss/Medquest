@@ -10,11 +10,16 @@
     <style>
         body { margin-left: 16rem; }
         @media (max-width: 768px) { body { margin-left: 0; } }
+        
         .alt { padding: 14px; border-radius: 12px; border:1px solid #e5e7eb; cursor:pointer; transition: all 0.2s; }
         .alt:hover:not(.ok):not(.err) { border-color: #3b82f6; background: #f8fafc; }
         .sel { background:#eff6ff; border-color:#3b82f6; ring: 2px solid #3b82f6; }
         .ok { background:#ecfdf5; border-color:#10b981; color: #065f46; font-weight: 500; }
         .err { background:#fef2f2; border-color:#ef4444; color: #991b1b; }
+
+        /* Estilo Custom para Scrollbar */
+        #lista-comentarios::-webkit-scrollbar { width: 6px; }
+        #lista-comentarios::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
     </style>
 </head>
 
@@ -22,22 +27,34 @@
 
     <div class="max-w-3xl mx-auto space-y-6">
 
-        <div class="bg-white p-6 rounded-2xl shadow">
-            <h2 id="tema" class="text-lg font-bold mb-4 text-blue-600">Carregando...</h2>
-            <div id="conteudo" class="text-gray-800 leading-relaxed"></div>
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <h2 id="tema" class="text-sm font-bold uppercase tracking-wider mb-2 text-blue-500">Carregando...</h2>
+            <div id="conteudo" class="text-gray-800 text-lg leading-relaxed mb-6"></div>
 
-            <div class="flex gap-2 mt-6">
-                <button id="prev" class="flex-1 bg-gray-200 py-2 rounded font-medium">Anterior</button>
-                <button id="btn" class="flex-1 bg-blue-600 text-white py-2 rounded font-bold shadow-lg">Responder</button>
-                <button id="next" class="flex-1 bg-gray-800 text-white py-2 rounded font-medium">Próxima</button>
+            <div class="flex gap-3 mt-8">
+                <button id="prev" class="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition">Anterior</button>
+                <button id="btn" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-blue-200 shadow-lg hover:bg-blue-700 transition transform active:scale-95">Responder</button>
+                <button id="next" class="px-6 py-3 bg-gray-800 text-white rounded-xl font-semibold hover:bg-black transition">Próxima</button>
             </div>
         </div>
 
-        <div id="comentarios-box" class="hidden bg-white p-6 rounded-2xl shadow">
-            <h3 class="font-bold mb-4 text-lg border-b pb-2">💬 Discussão Clínica</h3>
-            <div id="lista-comentarios" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
-            <textarea id="novo-comentario" class="w-full border p-3 rounded-xl mt-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escreva um comentário clínico..."></textarea>
-            <button id="btn-comentar" class="bg-blue-600 text-white px-6 py-2 rounded-lg mt-2 font-bold ml-auto block">Postar</button>
+        <div id="comentarios-box" class="hidden space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-bold text-xl text-gray-800 flex items-center gap-2">
+                    <span class="text-2xl">💬</span> Discussão Clínica
+                </h3>
+            </div>
+
+            <div id="lista-comentarios" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mt-4">
+                <textarea id="novo-comentario" 
+                    class="w-full border-none p-2 text-gray-700 placeholder-gray-400 focus:ring-0 outline-none resize-none" 
+                    rows="2" placeholder="Adicione uma observação clínica ou dúvida..."></textarea>
+                <div class="flex justify-end border-t pt-3 mt-2">
+                    <button id="btn-comentar" class="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition">Enviar</button>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -47,7 +64,6 @@
 
     <script>
     document.addEventListener("DOMContentLoaded", () => {
-
         let questoes = [];
         let indexAtual = 0;
         let questao = null;
@@ -60,14 +76,13 @@
 
         async function carregar() {
             const { data, error } = await supabaseClient.from("questoes").select("*");
-            if (error) return console.error("Erro ao carregar questões:", error);
+            if (error) return console.error(error);
             questoes = data;
             mostrarQuestao();
         }
 
         function mostrarQuestao() {
             if (!questoes[indexAtual]) return;
-            
             questao = questoes[indexAtual];
             marcada = null; 
             respondeu = false;
@@ -76,15 +91,14 @@
             document.getElementById("tema").innerText = questao.tema;
             document.getElementById("comentarios-box").classList.add("hidden");
 
-            let html = `<p class="mb-6 text-lg font-medium">${questao.enunciado}</p><div class="space-y-3">`;
-
+            let html = `<p class="mb-6">${questao.enunciado}</p><div class="space-y-3">`;
             ["a", "b", "c", "d"].forEach(l => {
-                html += `<div class="alt" data-l="${l}">
-                    <span class="uppercase font-bold mr-2">${l})</span> ${getAlt(questao, l)}
+                html += `<div class="alt group" data-l="${l}">
+                    <span class="inline-block w-8 h-8 rounded-full bg-gray-100 text-center leading-8 font-bold mr-3 group-hover:bg-blue-100 transition">${l.toUpperCase()}</span> 
+                    ${getAlt(questao, l)}
                 </div>`;
             });
             html += `</div>`;
-
             document.getElementById("conteudo").innerHTML = html;
 
             document.querySelectorAll(".alt").forEach(el => {
@@ -97,18 +111,11 @@
             });
         }
 
-        // LÓGICA DO BOTÃO RESPONDER
         document.getElementById("btn").onclick = async () => {
-            if (!marcada) return alert("Por favor, selecione uma alternativa.");
-
-            // Se já respondeu, o botão serve para ir para a próxima
+            if (!marcada) return alert("Selecione uma opção");
             if (respondeu) {
                 indexAtual++;
-                if (indexAtual < questoes.length) {
-                    mostrarQuestao();
-                } else {
-                    alert("Você chegou ao fim das questões!");
-                }
+                if (indexAtual < questoes.length) mostrarQuestao();
                 return;
             }
 
@@ -116,115 +123,103 @@
             const correta = questao.resposta_correta;
             const acertou = (marcada === correta);
 
-            // --- A MÁGICA: REGISTRAR REVISÃO NO BANCO ---
-            if (typeof registrarRevisao === "function") {
-                await registrarRevisao(questao.id, acertou);
-            }
+            if (typeof registrarRevisao === "function") await registrarRevisao(questao.id, acertou);
 
-            // Feedback visual
             const mapa = { a: 0, b: 1, c: 2, d: 3 };
             const itens = document.querySelectorAll(".alt");
-
             itens[mapa[correta]]?.classList.add("ok");
-            if (!acertou) {
-                itens[mapa[marcada]]?.classList.add("err");
-            }
+            if (!acertou) itens[mapa[marcada]]?.classList.add("err");
 
             document.getElementById("btn").innerText = "Próxima Questão";
             document.getElementById("comentarios-box").classList.remove("hidden");
             carregarComentarios();
         };
 
-        // Navegação simples
-        document.getElementById("next").onclick = () => {
-            if (indexAtual < questoes.length - 1) {
-                indexAtual++;
-                mostrarQuestao();
-            }
-        };
-
-        document.getElementById("prev").onclick = () => {
-            if (indexAtual > 0) {
-                indexAtual--;
-                mostrarQuestao();
-            }
-        };
-
-        // =================== COMENTÁRIOS ===================
+        // --- SISTEMA DE COMENTÁRIOS MELHORADO ---
 
         async function carregarComentarios() {
-            const { data } = await supabaseClient
-                .from("comentarios")
-                .select("*")
-                .eq("questao_id", questao.id)
-                .order("created_at", { ascending: false });
+            const { data } = await supabaseClient.from("comentarios")
+                .select("*").eq("questao_id", questao.id).order("created_at", { ascending: false });
 
             const lista = document.getElementById("lista-comentarios");
-            lista.innerHTML = data.length ? "" : "<p class='text-gray-400 text-sm italic'>Nenhum comentário ainda. Seja o primeiro a comentar!</p>";
+            lista.innerHTML = data.length ? "" : "<p class='text-center text-gray-400 py-4'>Nenhum comentário. Inicie a discussão!</p>";
 
-            data.forEach(c => {
-                if (!c.parent_id) {
-                    lista.innerHTML += renderComentario(c, data);
-                }
+            data.filter(c => !c.parent_id).forEach(c => {
+                lista.innerHTML += renderComentario(c, data);
             });
         }
 
         function renderComentario(c, all) {
             const respostas = all.filter(x => x.parent_id === c.id);
             return `
-                <div class="border p-3 rounded-lg bg-gray-50">
-                    <div class="flex justify-between text-xs text-gray-500 mb-2">
-                        <b class="text-blue-600">${c.usuario_nome}</b>
-                        <span>${new Date(c.created_at).toLocaleString()}</span>
-                    </div>
-                    <div class="mt-1 text-sm text-gray-700">${c.texto}</div>
-                    <div class="flex gap-4 mt-3 text-xs font-bold text-gray-500">
-                        <button onclick="like('${c.id}')" class="hover:text-blue-600 transition">👍 ${c.likes || 0}</button>
-                        <button onclick="responder('${c.id}')" class="hover:text-blue-600 transition">REPLICAR</button>
-                    </div>
-                    <div class="ml-4 mt-3 space-y-2 border-l-2 border-blue-100 pl-3">
-                        ${respostas.map(r => `
-                            <div class="text-sm py-1">
-                                <b class="text-xs text-gray-500">${r.usuario_nome}:</b> ${r.texto}
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">
+                                ${c.usuario_nome.charAt(0).toUpperCase()}
                             </div>
-                        `).join("")}
+                            <span class="font-bold text-gray-700 text-sm">${c.usuario_nome}</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400 font-medium">${new Date(c.created_at).toLocaleDateString()}</span>
                     </div>
+                    <p class="text-gray-600 text-sm leading-relaxed">${c.texto}</p>
+                    <div class="flex gap-4 pt-2">
+                        <button onclick="like('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition flex items-center gap-1">
+                            👍 ${c.likes || 0}
+                        </button>
+                        <button onclick="responder('${c.id}')" class="text-xs font-bold text-gray-400 hover:text-blue-600 transition uppercase tracking-tighter">
+                            Responder
+                        </button>
+                    </div>
+                    ${respostas.length ? `
+                        <div class="mt-4 ml-6 pl-4 border-l-2 border-gray-100 space-y-3">
+                            ${respostas.map(r => `
+                                <div class="text-sm">
+                                    <span class="font-bold text-blue-600 text-xs">${r.usuario_nome}</span>
+                                    <p class="text-gray-600 mt-0.5">${r.texto}</p>
+                                </div>
+                            `).join("")}
+                        </div>
+                    ` : ""}
                 </div>`;
         }
 
-        // POSTAR COMENTÁRIO
         document.getElementById("btn-comentar").onclick = async () => {
-            const texto = document.getElementById("novo-comentario").value;
-            if (!texto) return;
+            const campo = document.getElementById("novo-comentario");
+            if (!campo.value.trim()) return;
 
             const { data: { user } } = await supabaseClient.auth.getUser();
+            const nomeUser = user?.email ? user.email.split("@") : "Usuário";
 
             await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
-                texto,
-                usuario_nome: user?.email?.split("@") || "Doutor"
+                texto: campo.value,
+                usuario_nome: nomeUser
             }]);
 
-            document.getElementById("novo-comentario").value = "";
+            campo.value = "";
             carregarComentarios();
         };
 
-        // LIKE & RESPONDER (Globais para funcionarem no HTML dinâmico)
         window.like = async (id) => {
             await supabaseClient.rpc("increment_like", { comment_id: id });
             carregarComentarios();
         };
 
         window.responder = async (parent_id) => {
-            const texto = prompt("Sua resposta clínica:");
+            const texto = prompt("Digite sua resposta:");
             if (!texto) return;
+
             const { data: { user } } = await supabaseClient.auth.getUser();
+            const nomeUser = user?.email ? user.email.split("@") : "Usuário";
+
             await supabaseClient.from("comentarios").insert([{
                 questao_id: questao.id,
-                texto,
-                parent_id,
-                usuario_nome: user?.email?.split("@") || "Doutor"
+                texto: texto,
+                parent_id: parent_id,
+                usuario_nome: nomeUser
             }]);
+
             carregarComentarios();
         };
 
