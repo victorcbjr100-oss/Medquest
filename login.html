@@ -8,11 +8,15 @@
     <script src="js/supabase.js" defer></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
 <body class="bg-slate-50 flex items-center justify-center min-h-screen p-4">
 
     <div class="max-w-md w-full bg-white p-8 rounded-[32px] shadow-2xl border border-slate-100 text-center">
-        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-200">
+        <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
             <i data-lucide="graduation-cap" class="text-white w-8 h-8"></i>
         </div>
         
@@ -25,33 +29,34 @@
         </button>
 
         <div class="space-y-4 text-left">
-            <input type="email" id="email" placeholder="E-mail" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:border-blue-500">
-            <input type="password" id="senha" placeholder="Senha" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:border-blue-500">
-            <button onclick="loginEmail()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg">Acessar Plataforma</button>
+            <input type="email" id="email" placeholder="E-mail" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:border-blue-500 text-sm">
+            <input type="password" id="senha" placeholder="Senha" class="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:border-blue-500 text-sm">
+            <button onclick="loginEmail()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black shadow-lg">Acessar Plataforma</button>
         </div>
     </div>
 
     <script>
         async function loginGoogle() {
-            const client = window.supabaseClient;
-            if (!client) return alert("Erro: Banco de dados não carregado.");
-
-            const { error } = await client.auth.signInWithOAuth({
+            const btn = document.getElementById('btn-google');
+            btn.innerText = "Conectando...";
+            
+            const { error } = await window.supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: { 
-                    // Isso garante que o redirecionamento aponte para a sua página principal no GitHub
+                    // ATENÇÃO: Esta URL deve estar EXATAMENTE IGUAL no Google Cloud Console
                     redirectTo: 'https://victorcbjr100-oss.github.io/Medquest/index.html'
                 }
             });
-            if (error) alert("Erro: " + error.message);
+            if (error) {
+                alert("Erro: " + error.message);
+                btn.innerHTML = `<img src="..." class="w-5 h-5"> Entrar com Google`;
+            }
         }
 
         async function loginEmail() {
-            const client = window.supabaseClient;
             const email = document.getElementById('email').value;
             const password = document.getElementById('senha').value;
-            
-            const { error } = await client.auth.signInWithPassword({ email, password });
+            const { error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
             if (error) alert(error.message);
             else window.location.href = 'index.html';
         }
