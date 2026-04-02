@@ -1,45 +1,23 @@
-// js/supabase.js - Configurado para seu projeto Supabase
-let supabaseClient = null;
+// js/supabase.js
+const SUPABASE_URL = 'https://xkhwfudjcqmbhcdkpewr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI';
 
 async function inicializarSupabase() {
     try {
-        console.log('🔄 Inicializando Supabase...');
-        
-        // Suas credenciais EXATAS
-        const { createClient } = supabase;
-        supabaseClient = createClient(
-            'https://xkhwfudjcqmbhcdkpewr.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhraHdmdWRqY3FtYmhjZGtwZXdyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTAwMzQsImV4cCI6MjA4OTk2NjAzNH0.tOHjrpUCfqzt43b3MnC2sbCFXGJzFH95-p85lKGrwQI'
-        );
-        
-        // Teste de conexão
-        const { data: testData, error: testError } = await supabaseClient
-            .from('questoes')
-            .select('count')
-            .limit(1)
-            .single();
-            
-        if (testError) {
-            console.warn('⚠️ Teste de conexão falhou (tabela pode estar vazia):', testError.message);
-        } else {
-            console.log('✅ Supabase conectado com sucesso!');
+        // Verifica se a biblioteca externa (SDK) do Supabase já está disponível no navegador
+        if (typeof supabase === 'undefined') {
+            console.warn("Aguardando carregamento da biblioteca Supabase...");
+            return false;
         }
-        
+
+        // Cria o cliente global apenas uma vez
+        if (!window.supabaseClient) {
+            window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("✅ Conectado ao Supabase com sucesso!");
+        }
         return true;
     } catch (error) {
-        console.error('❌ Erro crítico ao conectar Supabase:', error);
+        console.error("❌ Erro crítico na conexão:", error);
         return false;
     }
 }
-
-// Inicializa automaticamente
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        inicializarSupabase();
-    });
-} else {
-    inicializarSupabase();
-}
-
-// Exporta para uso global
-window.supabaseClient = supabaseClient;
